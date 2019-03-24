@@ -33,11 +33,11 @@ def safe_mean(arr):
     """
     return np.nan if len(arr) == 0 else np.mean(arr)
 
-def train():
+def train(args):
     """
     Runs the test
     """
-    args = mujoco_arg_parser().parse_args()
+    args, argv = mujoco_arg_parser().parse_known_args(args)
 
     run_num = get_run_num( "ppo2", args.env, args.num_timesteps)
     log_dir = get_log_dir( "ppo2", args.num_timesteps, args.env, run_num)
@@ -131,7 +131,8 @@ def eval_return(args, save_dir, theta,  eval_timesteps, i):
 
 
 if __name__ == '__main__':
-    # train()
-    args = mujoco_arg_parser().parse_args()
-
-    eval_return(args, None, None,  5000, 0)
+    import sys
+    train(sys.argv)
+    # args = mujoco_arg_parser().parse_args()
+    #
+    # eval_return(args, None, None,  5000, 0)
