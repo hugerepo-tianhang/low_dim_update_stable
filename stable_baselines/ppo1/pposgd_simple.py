@@ -44,7 +44,7 @@ class PPO1(ActorCriticRLModel):
 
     def __init__(self, policy, env, gamma=0.99, timesteps_per_actorbatch=256, clip_param=0.2, entcoeff=0.01,
                  optim_epochs=4, optim_stepsize=1e-3, optim_batchsize=64, lam=0.95, adam_epsilon=1e-5,
-                 schedule='linear', verbose=0, tensorboard_log=None,
+                 schedule='linear', verbose=1, tensorboard_log=None,
                  _init_setup_model=True, policy_kwargs=None, full_tensorboard_log=False):
 
         super().__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=False,

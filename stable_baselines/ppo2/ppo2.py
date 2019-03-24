@@ -12,6 +12,8 @@ from stable_baselines.common import explained_variance, ActorCriticRLModel, tf_u
 from stable_baselines.common.runners import AbstractEnvRunner
 from stable_baselines.common.policies import LstmPolicy, ActorCriticPolicy
 from stable_baselines.a2c.utils import total_episode_reward_logger
+from stable_baselines.low_dim_analysis.eval_util import get_full_param_traj_file_path
+import csv
 
 
 class PPO2(ActorCriticRLModel):
@@ -42,7 +44,7 @@ class PPO2(ActorCriticRLModel):
     """
 
     def __init__(self, policy, env, gamma=0.99, n_steps=128, ent_coef=0.01, learning_rate=2.5e-4, vf_coef=0.5,
-                 max_grad_norm=0.5, lam=0.95, nminibatches=4, noptepochs=4, cliprange=0.2, verbose=0,
+                 max_grad_norm=0.5, lam=0.95, nminibatches=4, noptepochs=4, cliprange=0.2, verbose=1,
                  tensorboard_log=None, _init_setup_model=True, policy_kwargs=None,
                  full_tensorboard_log=False):
 
@@ -88,15 +90,17 @@ class PPO2(ActorCriticRLModel):
         self.n_batch = None
         self.summary = None
         self.episode_reward = None
-
         if _init_setup_model:
             self.setup_model()
+
 
     def setup_model(self):
         with SetVerbosity(self.verbose):
 
             assert issubclass(self.policy, ActorCriticPolicy), "Error: the input policy for the PPO2 model must be " \
                                                                "an instance of common.policies.ActorCriticPolicy."
+
+
 
             self.n_batch = self.n_envs * self.n_steps
 
@@ -160,6 +164,10 @@ class PPO2(ActorCriticRLModel):
 
                     with tf.variable_scope('model'):
                         self.params = tf.trainable_variables()
+
+                        self.get_flat = tf_util.GetFlat(self.params, sess=self.sess)
+                        self.set_from_flat = tf_util.SetFromFlat(self.params, sess=self.sess)
+
                         if self.full_tensorboard_log:
                             for var in self.params:
                                 tf.summary.histogram(var.name, var)
@@ -201,6 +209,16 @@ class PPO2(ActorCriticRLModel):
                 tf.global_variables_initializer().run(session=self.sess)  # pylint: disable=E1101
 
                 self.summary = tf.summary.merge_all()
+
+    def tell_run_info(self, run_info):
+        self.run_info = run_info
+
+    def dump(self, var_list, index):
+        var_output_file = get_full_param_traj_file_path(dir_name=self.run_info["full_param_traj_dir_path"], index=index)
+
+        with open(var_output_file, 'a') as fp:
+            wr = csv.writer(fp)
+            wr.writerow(var_list)
 
     def _train_step(self, learning_rate, cliprange, obs, returns, masks, actions, values, neglogpacs, update,
                     writer, states=None):
@@ -253,6 +271,8 @@ class PPO2(ActorCriticRLModel):
             policy_loss, value_loss, policy_entropy, approxkl, clipfrac, _ = self.sess.run(
                 [self.pg_loss, self.vf_loss, self.entropy, self.approxkl, self.clipfrac, self._train], td_map)
 
+
+
         return policy_loss, value_loss, policy_entropy, approxkl, clipfrac
 
     def learn(self, total_timesteps, callback=None, seed=None, log_interval=1, tb_log_name="PPO2",
@@ -298,6 +318,10 @@ class PPO2(ActorCriticRLModel):
                             slices = (arr[mbinds] for arr in (obs, returns, masks, actions, values, neglogpacs))
                             mb_loss_vals.append(self._train_step(lr_now, cliprangenow, *slices, writer=writer,
                                                                  update=timestep))
+
+                            flat_params = self.get_flat()
+                            self.dump(flat_params, update - 1)
+
                     self.num_timesteps += (self.n_batch * self.noptepochs) // batch_size * update_fac
                 else:  # recurrent version
                     update_fac = self.n_batch // self.nminibatches // self.noptepochs // self.n_steps + 1
@@ -317,6 +341,9 @@ class PPO2(ActorCriticRLModel):
                             mb_states = states[mb_env_inds]
                             mb_loss_vals.append(self._train_step(lr_now, cliprangenow, *slices, update=timestep,
                                                                  writer=writer, states=mb_states))
+                            flat_params = self.get_flat()
+                            self.dump(flat_params, update - 1)
+
                     self.num_timesteps += (self.n_envs * self.noptepochs) // envs_per_batch * update_fac
 
                 loss_vals = np.mean(mb_loss_vals, axis=0)
@@ -348,6 +375,10 @@ class PPO2(ActorCriticRLModel):
                     # compatibility with callbacks that have no return statement.
                     if callback(locals(), globals()) is False:
                         break
+
+
+            flat_params = self.get_flat()
+            self.dump(flat_params, "final")
 
             return self
 
