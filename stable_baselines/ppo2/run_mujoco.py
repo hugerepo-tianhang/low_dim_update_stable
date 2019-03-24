@@ -123,8 +123,8 @@ def eval_return(args, save_dir, theta,  eval_timesteps, i):
         # env.render()
         done = done.any()
         if done:
-            episode_rew = safe_mean([ep_info['r'] for ep_info in ep_infos])
-            print(f'episode_rew={episode_rew}')
+            # episode_rew = safe_mean([ep_info['r'] for ep_info in ep_infos])
+            # print(f'episode_rew={episode_rew}')
             obs = env.reset()
 
     return safe_mean([ep_info['r'] for ep_info in ep_infos])
