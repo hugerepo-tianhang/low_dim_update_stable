@@ -6,7 +6,7 @@ from stable_baselines import logger
 import pandas as pd
 from sklearn.decomposition import PCA
 
-from stable_baselines.low_dim_analysis.common import project_2D_final_param_origin, plot_contour_trajectory, plot_3d_trajectory
+from stable_baselines.low_dim_analysis.common import project_2D_pca_mean_origin, plot_contour_trajectory, plot_3d_trajectory
 from joblib import Parallel, delayed
 
 
@@ -117,7 +117,8 @@ if __name__ == '__main__':
 
     if not os.path.exists(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=2))\
         or not os.path.exists(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=2))\
-        or not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2)):
+        or not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2))\
+        or not os.path.exists(get_mean_param_filename(intermediate_dir=intermediate_data_dir, n_comp=2)):
 
         tic = time.time()
         concat_matrix_diff = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
@@ -141,8 +142,10 @@ if __name__ == '__main__':
 
         first_2_pcs = final_pca.components_[:2]
         explained_variance_ratio = final_pca.explained_variance_ratio_
+        mean_param = final_pca.mean_
 
         np.savetxt(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=2), first_2_pcs, delimiter=',')
+        np.savetxt(get_mean_param_filename(intermediate_dir=intermediate_data_dir, n_comp=2), mean_param, delimiter=',')
         np.savetxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=2),
                    explained_variance_ratio, delimiter=',')
 
@@ -159,7 +162,7 @@ if __name__ == '__main__':
         proj_xcoord, proj_ycoord = [], []
         for param in concat_matrix_diff:
 
-            x, y = project_2D_final_param_origin(d=param, dx=first_2_pcs[0], dy=first_2_pcs[1])
+            x, y = project_2D_pca_mean_origin(d=param, dx=first_2_pcs[0], dy=first_2_pcs[1], pca_mean=mean_param)
 
             proj_xcoord.append(x)
             proj_ycoord.append(y)
@@ -177,6 +180,7 @@ if __name__ == '__main__':
         explained_variance_ratio = np.loadtxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=2),
                    delimiter=',')
         proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2), delimiter=',')
+        mean_param = np.loadtxt(get_mean_param_filename(intermediate_dir=intermediate_data_dir, n_comp=2), delimiter=',')
 
 
     '''
@@ -214,7 +218,7 @@ if __name__ == '__main__':
         from stable_baselines.ppo2.run_mujoco import eval_return
 
         tic = time.time()
-        thetas_to_eval = [final_concat_params + x * first_2_pcs[0] + y * first_2_pcs[1] for y in ycoordinates_to_eval for x in xcoordinates_to_eval]
+        thetas_to_eval = [mean_param + x * first_2_pcs[0] + y * first_2_pcs[1] for y in ycoordinates_to_eval for x in xcoordinates_to_eval]
 
         eval_returns = Parallel(n_jobs=plot_args.cores_to_use, max_nbytes='100M')\
             (delayed(eval_return)(openai_args, save_dir, theta, plot_args.eval_num_timesteps, i) for (i, theta) in enumerate(thetas_to_eval))

@@ -43,6 +43,10 @@ def get_intermediate_data_dir(alg, total_timesteps, env_id, run_num):
 def get_pcs_filename(intermediate_dir, n_comp):
 
     return f"{intermediate_dir}/n_comp_{n_comp}_pcs"
+def get_mean_param_filename(intermediate_dir, n_comp):
+
+    return f"{intermediate_dir}/n_comp_{n_comp}_mean_param"
+
 def get_explain_ratios_filename(intermediate_dir, n_comp):
 
     return f"{intermediate_dir}/n_comp_{n_comp}_explain_ratios"

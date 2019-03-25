@@ -6,7 +6,7 @@ from stable_baselines import logger
 import pandas as pd
 from sklearn.decomposition import PCA
 
-from stable_baselines.low_dim_analysis.common import project_2D, plot_contour_trajectory, plot_3d_trajectory
+from stable_baselines.low_dim_analysis.common import project_2D_final_param_origin, plot_contour_trajectory, plot_3d_trajectory
 from joblib import Parallel, delayed
 
 

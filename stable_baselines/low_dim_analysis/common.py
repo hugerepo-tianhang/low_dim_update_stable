@@ -74,7 +74,18 @@ def project_1D(w, d):
     scale = np.dot(w, d) / LA.norm(d, 2)
     return scale
 
-def project_2D(d, dx, dy, proj_method='cos'):
+def project_2D_pca_mean_origin(d, dx, dy, pca_mean):
+
+        # this is actually actually shifted projection
+        # real projection should be (d - X_train.mean(0)).dot(A)
+
+    A = np.vstack([dx, dy]).T
+    [x,y] = (d - pca_mean).dot(A)
+
+    return x, y
+
+
+def project_2D_final_param_origin(d, dx, dy, proj_method='lstsq'):
     if proj_method == 'cos':
         # when dx and dy are orthorgonal
         x = project_1D(d, dx)
@@ -103,6 +114,9 @@ def plot_contour_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, p
     cbar = plt.colorbar()
     # plot trajectories
     plt.plot(proj_xcoord, proj_ycoord, marker='.')
+    plt.annotate('end', xy=(proj_xcoord[-1], proj_ycoord[-1]), xytext=(proj_xcoord[-1] + 0.2, proj_ycoord[-1] +0.2),
+                arrowprops=dict(facecolor='black', shrink=0.05),
+                )
 
     # plot red points when learning rate decays
     # for e in [150, 225, 275]:
