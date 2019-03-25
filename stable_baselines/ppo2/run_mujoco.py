@@ -38,8 +38,10 @@ def train(args):
     Runs the test
     """
     args, argv = mujoco_arg_parser().parse_known_args(args)
-    run_num = get_run_num( "ppo2", args.env, args.num_timesteps, args.normalize)
-    this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps, args.env, args.normalize, run_num)
+    this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps, args.env, args.normalize, args.run_num)
+    if os.path.exists(this_run_dir):
+        logger.log(f"{this_run_dir} already exist, quiting")
+        return None
 
     log_dir = get_log_dir( this_run_dir)
     save_dir = get_save_dir( this_run_dir)
@@ -61,7 +63,7 @@ def train(args):
     # extra run info I added for my purposes
 
     this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps,
-                                             args.env, args.normalize, run_num)
+                                             args.env, args.normalize, args.run_num)
 
 
     full_param_traj_dir_path = get_full_params_dir( this_run_dir)
@@ -77,7 +79,7 @@ def train(args):
         shutil.rmtree(save_dir)
     os.makedirs(save_dir)
 
-    run_info = {"run_num": run_num,
+    run_info = {"run_num": args.run_num,
                 "env_id": args.env,
                 "full_param_traj_dir_path": full_param_traj_dir_path}
 

@@ -221,7 +221,7 @@ if __name__ == '__main__':
     plot_cma_returns(cma_plot_dir, ret_plot_name, mean_rets, min_rets, max_rets, show=False)
     es.result_pretty()
     cma.plot()  # shortcut for es.logger.plot()
-    cma.s.figsave('fig425.png')  # save current figure
+    plt.savefig('fig425.png')  # save current figure
 
     np.savetxt("mean_rets.txt", mean_rets, delimiter=',')
     np.savetxt("min_rets.txt", min_rets, delimiter=',')
