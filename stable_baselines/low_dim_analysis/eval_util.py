@@ -59,9 +59,7 @@ def get_projected_full_path_filename(intermediate_dir, n_comp):
 def get_eval_returns_filename(intermediate_dir, xnum, ynum, n_comp):
 
     return f"{intermediate_dir}/xnum_{xnum}_ynum_{ynum}_n_comp_{n_comp}_eval_returns"
-def get_eval_returns_filename(intermediate_dir, n_comp_to_use, run_num):
 
-    return f"{intermediate_dir}/xnum_{xnum}_ynum_{ynum}_n_comp_{n_comp}_eval_returns"
 
 if __name__ == '__main__':
     print(get_log_dir("a", 1, "s", False, 0))
