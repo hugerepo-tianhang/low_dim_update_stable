@@ -14,10 +14,10 @@ import os
 from stable_baselines.low_dim_analysis.eval_util import get_full_params_dir, get_dir_path_for_this_run, get_log_dir, get_save_dir
 
 
-def get_run_num(alg, env_id, total_timesteps):
 
+def get_run_num(alg, env_id, total_timesteps, normalize):
     run_num = 0
-    while os.path.exists(get_dir_path_for_this_run(alg, total_timesteps, env_id, run_num)):
+    while os.path.exists(get_dir_path_for_this_run(alg, total_timesteps, env_id, normalize, run_num)):
         run_num += 1
     return run_num
 
@@ -38,10 +38,11 @@ def train(args):
     Runs the test
     """
     args, argv = mujoco_arg_parser().parse_known_args(args)
+    run_num = get_run_num( "ppo2", args.env, args.num_timesteps, args.normalize)
+    this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps, args.env, args.normalize, run_num)
 
-    run_num = get_run_num( "ppo2", args.env, args.num_timesteps)
-    log_dir = get_log_dir( "ppo2", args.num_timesteps, args.env, run_num)
-    save_dir = get_save_dir( "ppo2", args.num_timesteps, args.env, run_num)
+    log_dir = get_log_dir( this_run_dir)
+    save_dir = get_save_dir( this_run_dir)
     logger.configure(log_dir)
 
 
@@ -51,16 +52,20 @@ def train(args):
         return env_out
 
     env = DummyVecEnv([make_env])
-    env = VecNormalize(env)
+    if args.normalize:
+        env = VecNormalize(env)
 
     set_global_seeds(args.seed)
     policy = MlpPolicy
 
     # extra run info I added for my purposes
 
+    this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps,
+                                             args.env, args.normalize, run_num)
 
-    full_param_traj_dir_path = get_full_params_dir( "ppo2", args.num_timesteps,
-                                                   args.env, run_num)
+
+    full_param_traj_dir_path = get_full_params_dir( this_run_dir)
+
     if os.path.exists(full_param_traj_dir_path):
         import shutil
         shutil.rmtree(full_param_traj_dir_path)
@@ -84,7 +89,10 @@ def train(args):
     model.learn(total_timesteps=args.num_timesteps)
 
     model.save(f"{save_dir}/ppo2")
-    env.save_running_average(save_dir)
+
+
+    if args.normalize:
+        env.save_running_average(save_dir)
 
 
 
@@ -96,14 +104,16 @@ def eval_return(args, save_dir, theta,  eval_timesteps, i):
         env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
         return env_out
     env = DummyVecEnv([make_env])
-    env = VecNormalize(env)
+    if args.normalize:
+        env = VecNormalize(env)
 
     model = PPO2.load(f"{save_dir}/ppo2")
     # flat_params = model.get_flat()
+    if theta is not None:
+        model.set_from_flat(theta)
 
-    model.set_from_flat(theta)
-
-    env.load_running_average(save_dir)
+    if args.normalize:
+        env.load_running_average(save_dir)
 
 
 
@@ -123,8 +133,9 @@ def eval_return(args, save_dir, theta,  eval_timesteps, i):
         # env.render()
         done = done.any()
         if done:
-            # episode_rew = safe_mean([ep_info['r'] for ep_info in ep_infos])
-            # print(f'episode_rew={episode_rew}')
+            if theta is None:
+                episode_rew = safe_mean([ep_info['r'] for ep_info in ep_infos])
+                print(f'episode_rew={episode_rew}')
             obs = env.reset()
 
     return safe_mean([ep_info['r'] for ep_info in ep_infos])
@@ -134,5 +145,7 @@ if __name__ == '__main__':
     import sys
     train(sys.argv)
     # args = mujoco_arg_parser().parse_args()
-    #
-    # eval_return(args, None, None,  5000, 0)
+    # this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps,
+    #                                          args.env, args.normalize, 1)
+    # save_dir = get_save_dir(this_run_dir)
+    # eval_return(args, save_dir, None,  5000, 1)

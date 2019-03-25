@@ -7,14 +7,22 @@ def get_project_dir():
     return project_dir
 
 
-def get_dir_path_for_this_run(alg, total_timesteps, env_id, run_num):
-    return f'{get_project_dir()}/stable_baselines/{alg}/env_{env_id}_time_step_{total_timesteps}_run_{run_num}'
+def get_dir_path_for_this_run(alg, total_timesteps, env_id, normalize, run_num):
+    return f'{get_project_dir()}/stable_baselines/{alg}/env_{env_id}_time_step_{total_timesteps}_normalize_{normalize}_run_{run_num}'
 
-def get_log_dir(alg, total_timesteps, env_id, run_num):
-    return f"{get_dir_path_for_this_run(alg, total_timesteps, env_id, run_num)}/the_log_dir"
+def get_log_dir(this_run_dir):
+    return f"{this_run_dir}/the_log_dir"
 
-def get_save_dir(alg, total_timesteps, env_id, run_num):
-    return f"{get_dir_path_for_this_run(alg, total_timesteps, env_id, run_num)}/the_save_dir"
+def get_save_dir(this_run_dir):
+    return f"{this_run_dir}/the_save_dir"
+
+def get_full_params_dir(this_run_dir):
+
+    return f"{this_run_dir}/full_params"
+
+def get_intermediate_data_dir(this_run_dir):
+
+    return f"{this_run_dir}/intermediate_data"
 
 def get_eval_losses_file_path(dir_name, total_timesteps):
     return f'{dir_name}/eval_loss_{total_timesteps}.hdf5'
@@ -27,25 +35,20 @@ def get_full_param_traj_file_path(dir_name, index):
 
 
 
-def get_plot_dir(alg, total_timesteps, env_id, run_num):
-    return f'{get_project_dir()}/plots/{alg}/env_{env_id}_time_step_{total_timesteps}_run_{run_num}'
+def get_plot_dir(alg, total_timesteps, env_id, normalize, run_num):
+    return f'{get_project_dir()}/plots/{alg}/env_{env_id}_time_step_{total_timesteps}_normalize_{normalize}_run_{run_num}'
 
-def get_full_params_dir(alg, total_timesteps, env_id, run_num):
-    this_run_dir = get_dir_path_for_this_run(alg, total_timesteps, env_id, run_num)
+def get_cma_plot_dir(plot_dir):
+    return f'{plot_dir}/cma'
 
-    return f"{this_run_dir}/full_params"
 
-def get_intermediate_data_dir(alg, total_timesteps, env_id, run_num):
-    this_run_dir = get_dir_path_for_this_run(alg, total_timesteps, env_id, run_num)
-
-    return f"{this_run_dir}/intermediate_data"
 
 def get_pcs_filename(intermediate_dir, n_comp):
 
     return f"{intermediate_dir}/n_comp_{n_comp}_pcs"
-def get_mean_param_filename(intermediate_dir, n_comp):
+def get_mean_param_filename(intermediate_dir):
 
-    return f"{intermediate_dir}/n_comp_{n_comp}_mean_param"
+    return f"{intermediate_dir}/mean_param"
 
 def get_explain_ratios_filename(intermediate_dir, n_comp):
 
@@ -56,6 +59,9 @@ def get_projected_full_path_filename(intermediate_dir, n_comp):
 def get_eval_returns_filename(intermediate_dir, xnum, ynum, n_comp):
 
     return f"{intermediate_dir}/xnum_{xnum}_ynum_{ynum}_n_comp_{n_comp}_eval_returns"
+def get_eval_returns_filename(intermediate_dir, n_comp_to_use, run_num):
+
+    return f"{intermediate_dir}/xnum_{xnum}_ynum_{ynum}_n_comp_{n_comp}_eval_returns"
 
 if __name__ == '__main__':
-    print(get_project_dir())
+    print(get_log_dir("a", 1, "s", False, 0))

@@ -93,10 +93,13 @@ if __name__ == '__main__':
     logger.log(f"THREADS OR NOT: {threads_or_None}")
 
 
-    plot_dir_alg = get_plot_dir(plot_args.alg, plot_args.num_timesteps, plot_args.env, plot_args.run_num)
-    traj_params_dir_name = get_full_params_dir(plot_args.alg, plot_args.num_timesteps, plot_args.env, plot_args.run_num)
-    intermediate_data_dir = get_intermediate_data_dir(plot_args.alg, plot_args.num_timesteps, plot_args.env, plot_args.run_num)
-    save_dir = get_save_dir( plot_args.alg, plot_args.num_timesteps, plot_args.env, plot_args.run_num)
+    plot_dir_alg = get_plot_dir(plot_args.alg, plot_args.num_timesteps, plot_args.env, plot_args.normalize, plot_args.run_num)
+    this_run_dir = get_dir_path_for_this_run(plot_args.alg, plot_args.num_timesteps,
+                                             plot_args.env, plot_args.normalize, plot_args.run_num)
+
+    traj_params_dir_name = get_full_params_dir(this_run_dir)
+    intermediate_data_dir = get_intermediate_data_dir(this_run_dir)
+    save_dir = get_save_dir( this_run_dir)
 
     if not os.path.exists(plot_dir_alg):
         os.makedirs(plot_dir_alg)
@@ -138,11 +141,13 @@ if __name__ == '__main__':
 
         logger.log(final_pca.explained_variance_ratio_)
 
+        pcs_components = final_pca.components_
 
-        first_2_pcs = final_pca.components_[:2]
+        first_2_pcs = pcs_components[:2]
         explained_variance_ratio = final_pca.explained_variance_ratio_
 
-        np.savetxt(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=2), first_2_pcs, delimiter=',')
+        np.savetxt(get_pcs_filename(intermediate_dir=intermediate_data_dir,
+                                    n_comp=plot_args.n_components), pcs_components, delimiter=',')
         np.savetxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=2),
                    explained_variance_ratio, delimiter=',')
 
@@ -173,7 +178,9 @@ if __name__ == '__main__':
         gc.collect()
 
     else:
-        first_2_pcs = np.loadtxt(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=2), delimiter=',')
+        pcs_components = np.loadtxt(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=plot_args.n_components), delimiter=',')
+        first_2_pcs = pcs_components[:2]
+
         explained_variance_ratio = np.loadtxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=2),
                    delimiter=',')
         proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2), delimiter=',')
