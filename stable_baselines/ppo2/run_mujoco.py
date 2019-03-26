@@ -36,8 +36,9 @@ def train(args):
 
     this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps, args.env, args.normalize, args.run_num)
     if os.path.exists(this_run_dir):
-        logger.log(f"{this_run_dir} already exist, quiting")
-        return None
+        import shutil
+        shutil.rmtree(this_run_dir)
+    os.makedirs(this_run_dir)
 
     log_dir = get_log_dir( this_run_dir)
     save_dir = get_save_dir( this_run_dir)
@@ -57,9 +58,6 @@ def train(args):
     policy = MlpPolicy
 
     # extra run info I added for my purposes
-
-    this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps,
-                                             args.env, args.normalize, args.run_num)
 
 
     full_param_traj_dir_path = get_full_params_dir( this_run_dir)
