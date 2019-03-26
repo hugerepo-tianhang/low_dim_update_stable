@@ -16,7 +16,7 @@ run_and_plot_once () {
     local env=$2
 
     echo "Welcome run number $run"
-#    python -m stable_baselines.ppo2.run_mujoco --env=$env --num-timesteps=$time_steps
+    python -m stable_baselines.ppo2.run_mujoco --env=$env --num-timesteps=$time_steps --run_num=$run
 
 #    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
 #                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
