@@ -98,7 +98,6 @@ if __name__ == '__main__':
     from stable_baselines.common.cmd_util import mujoco_arg_parser
     from stable_baselines.low_dim_analysis.common_parser import get_common_parser
     from stable_baselines.cmaes.cma_arg_parser import get_cma_parser
-    parser = get_common_parser()
     openai_arg_parser = mujoco_arg_parser()
     cma_arg_parser = get_cma_parser()
 

@@ -103,8 +103,6 @@ if __name__ == '__main__':
     cma_arg_parser = get_cma_parser()
 
     cma_args, cma_unknown_args = cma_arg_parser.parse_known_args()
-    openai_args, openai_unknown_args = openai_arg_parser.parse_known_args()
-
 
 
     this_run_dir = get_dir_path_for_this_run(cma_args.alg, cma_args.num_timesteps,
@@ -153,7 +151,6 @@ if __name__ == '__main__':
 
         pcs_components = final_pca.components_
 
-        first_n_pcs = pcs_components[:cma_args.n_comp_to_use]
         mean_param = final_pca.mean_
 
         np.savetxt(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=cma_args.n_components), pcs_components, delimiter=',')
@@ -169,5 +166,4 @@ if __name__ == '__main__':
     else:
         pcs_components = np.loadtxt(
             get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=cma_args.n_components), delimiter=',')
-        first_n_pcs = pcs_components[:cma_args.n_comp_to_use]
         mean_param = np.loadtxt(get_mean_param_filename(intermediate_dir=intermediate_data_dir), delimiter=',')
