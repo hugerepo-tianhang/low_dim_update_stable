@@ -168,7 +168,7 @@ if __name__ == '__main__':
         proj_xcoord, proj_ycoord = [], []
         for param in concat_matrix_diff:
 
-            x, y = project_2D_pca_mean_origin(d=param, dx=first_2_pcs[0], dy=first_2_pcs[1], pca_mean=mean_param)
+            x, y = project_2D_pca_mean_origin(d=param, components=first_2_pcs, pca_mean=mean_param)
 
             proj_xcoord.append(x)
             proj_ycoord.append(y)
@@ -214,8 +214,6 @@ if __name__ == '__main__':
     xcoordinates_to_eval = np.linspace(xmin, xmax, plot_args.xnum)
     ycoordinates_to_eval = np.linspace(ymin, ymax, plot_args.ynum)
 
-    np.insert(xcoordinates_to_eval, xcoordinates_to_eval.searchsorted(0), 0)
-    np.insert(ycoordinates_to_eval, ycoordinates_to_eval.searchsorted(0), 0)
     '''
     ==========================================================================================
     eval all xy coords

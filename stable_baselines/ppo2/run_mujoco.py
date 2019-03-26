@@ -11,15 +11,9 @@ from stable_baselines.common.policies import MlpPolicy
 from stable_baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 import csv
 import os
-from stable_baselines.low_dim_analysis.eval_util import get_full_params_dir, get_dir_path_for_this_run, get_log_dir, get_save_dir
+from stable_baselines.low_dim_analysis.eval_util import get_full_param_traj_file_path, get_full_params_dir, get_dir_path_for_this_run, get_log_dir, get_save_dir
 
 
-
-def get_run_num(alg, env_id, total_timesteps, normalize):
-    run_num = 0
-    while os.path.exists(get_dir_path_for_this_run(alg, total_timesteps, env_id, normalize, run_num)):
-        run_num += 1
-    return run_num
 
 
 
@@ -38,6 +32,8 @@ def train(args):
     Runs the test
     """
     args, argv = mujoco_arg_parser().parse_known_args(args)
+    logger.log(f"#######TRAIN: {args}")
+
     this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps, args.env, args.normalize, args.run_num)
     if os.path.exists(this_run_dir):
         logger.log(f"{this_run_dir} already exist, quiting")
@@ -99,7 +95,7 @@ def train(args):
 
 
 def eval_return(args, save_dir, theta,  eval_timesteps, i):
-    # save_dir = get_save_dir( "ppo2", 50000, "Hopper-v2", 0)
+    logger.log(f"#######EVAL: {args}")
 
     def make_env():
         env_out = gym.make(args.env)
@@ -110,7 +106,6 @@ def eval_return(args, save_dir, theta,  eval_timesteps, i):
         env = VecNormalize(env)
 
     model = PPO2.load(f"{save_dir}/ppo2")
-    # flat_params = model.get_flat()
     if theta is not None:
         model.set_from_flat(theta)
 
@@ -119,7 +114,6 @@ def eval_return(args, save_dir, theta,  eval_timesteps, i):
 
 
 
-    logger.log("Running trained model")
     obs = np.zeros((env.num_envs,) + env.observation_space.shape)
     obs[:] = env.reset()
     ep_infos = []
@@ -145,9 +139,17 @@ def eval_return(args, save_dir, theta,  eval_timesteps, i):
 
 if __name__ == '__main__':
     import sys
+    # import pandas as pd
     train(sys.argv)
     # args = mujoco_arg_parser().parse_args()
     # this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps,
-    #                                          args.env, args.normalize, 1)
+    #                                          args.env, args.normalize, 0)
     # save_dir = get_save_dir(this_run_dir)
-    # eval_return(args, save_dir, None,  5000, 1)
+    #
+    # logger.log("grab final params")
+    # traj_params_dir_name = get_full_params_dir(this_run_dir)
+    #
+    # final_file = get_full_param_traj_file_path(traj_params_dir_name, "final")
+    # final_concat_params = pd.read_csv(final_file, header=None).values[0]
+    #
+    # logger.log(eval_return(args, save_dir, final_concat_params,  5000, 0))

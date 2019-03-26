@@ -2,7 +2,7 @@ import argparse
 def get_cma_parser():
     parser = argparse.ArgumentParser(description='load and pca')
 
-    parser.add_argument('--cma_num_timesteps', default=1500000, type=int, help='total timesteps agent runs')
+    parser.add_argument('--cma_num_timesteps', default=20000, type=int, help='total timesteps agent runs')
     # PCA parameters
     parser.add_argument('--alg', default='ppo2', help='algorithm to train on')
     parser.add_argument('--env', default='Hopper-v2', help='algorithm to train on')
@@ -13,7 +13,7 @@ def get_cma_parser():
     parser.add_argument('--cores_to_use', default=2, type=int, help='cores to use to parallel')
     parser.add_argument('--eval_num_timesteps', default=2048, type=int, help='total timesteps agent runs')
 
-    parser.add_argument('--n_comp_to_use', default=2, type=int, help='n_components of PCA')
-    parser.add_argument('--n_components', default=2, type=int, help='n_components of PCA')
+    parser.add_argument('--n_comp_to_use', default=10, type=int, help='n_components of PCA')
+    parser.add_argument('--n_components', default=20, type=int, help='n_components of PCA')
 
     return parser

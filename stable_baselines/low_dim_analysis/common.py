@@ -74,13 +74,12 @@ def project_1D(w, d):
     scale = np.dot(w, d) / LA.norm(d, 2)
     return scale
 
-def project_2D_pca_mean_origin(d, dx, dy, pca_mean):
+def project_2D_pca_mean_origin(d, components, pca_mean):
 
         # this is actually actually shifted projection
         # real projection should be (d - X_train.mean(0)).dot(A)
 
-    A = np.vstack([dx, dy]).T
-    [x,y] = (d - pca_mean).dot(A)
+    [x,y] = (d - pca_mean).dot(components.T)
 
     return x, y
 

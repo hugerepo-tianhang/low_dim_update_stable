@@ -242,10 +242,10 @@ if __name__ == '__main__':
     ==========================================================================================
     '''
 
-    plot_contour_trajectory(plot_dir_alg, "eval_return_contour_plot", xcoordinates_to_eval, ycoordinates_to_eval, eval_returns, proj_xcoord, proj_ycoord,
+    plot_contour_trajectory(plot_dir_alg, "end_point_origin_eval_return_contour_plot", xcoordinates_to_eval, ycoordinates_to_eval, eval_returns, proj_xcoord, proj_ycoord,
                             explained_variance_ratio[:2],
                             num_levels=15, show=False)
-    plot_3d_trajectory(plot_dir_alg, "eval_return_3d_plot", xcoordinates_to_eval, ycoordinates_to_eval,
+    plot_3d_trajectory(plot_dir_alg, "end_point_origin_eval_return_3d_plot", xcoordinates_to_eval, ycoordinates_to_eval,
                             eval_returns, proj_xcoord, proj_ycoord,
                             explained_variance_ratio[:2],
                             num_levels=15, show=False)

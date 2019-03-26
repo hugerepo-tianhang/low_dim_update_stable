@@ -5,12 +5,12 @@ def get_common_parser():
     # PCA parameters
     parser.add_argument('--alg', default='ppo2', help='algorithm to train on')
     parser.add_argument('--env', default='Hopper-v2', help='algorithm to train on')
-    parser.add_argument('--num-timesteps', default=300000, type=int, help='total timesteps agent runs')
+    parser.add_argument('--num-timesteps', default=50001, type=int, help='total timesteps agent runs')
     parser.add_argument('--normalize', default=False, action='store_true')
+    parser.add_argument('--run_num', default=0, type=int, help='which run number')
 
     parser.add_argument('--cores_to_use', default=2, type=int, help='cores to use to parallel')
     parser.add_argument('--eval_num_timesteps', default=2048, type=int, help='total timesteps agent runs')
-    parser.add_argument('--run_num', default=0, type=int, help='which run number')
     parser.add_argument('--padding_fraction', default=0.4, type=float)
     parser.add_argument('--xnum', default=3, type=int)
     parser.add_argument('--ynum', default=3, type=int)

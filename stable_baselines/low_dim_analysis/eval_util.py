@@ -38,8 +38,8 @@ def get_full_param_traj_file_path(dir_name, index):
 def get_plot_dir(alg, total_timesteps, env_id, normalize, run_num):
     return f'{get_project_dir()}/plots/{alg}/env_{env_id}_time_step_{total_timesteps}_normalize_{normalize}_run_{run_num}'
 
-def get_cma_plot_dir(plot_dir):
-    return f'{plot_dir}/cma'
+def get_cma_plot_dir(plot_dir, n_comp_to_use, cma_run_num):
+    return f'{plot_dir}/cma/cma_n_comp_{n_comp_to_use}_run_num_{cma_run_num}'
 
 
 
@@ -59,6 +59,11 @@ def get_projected_full_path_filename(intermediate_dir, n_comp):
 def get_eval_returns_filename(intermediate_dir, xnum, ynum, n_comp):
 
     return f"{intermediate_dir}/xnum_{xnum}_ynum_{ynum}_n_comp_{n_comp}_eval_returns"
+
+def get_cma_returns_dirname(intermediate_dir, n_comp, run_num):
+
+    return f"{intermediate_dir}/cma/cma_n_comp_{n_comp}_run_num_{run_num}"
+
 
 
 if __name__ == '__main__':

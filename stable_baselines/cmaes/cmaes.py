@@ -8,7 +8,6 @@ from stable_baselines import logger
 import pandas as pd
 from sklearn.decomposition import PCA
 
-from stable_baselines.low_dim_analysis.common import project_2D_pca_mean_origin, plot_contour_trajectory, plot_3d_trajectory
 from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
 
@@ -84,6 +83,14 @@ def plot_cma_returns(plot_dir_alg, name, mean_rets, min_rets, max_rets, show):
                 bbox_inches='tight', format='pdf')
     if show: plt.show()
 
+
+def get_cma_run_num(intermediate_data_dir, n_comp):
+    run_num = 0
+    while os.path.exists(get_cma_returns_dirname(intermediate_data_dir, n_comp=n_comp, run_num=run_num)):
+        run_num += 1
+    return run_num
+
+
 if __name__ == '__main__':
 
     import time
@@ -99,7 +106,6 @@ if __name__ == '__main__':
     openai_args, openai_unknown_args = openai_arg_parser.parse_known_args()
 
 
-    cma_plot_dir = get_cma_plot_dir(get_plot_dir(cma_args.alg, cma_args.num_timesteps, cma_args.env, cma_args.normalize, cma_args.run_num))
 
     this_run_dir = get_dir_path_for_this_run(cma_args.alg, cma_args.num_timesteps,
                                              cma_args.env, cma_args.normalize, cma_args.run_num)
@@ -108,8 +114,7 @@ if __name__ == '__main__':
     intermediate_data_dir = get_intermediate_data_dir(this_run_dir)
     save_dir = get_save_dir( this_run_dir)
 
-    if not os.path.exists(cma_plot_dir):
-        os.makedirs(cma_plot_dir)
+
     if not os.path.exists(intermediate_data_dir):
         os.makedirs(intermediate_data_dir)
 
@@ -215,17 +220,30 @@ if __name__ == '__main__':
         es.disp()
 
 
+    cma_run_num = get_cma_run_num(intermediate_data_dir, n_comp=cma_args.n_comp_to_use)
+    cma_intermediate_data_dir = get_cma_returns_dirname(intermediate_data_dir, cma_args.n_comp_to_use, cma_run_num)
+    if not os.path.exists(cma_intermediate_data_dir):
+        os.makedirs(cma_intermediate_data_dir)
 
+    np.savetxt(f"{cma_intermediate_data_dir}/mean_rets.txt",mean_rets, delimiter=',')
+    np.savetxt(f"{cma_intermediate_data_dir}/min_rets.txt", min_rets, delimiter=',')
+    np.savetxt(f"{cma_intermediate_data_dir}/max_rets.txt", max_rets, delimiter=',')
+
+
+    plot_dir = get_plot_dir(cma_args.alg, cma_args.num_timesteps, cma_args.env, cma_args.normalize, cma_args.run_num)
+    cma_plot_dir = get_cma_plot_dir(plot_dir, cma_args.n_comp_to_use, cma_run_num)
+    if not os.path.exists(cma_plot_dir):
+        os.makedirs(cma_plot_dir)
+
+
+    es.result_pretty()
+    cma.plot()  # shortcut for es.logger.plot()
+    plt.savefig(f'{cma_plot_dir}/cma_plot.png')  # save current figure
 
     ret_plot_name = f"cma return on {cma_args.n_comp_to_use} dim space of real pca plane"
     plot_cma_returns(cma_plot_dir, ret_plot_name, mean_rets, min_rets, max_rets, show=False)
-    es.result_pretty()
-    cma.plot()  # shortcut for es.logger.plot()
-    plt.savefig('fig425.png')  # save current figure
 
-    np.savetxt("mean_rets.txt", mean_rets, delimiter=',')
-    np.savetxt("min_rets.txt", min_rets, delimiter=',')
-    np.savetxt("max_rets.txt", max_rets, delimiter=',')
+
 
     toc = time.time()
     logger.log(f"####################################CMA took {toc-tic} seconds")
