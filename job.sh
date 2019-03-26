@@ -1,6 +1,6 @@
 #!/bin/bash
 
-repeat_num=3
+repeat_num=2
 start_index=0
 
 time_steps=625000
@@ -47,7 +47,7 @@ cma_once () {
     local run=$1
     local env=$2
 
-    echo "Welcome to plot: run number $run"
+    echo "Welcome to cma: run number $run"
 
 #    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
 #                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
@@ -70,16 +70,16 @@ cma_once () {
 #
 #wait
 
-for (( run_num=$start_index; run_num<$repeat_num; run_num++ ))
-do
-    sleep 1; plot_once $run_num 'Hopper-v2' ; sleep 1; ps
-    sleep 1; plot_once $run_num 'Walker2d-v2' ; sleep 1; ps
-
-done
-
 #for (( run_num=$start_index; run_num<$repeat_num; run_num++ ))
 #do
-#    sleep 1; cma_once $run_num 'Hopper-v2' ; sleep 1; ps
-#    sleep 1; cma_once $run_num 'Walker2d-v2' ; sleep 1; ps
+#    sleep 1; plot_once $run_num 'Hopper-v2' ; sleep 1; ps
+#    sleep 1; plot_once $run_num 'Walker2d-v2' ; sleep 1; ps
 #
 #done
+
+for (( run_num=$start_index; run_num<$repeat_num; run_num++ ))
+do
+    sleep 1; cma_once $run_num 'Hopper-v2' ; sleep 1; ps
+    sleep 1; cma_once $run_num 'Walker2d-v2' ; sleep 1; ps
+
+done

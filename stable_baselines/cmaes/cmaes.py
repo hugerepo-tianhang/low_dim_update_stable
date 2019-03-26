@@ -197,7 +197,7 @@ if __name__ == '__main__':
     while total_num_timesteps < cma_args.cma_num_timesteps and not es.stop():
         solutions = es.ask()
         thetas = [np.matmul(coord, first_n_pcs) + mean_param for coord in solutions]
-
+        logger.log(f"eval num: {cma_args.eval_num_timesteps}")
         eval_returns = Parallel(n_jobs=cma_args.cores_to_use) \
             (delayed(eval_return)(openai_args, save_dir, theta, cma_args.eval_num_timesteps, i) for (i, theta) in enumerate(thetas))
 
