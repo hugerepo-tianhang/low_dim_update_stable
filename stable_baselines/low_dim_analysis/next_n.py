@@ -35,7 +35,7 @@ from stable_baselines.low_dim_analysis.common import calculate_projection_error,
 
 
 
-def plot_distances(plot_dir_alg,
+def plot_distances(plot_next_n_dir,
                    distances,
                    show=False):
 
@@ -46,7 +46,7 @@ def plot_distances(plot_dir_alg,
     # plt.title('projection error to final PCA plane')
     # plt.clabel(CS1, inline=1, fontsize=6)
     # plt.clabel(CS2, inline=1, fontsize=6)
-    fig.savefig(f"{plot_dir_alg}/full_distances.pdf", dpi=300,
+    fig.savefig(f"{plot_next_n_dir}/full_distances.pdf", dpi=300,
                 bbox_inches='tight', format='pdf')
     if show: plt.show()
 
@@ -87,15 +87,17 @@ if __name__ == '__main__':
     threads_or_None = 'threads' if args.use_threads else None
     logger.log(f"THREADS OR NOT: {threads_or_None}")
 
-    plot_dir_alg = get_plot_dir(args.alg, args.total_timesteps, args.env_id, args.normalize, args.run_num)
+    plot_dir = get_plot_dir(args.alg, args.num_timesteps, args.env, args.normalize, args.run_num)
+
+    plot_next_n_dir = f"{plot_dir}/next_n"
     this_run_dir = get_dir_path_for_this_run(args.alg, args.num_timesteps,
                                              args.env, args.normalize, args.run_num)
 
     traj_params_dir_name = get_full_params_dir(this_run_dir)
-    if os.path.exists(plot_dir_alg):
+    if os.path.exists(plot_next_n_dir):
         import shutil
-        shutil.rmtree(plot_dir_alg)
-    os.makedirs(plot_dir_alg)
+        shutil.rmtree(plot_next_n_dir)
+    os.makedirs(plot_next_n_dir)
 
     logger.log("grab final params")
     final_file = get_full_param_traj_file_path(traj_params_dir_name, "final")
@@ -130,12 +132,12 @@ if __name__ == '__main__':
 
         proj_errors = calculate_projection_error(pca, concat_matrix_diff[check_index:], num_axis_to_use=args.n_comp_to_use)
 
-        dump_my(plot_dir_alg, proj_errors, f"all next proj_errors, check index: {check_index}")
+        dump_my(plot_next_n_dir, proj_errors, f"all next proj_errors, check index: {check_index}")
 
-        plot_2d_check_index(plot_dir_alg, proj_errors,
+        plot_2d_check_index(plot_next_n_dir, proj_errors,
                             f'proj errors',
                             f'proj errors to check_index {check_index}PCA using {args.n_comp_to_use} pca components, total variance explained {np.sum(pca.explained_variance_ratio_[:args.n_comp_to_use])}',
-                            check_index=check_index, xlabel='update_number', show=args.show)
+                            check_index=check_index, xlabel='update_number', show=False)
 
     final_pca = PCA(n_components=args.n_components)
 
@@ -152,16 +154,16 @@ if __name__ == '__main__':
 
     num_to_use, total_explained = calculate_num_axis_to_explain(final_pca, args.explain_ratio_threshold)
     proj_errors = calculate_projection_error(final_pca, concat_matrix_diff, num_axis_to_use=args.n_comp_to_use)
-    dump_my(plot_dir_alg, proj_errors, "full proj_errors")
-    plot_2d_check_index(plot_dir_alg, proj_errors,
+    dump_my(plot_next_n_dir, proj_errors, "full proj_errors")
+    plot_2d_check_index(plot_next_n_dir, proj_errors,
                         f'proj errors',
                         f'proj errors to final PCA using {args.n_comp_to_use} pca components, total variance explained {np.sum(final_pca.explained_variance_ratio_[:args.n_comp_to_use])}',
-                        check_index=None, xlabel='update_number', show=args.show)
+                        check_index=None, xlabel='update_number', show=False)
 
 
     distances_traveled = get_distances(concat_matrix_diff)
-    plot_distances(plot_dir_alg, distances_traveled, show=args.show)
-    dump_my(plot_dir_alg, np.sum(distances_traveled), "total distance travelled")
+    plot_distances(plot_next_n_dir, distances_traveled, show=False)
+    dump_my(plot_next_n_dir, np.sum(distances_traveled), "total distance travelled")
 
 
     print("gc the big thing")
