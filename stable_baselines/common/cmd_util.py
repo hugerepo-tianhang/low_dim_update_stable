@@ -13,7 +13,7 @@ from stable_baselines.bench import Monitor
 from stable_baselines.common import set_global_seeds
 from stable_baselines.common.atari_wrappers import make_atari, wrap_deepmind
 from stable_baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
-
+from stable_baselines.low_dim_analysis.common_parser import str2bool
 
 def make_atari_env(env_id, num_env, seed, wrapper_kwargs=None, start_index=0, allow_early_resets=True):
     """
@@ -109,13 +109,14 @@ def mujoco_arg_parser():
     :return:  (ArgumentParser) parser {'--env': 'Reacher-v2', '--seed': 0, '--num-timesteps': int(1e6), '--play': False}
     """
     parser = arg_parser()
+    parser.register('type', 'bool', str2bool)
+    parser.add_argument("--normalize", type='bool', default=False)
     parser.add_argument('--env', help='environment ID', type=str, default='Hopper-v2')
     parser.add_argument('--seed', help='RNG seed', type=int, default=0)
     parser.add_argument('--run_num', default=0, type=int, help='which run number')
 
-    parser.add_argument('--num-timesteps', type=int, default=625000)
+    parser.add_argument('--num-timesteps', type=int, default=50002)
     parser.add_argument('--play', default=False, action='store_true')
-    parser.add_argument('--normalize', default=False, action='store_true')
     return parser
 
 

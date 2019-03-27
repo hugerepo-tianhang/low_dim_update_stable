@@ -15,18 +15,19 @@ n_comp_to_use=15
 cma_num_timesteps=50000
 eval_num_timesteps=2048
 even_check_point_num=5
+normalize=True
 
 plot_final_param_plane () {
     local run=$1
     local env=$2
 
-    echo "Welcome to plot_final_param_plane: run number $run"
+    echo "Welcome to plot_final_param_plane: run number $env  $run"
 
     python -m stable_baselines.low_dim_analysis.plot_return_landscape \
                                     --num-timesteps=$time_steps --run_num=$run --env=$env\
                                     --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
                                     --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps\
-                                    --n_comp_to_use=$n_comp_to_use --n_components=$n_components
+                                    --n_comp_to_use=$n_comp_to_use --n_components=$n_components --normalize=$normalize
 #    python -m stable_baselines.low_dim_analysis.just_pca \
 #                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
 #                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
@@ -37,13 +38,13 @@ plot_mean_param_plane () {
     local run=$1
     local env=$2
 
-    echo "Welcome to plot_mean_param_plane: run number $run"
+    echo "Welcome to plot_mean_param_plane: run number  $env $run"
 
     python -m stable_baselines.low_dim_analysis.plot_return_real_pca_plane \
                                     --num-timesteps=$time_steps --run_num=$run --env=$env\
                                     --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
                                     --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps\
-                                    --n_comp_to_use=$n_comp_to_use --n_components=$n_components
+                                    --n_comp_to_use=$n_comp_to_use --n_components=$n_components --normalize=$normalize
 #    python -m stable_baselines.low_dim_analysis.just_pca \
 #                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
 #                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
@@ -54,13 +55,13 @@ plot_final_plane_with_9_10 () {
     local run=$1
     local env=$2
 
-    echo "Welcome to plot_mean_param_plane: run number $run"
+    echo "Welcome to plot_mean_param_plane: run number  $env $run"
 
     python -m stable_baselines.low_dim_analysis.plot_other_pca_plane_return_landscape \
                                     --num-timesteps=$time_steps --run_num=$run --env=$env\
                                     --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
                                     --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps\
-                                    --n_comp_to_use=$n_comp_to_use --n_components=$n_components
+                                    --n_comp_to_use=$n_comp_to_use --n_components=$n_components --normalize=$normalize
 #    python -m stable_baselines.low_dim_analysis.just_pca \
 #                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
 #                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
@@ -71,8 +72,8 @@ run () {
     local run=$1
     local env=$2
 
-    echo "Welcome to RUN: run number $run"
-    python -m stable_baselines.ppo2.run_mujoco --env=$env --num-timesteps=$time_steps --run_num=$run
+    echo "Welcome to RUN: run number  $env $run"
+    python -m stable_baselines.ppo2.run_mujoco --env=$env --num-timesteps=$time_steps --run_num=$run --normalize=$normalize
 
 }
 
@@ -80,7 +81,7 @@ cma_once () {
     local run=$1
     local env=$2
 
-    echo "Welcome to cma: run number $run"
+    echo "Welcome to cma: run number  $env $run"
 
 #    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
 #                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
@@ -90,14 +91,15 @@ cma_once () {
                                     --num-timesteps=$time_steps --run_num=$run --env=$env\
                                     --cores_to_use=$cores_to_use \
                                     --n_components=$n_components --cma_num_timesteps=$cma_num_timesteps\
-                                    --n_comp_to_use=$n_comp_to_use --eval_num_timesteps=$eval_num_timesteps
+                                    --n_comp_to_use=$n_comp_to_use --eval_num_timesteps=$eval_num_timesteps\
+                                     --normalize=$normalize
 }
 
 next_n_once () {
     local run=$1
     local env=$2
 
-    echo "Welcome to next_n: run number $run"
+    echo "Welcome to next_n: run number $env $run"
 
 #    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
 #                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
@@ -107,7 +109,7 @@ next_n_once () {
                                     --num-timesteps=$time_steps --run_num=$run --env=$env\
                                     --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
                                     --n_comp_to_use=$n_comp_to_use --n_components=$n_components \
-                                    --even_check_point_num=$even_check_point_num
+                                    --even_check_point_num=$even_check_point_num --normalize=$normalize
 }
 
 
