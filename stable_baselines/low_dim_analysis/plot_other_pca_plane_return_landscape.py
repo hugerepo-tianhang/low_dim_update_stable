@@ -200,7 +200,7 @@ if __name__ == '__main__':
     ==========================================================================================
     '''
     if not os.path.exists(get_eval_returns_filename(intermediate_dir=intermediate_data_dir,
-                                                    xnum=plot_args.xnum, ynum=plot_args.ynum, n_comp=2, pca_center=pca_center, which_components={pca_indexes})):
+                                                    xnum=plot_args.xnum, ynum=plot_args.ynum, n_comp=2, pca_center=pca_center, which_components=pca_indexes)):
 
         from stable_baselines.ppo2.run_mujoco import eval_return
 
@@ -214,10 +214,10 @@ if __name__ == '__main__':
 
 
         np.savetxt(get_eval_returns_filename(intermediate_dir=intermediate_data_dir,
-                                                    xnum=plot_args.xnum, ynum=plot_args.ynum, n_comp=2, pca_center=pca_center, which_components={pca_indexes}), eval_returns, delimiter=',')
+                                                    xnum=plot_args.xnum, ynum=plot_args.ynum, n_comp=2, pca_center=pca_center, which_components=pca_indexes), eval_returns, delimiter=',')
     else:
         eval_returns = np.loadtxt(get_eval_returns_filename(intermediate_dir=intermediate_data_dir,
-                                                    xnum=plot_args.xnum, ynum=plot_args.ynum, n_comp=2, pca_center=pca_center, which_components={pca_indexes}), delimiter=',')
+                                                    xnum=plot_args.xnum, ynum=plot_args.ynum, n_comp=2, pca_center=pca_center, which_components=pca_indexes), delimiter=',')
 
 
     '''
