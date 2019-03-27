@@ -24,6 +24,7 @@ def get_intermediate_data_dir(this_run_dir):
 
     return f"{this_run_dir}/intermediate_data"
 
+
 def get_eval_losses_file_path(dir_name, total_timesteps):
     return f'{dir_name}/eval_loss_{total_timesteps}.hdf5'
 
@@ -56,9 +57,9 @@ def get_explain_ratios_filename(intermediate_dir, n_comp):
 def get_projected_full_path_filename(intermediate_dir, n_comp, pca_center, which_components=(1,2)):
 
     return f"{intermediate_dir}/n_comp_{n_comp}_pca_center_{pca_center}_which_components_{which_components}_projected_full_path"
-def get_eval_returns_filename(intermediate_dir, xnum, ynum, n_comp, pca_center):
+def get_eval_returns_filename(intermediate_dir, xnum, ynum, n_comp, pca_center, which_components=(1,2)):
 
-    return f"{intermediate_dir}/xnum_{xnum}_ynum_{ynum}_n_comp_{n_comp}_pca_center_{pca_center}_eval_returns"
+    return f"{intermediate_dir}/xnum_{xnum}_ynum_{ynum}_n_comp_{n_comp}_pca_center_{pca_center}_which_components_{which_components}eval_returns"
 
 def get_cma_returns_dirname(intermediate_dir, n_comp, run_num):
 
