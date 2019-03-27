@@ -143,7 +143,7 @@ if __name__ == '__main__':
     train(sys.argv)
     # args = mujoco_arg_parser().parse_args()
     # this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps,
-    #                                          args.env, args.normalize, 0)
+    #                                          args.env, args.normalize, run_num=1)
     # save_dir = get_save_dir(this_run_dir)
     #
     # logger.log("grab final params")

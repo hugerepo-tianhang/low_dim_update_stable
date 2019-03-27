@@ -18,7 +18,7 @@ def get_common_parser():
 
     parser.add_argument('--even_check_point_num', default=5, type=int, help='even_check_point_num')
     parser.add_argument('--n_components', default=10, type=int, help='n_components of PCA')
-    parser.add_argument('--explain_ratio_threshold', default=0.9, type=float)
+    parser.add_argument('--explain_ratio_threshold', default=0.97, type=float)
     parser.add_argument('--use_IPCA', action='store_true', default=False)
     parser.add_argument('--use_threads', action='store_true', default=False)
 

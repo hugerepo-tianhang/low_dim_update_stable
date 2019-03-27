@@ -5,6 +5,7 @@ import pandas as pd
 from sklearn.decomposition import IncrementalPCA, PCA
 import csv
 from collections.abc import Iterable
+from stable_baselines.low_dim_analysis.eval_util import *
 
 def get_projected_data_in_old_basis(pca, data, num_axis_to_use):
     components = pca.components_[:num_axis_to_use]
@@ -173,6 +174,31 @@ def plot_3d_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, proj_x
                 bbox_inches='tight', format='pdf')
     if show: plt.show()
 
+
+def get_allinone_concat_matrix_diff(dir_name, final_concat_params):
+    index = 0
+    theta_file = get_full_param_traj_file_path(dir_name, index)
+
+    concat_df = pd.read_csv(theta_file, header=None)
+
+    result_matrix_diff = concat_df.sub(final_concat_params, axis='columns')
+
+    index += 1
+
+    while os.path.exists(get_full_param_traj_file_path(dir_name, index)):
+        theta_file = get_full_param_traj_file_path(dir_name, index)
+
+        part_concat_df = pd.read_csv(theta_file, header=None)
+
+        part_concat_df = part_concat_df.sub(final_concat_params, axis='columns')
+
+        result_matrix_diff = result_matrix_diff.append(part_concat_df, ignore_index=True)
+        index += 1
+
+    return result_matrix_diff.values
+
+
+
 if __name__ == "__main__":
     from numpy.testing import assert_array_almost_equal
 
@@ -198,3 +224,4 @@ if __name__ == "__main__":
     a = calculate_projection_error(test_pca, X_train, num_axis_to_use=2)
     loss = LA.norm((X_train - X_projected2), ord=2, axis=1)
     assert_array_almost_equal(a, loss)
+

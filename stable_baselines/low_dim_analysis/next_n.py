@@ -21,17 +21,17 @@ ABout the plane:
 
 '''
 import numpy as np
-from baselines.low_dim_analysis.eval_util import get_full_params_dir, get_plot_dir, get_dir_path_for_this_run, \
+from stable_baselines.low_dim_analysis.eval_util import get_full_params_dir, get_plot_dir, get_dir_path_for_this_run, \
     get_full_param_traj_file_path
 
-from baselines import logger
+from stable_baselines import logger
 
 import pandas as pd
-from sklearn.decomposition import IncrementalPCA, PCA
+from sklearn.decomposition import PCA
 from numpy import linalg as LA
 from matplotlib import pyplot as plt
-from baselines.low_dim_analysis.common import calculate_projection_error, \
-    calculate_num_axis_to_explain, plot_2d_check_index
+from stable_baselines.low_dim_analysis.common import calculate_projection_error, \
+    calculate_num_axis_to_explain, plot_2d_check_index, get_allinone_concat_matrix_diff
 
 
 
@@ -52,36 +52,6 @@ def plot_distances(plot_dir_alg,
 
 
 
-def get_concat_matrix_diff(dir_name, index, final_concat_params):
-    theta_file = get_full_param_traj_file_path(dir_name, index)
-
-    concat_df = pd.read_csv(theta_file, header=None)
-
-    concat_matrix_diff = concat_df.sub(final_concat_params, axis='columns').values
-    return concat_matrix_diff
-
-
-def get_allinone_concat_matrix_diff(dir_name, final_concat_params):
-    index = 0
-    theta_file = get_full_param_traj_file_path(dir_name, index)
-
-    concat_df = pd.read_csv(theta_file, header=None)
-
-    result_matrix_diff = concat_df.sub(final_concat_params, axis='columns')
-
-    index += 1
-
-    while os.path.exists(get_full_param_traj_file_path(traj_params_dir_name, index)):
-        theta_file = get_full_param_traj_file_path(dir_name, index)
-
-        part_concat_df = pd.read_csv(theta_file, header=None)
-
-        part_concat_df = part_concat_df.sub(final_concat_params, axis='columns')
-
-        result_matrix_diff = result_matrix_diff.append(part_concat_df, ignore_index=True)
-        index += 1
-
-    return result_matrix_diff.values
 
 
 import csv
@@ -109,7 +79,7 @@ if __name__ == '__main__':
     import time
     import os
 
-    from baselines.low_dim_analysis.common_parser import get_common_parser
+    from stable_baselines.low_dim_analysis.common_parser import get_common_parser
     parser = get_common_parser()
     args = parser.parse_args()
 
@@ -117,9 +87,11 @@ if __name__ == '__main__':
     threads_or_None = 'threads' if args.use_threads else None
     logger.log(f"THREADS OR NOT: {threads_or_None}")
 
-    plot_dir_alg = get_plot_dir(args.machine, args.alg, args.total_timesteps, args.env_id, args.run_num)
-    traj_params_dir_name = get_full_params_dir(args.machine, args.alg, args.total_timesteps, args.env_id, args.run_num)
+    plot_dir_alg = get_plot_dir(args.alg, args.total_timesteps, args.env_id, args.normalize, args.run_num)
+    this_run_dir = get_dir_path_for_this_run(args.alg, args.num_timesteps,
+                                             args.env, args.normalize, args.run_num)
 
+    traj_params_dir_name = get_full_params_dir(this_run_dir)
     if os.path.exists(plot_dir_alg):
         import shutil
         shutil.rmtree(plot_dir_alg)
@@ -134,7 +106,7 @@ if __name__ == '__main__':
     concat_matrix_diff = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
                                                          final_concat_params=final_concat_params)
     toc = time.time()
-    print('\nElapsed time getting the PARALLEL full concat diff took {:.2f} s\n'
+    print('\nElapsed time getting the full concat diff took {:.2f} s\n'
           .format(toc - tic))
 
 
@@ -154,14 +126,15 @@ if __name__ == '__main__':
 
         logger.log(pca.explained_variance_ratio_)
 
-        num_to_use, total_explained = calculate_num_axis_to_explain(pca, args.explain_ratio_threshold)
-        proj_errors = calculate_projection_error(pca, concat_matrix_diff[check_index:], num_axis_to_use=num_to_use)
+        # num_to_use, total_explained = calculate_num_axis_to_explain(pca, args.explain_ratio_threshold)
+
+        proj_errors = calculate_projection_error(pca, concat_matrix_diff[check_index:], num_axis_to_use=args.n_comp_to_use)
 
         dump_my(plot_dir_alg, proj_errors, f"all next proj_errors, check index: {check_index}")
 
         plot_2d_check_index(plot_dir_alg, proj_errors,
                             f'proj errors',
-                            f'proj errors to check_index {check_index}PCA using {num_to_use} pca components, total variance explained {total_explained}',
+                            f'proj errors to check_index {check_index}PCA using {args.n_comp_to_use} pca components, total variance explained {np.sum(pca.explained_variance_ratio_[:args.n_comp_to_use])}',
                             check_index=check_index, xlabel='update_number', show=args.show)
 
     final_pca = PCA(n_components=args.n_components)
@@ -178,11 +151,11 @@ if __name__ == '__main__':
     logger.log(f"project all params")
 
     num_to_use, total_explained = calculate_num_axis_to_explain(final_pca, args.explain_ratio_threshold)
-    proj_errors = calculate_projection_error(final_pca, concat_matrix_diff, num_axis_to_use=num_to_use)
+    proj_errors = calculate_projection_error(final_pca, concat_matrix_diff, num_axis_to_use=args.n_comp_to_use)
     dump_my(plot_dir_alg, proj_errors, "full proj_errors")
     plot_2d_check_index(plot_dir_alg, proj_errors,
                         f'proj errors',
-                        f'proj errors to final PCA using {num_to_use} pca components, total variance explained {total_explained}',
+                        f'proj errors to final PCA using {args.n_comp_to_use} pca components, total variance explained {np.sum(final_pca.explained_variance_ratio_[:args.n_comp_to_use])}',
                         check_index=None, xlabel='update_number', show=args.show)
 
 

@@ -123,13 +123,13 @@ if __name__ == '__main__':
     get the pc vectors
     ==========================================================================================
     '''
+    logger.log("grab final params")
+    final_file = get_full_param_traj_file_path(traj_params_dir_name, "final")
+    final_concat_params = pd.read_csv(final_file, header=None).values[0]
 
     if not os.path.exists(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=cma_args.n_components))\
         or not os.path.exists(get_mean_param_filename(intermediate_dir=intermediate_data_dir)):
 
-        logger.log("grab final params")
-        final_file = get_full_param_traj_file_path(traj_params_dir_name, "final")
-        final_concat_params = pd.read_csv(final_file, header=None).values[0]
 
         tic = time.time()
         concat_matrix_diff = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
@@ -184,7 +184,7 @@ if __name__ == '__main__':
 
     import cma
     #TODO better starting locations, record how many samples,
-    starting_coord = np.zeros((1, cma_args.n_comp_to_use)) # use mean
+    starting_coord = np.random.rand(1, cma_args.n_comp_to_use) # use mean
     es = cma.CMAEvolutionStrategy(starting_coord, 2)
     total_num_of_evals = 0
     total_num_timesteps = 0
@@ -196,8 +196,8 @@ if __name__ == '__main__':
     eval_returns = None
     while total_num_timesteps < cma_args.cma_num_timesteps and not es.stop():
         solutions = es.ask()
-        thetas = [np.matmul(coord, first_n_pcs) + mean_param for coord in solutions]
-        logger.log(f"eval num: {cma_args.eval_num_timesteps}")
+        thetas = [np.matmul(coord, first_n_pcs) + final_concat_params for coord in solutions]
+
         eval_returns = Parallel(n_jobs=cma_args.cores_to_use) \
             (delayed(eval_return)(openai_args, save_dir, theta, cma_args.eval_num_timesteps, i) for (i, theta) in enumerate(thetas))
 
@@ -217,9 +217,6 @@ if __name__ == '__main__':
         es.tell(solutions, negative_eval_returns)
         es.logger.add()  # write data to disc to be plotted
         es.disp()
-
-    toc = time.time()
-    logger.log(f"####################################CMA took {toc-tic} seconds")
 
 
     cma_run_num = get_cma_run_num(intermediate_data_dir, n_comp=cma_args.n_comp_to_use)
@@ -246,6 +243,9 @@ if __name__ == '__main__':
     plot_cma_returns(cma_plot_dir, ret_plot_name, mean_rets, min_rets, max_rets, show=False)
 
 
+
+    toc = time.time()
+    logger.log(f"####################################CMA took {toc-tic} seconds")
 
 
 #TODO Give filenames more info to identify which hyperparameter is the data for

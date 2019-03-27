@@ -6,32 +6,9 @@ from stable_baselines import logger
 import pandas as pd
 from sklearn.decomposition import PCA
 
-from stable_baselines.low_dim_analysis.common import project_2D_pca_mean_origin, plot_contour_trajectory, plot_3d_trajectory
+from stable_baselines.low_dim_analysis.common import project_2D_pca_mean_origin, plot_contour_trajectory, plot_3d_trajectory, get_allinone_concat_matrix_diff
 from joblib import Parallel, delayed
 
-
-
-def get_allinone_concat_matrix_diff(dir_name, final_concat_params):
-    index = 0
-    theta_file = get_full_param_traj_file_path(dir_name, index)
-
-    concat_df = pd.read_csv(theta_file, header=None)
-
-    result_matrix_diff = concat_df.sub(final_concat_params, axis='columns')
-
-    index += 1
-
-    while os.path.exists(get_full_param_traj_file_path(traj_params_dir_name, index)):
-        theta_file = get_full_param_traj_file_path(dir_name, index)
-
-        part_concat_df = pd.read_csv(theta_file, header=None)
-
-        part_concat_df = part_concat_df.sub(final_concat_params, axis='columns')
-
-        result_matrix_diff = result_matrix_diff.append(part_concat_df, ignore_index=True)
-        index += 1
-
-    return result_matrix_diff.values
 
 
 def parse_unknown_args(args):
@@ -117,10 +94,11 @@ if __name__ == '__main__':
     get the pc vectors
     ==========================================================================================
     '''
+    pca_center = "mean_param"
 
     if not os.path.exists(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=2))\
         or not os.path.exists(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=2))\
-        or not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2))\
+        or not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2, pca_center=pca_center))\
         or not os.path.exists(get_mean_param_filename(intermediate_dir=intermediate_data_dir)):
 
         tic = time.time()
@@ -174,7 +152,7 @@ if __name__ == '__main__':
             proj_ycoord.append(y)
 
         proj_coords = np.array([proj_xcoord, proj_ycoord])
-        np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2), proj_coords, delimiter=',')
+        np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2, pca_center=pca_center), proj_coords, delimiter=',')
 
         print("gc the big thing")
         del concat_matrix_diff
@@ -188,7 +166,7 @@ if __name__ == '__main__':
 
         explained_variance_ratio = np.loadtxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=2),
                    delimiter=',')
-        proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2), delimiter=',')
+        proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2, pca_center=pca_center), delimiter=',')
         mean_param = np.loadtxt(get_mean_param_filename(intermediate_dir=intermediate_data_dir), delimiter=',')
 
 
@@ -220,7 +198,7 @@ if __name__ == '__main__':
     ==========================================================================================
     '''
     if not os.path.exists(get_eval_returns_filename(intermediate_dir=intermediate_data_dir,
-                                                    xnum=plot_args.xnum, ynum=plot_args.ynum, n_comp=2)):
+                                                    xnum=plot_args.xnum, ynum=plot_args.ynum, n_comp=2, pca_center=pca_center)):
 
         from stable_baselines.ppo2.run_mujoco import eval_return
 
@@ -234,10 +212,10 @@ if __name__ == '__main__':
 
 
         np.savetxt(get_eval_returns_filename(intermediate_dir=intermediate_data_dir,
-                                                    xnum=plot_args.xnum, ynum=plot_args.ynum, n_comp=2), eval_returns, delimiter=',')
+                                                    xnum=plot_args.xnum, ynum=plot_args.ynum, n_comp=2, pca_center=pca_center), eval_returns, delimiter=',')
     else:
         eval_returns = np.loadtxt(get_eval_returns_filename(intermediate_dir=intermediate_data_dir,
-                                                    xnum=plot_args.xnum, ynum=plot_args.ynum, n_comp=2), delimiter=',')
+                                                    xnum=plot_args.xnum, ynum=plot_args.ynum, n_comp=2, pca_center=pca_center), delimiter=',')
 
 
     '''
