@@ -1,18 +1,18 @@
 #!/bin/bash
 
-repeat_num=1
+repeat_num=3
 start_index=0
 
-time_steps=5000
+time_steps=675000
 cores_to_use=-1
-xnum=3
-ynum=3
+xnum=50
+ynum=50
 
 padding_fraction=0.4
 n_components=15
 
 n_comp_to_use=15
-cma_num_timesteps=50000
+cma_num_timesteps=1000000
 eval_num_timesteps=2048
 even_check_point_num=5
 normalize=True
@@ -128,13 +128,15 @@ do
     sleep 1; plot_final_plane_with_9_10 $run_num 'Hopper-v2' ; sleep 1; ps
     sleep 1; plot_final_plane_with_9_10 $run_num 'Walker2d-v2' ; sleep 1; ps
 
-#    sleep 1; plot_mean_param_plane $run_num 'Hopper-v2' ; sleep 1; ps
-#    sleep 1; plot_mean_param_plane $run_num 'Walker2d-v2' ; sleep 1; ps
-#
-#
-#    sleep 1; cma_once $run_num 'Hopper-v2' ; sleep 1; ps
-#    sleep 1; cma_once $run_num 'Walker2d-v2' ; sleep 1; ps
-#
-#    sleep 1; next_n_once $run_num 'Hopper-v2' ; sleep 1; ps
-#    sleep 1; next_n_once $run_num 'Walker2d-v2' ; sleep 1; ps
+    sleep 1; plot_mean_param_plane $run_num 'Hopper-v2' ; sleep 1; ps
+    sleep 1; plot_mean_param_plane $run_num 'Walker2d-v2' ; sleep 1; ps
+
+    sleep 1; plot_final_param_plane $run_num 'Hopper-v2' ; sleep 1; ps
+    sleep 1; plot_final_param_plane $run_num 'Walker2d-v2' ; sleep 1; ps
+
+    sleep 1; cma_once $run_num 'Hopper-v2' ; sleep 1; ps
+    sleep 1; cma_once $run_num 'Walker2d-v2' ; sleep 1; ps
+
+    sleep 1; next_n_once $run_num 'Hopper-v2' ; sleep 1; ps
+    sleep 1; next_n_once $run_num 'Walker2d-v2' ; sleep 1; ps
 done
