@@ -179,8 +179,8 @@ if __name__ == '__main__':
     xmin, xmax = np.min(proj_xcoord), np.max(proj_xcoord)
     ymin, ymax = np.min(proj_ycoord), np.max(proj_ycoord)
 
-    x_len = xmax - xmin
-    y_len = ymax - ymin
+    x_len = 1
+    y_len = 1
     assert(x_len>=0)
     assert(y_len>=0)
 
