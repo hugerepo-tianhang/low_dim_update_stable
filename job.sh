@@ -50,7 +50,23 @@ plot_mean_param_plane () {
 #                                    --n_components=$n_components --n_comp_to_use=$n_comp_to_use
 
 }
+plot_final_plane_with_9_10 () {
+    local run=$1
+    local env=$2
 
+    echo "Welcome to plot_mean_param_plane: run number $run"
+
+    python -m stable_baselines.low_dim_analysis.plot_other_pca_plane_return_landscape \
+                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
+                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
+                                    --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps\
+                                    --n_comp_to_use=$n_comp_to_use --n_components=$n_components
+#    python -m stable_baselines.low_dim_analysis.just_pca \
+#                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
+#                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
+#                                    --n_components=$n_components --n_comp_to_use=$n_comp_to_use
+
+}
 run () {
     local run=$1
     local env=$2
@@ -106,16 +122,17 @@ wait
 
 for (( run_num=$start_index; run_num<$repeat_num; run_num++ ))
 do
-    sleep 1; plot_final_param_plane $run_num 'Hopper-v2' ; sleep 1; ps
-    sleep 1; plot_final_param_plane $run_num 'Walker2d-v2' ; sleep 1; ps
 
-    sleep 1; plot_mean_param_plane $run_num 'Hopper-v2' ; sleep 1; ps
-    sleep 1; plot_mean_param_plane $run_num 'Walker2d-v2' ; sleep 1; ps
+    sleep 1; plot_final_plane_with_9_10 $run_num 'Hopper-v2' ; sleep 1; ps
+    sleep 1; plot_final_plane_with_9_10 $run_num 'Walker2d-v2' ; sleep 1; ps
 
-
-    sleep 1; cma_once $run_num 'Hopper-v2' ; sleep 1; ps
-    sleep 1; cma_once $run_num 'Walker2d-v2' ; sleep 1; ps
-
-    sleep 1; next_n_once $run_num 'Hopper-v2' ; sleep 1; ps
-    sleep 1; next_n_once $run_num 'Walker2d-v2' ; sleep 1; ps
+#    sleep 1; plot_mean_param_plane $run_num 'Hopper-v2' ; sleep 1; ps
+#    sleep 1; plot_mean_param_plane $run_num 'Walker2d-v2' ; sleep 1; ps
+#
+#
+#    sleep 1; cma_once $run_num 'Hopper-v2' ; sleep 1; ps
+#    sleep 1; cma_once $run_num 'Walker2d-v2' ; sleep 1; ps
+#
+#    sleep 1; next_n_once $run_num 'Hopper-v2' ; sleep 1; ps
+#    sleep 1; next_n_once $run_num 'Walker2d-v2' ; sleep 1; ps
 done
