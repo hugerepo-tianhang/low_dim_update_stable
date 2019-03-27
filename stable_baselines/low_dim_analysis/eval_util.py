@@ -53,9 +53,9 @@ def get_mean_param_filename(intermediate_dir):
 def get_explain_ratios_filename(intermediate_dir, n_comp):
 
     return f"{intermediate_dir}/n_comp_{n_comp}_explain_ratios"
-def get_projected_full_path_filename(intermediate_dir, n_comp, pca_center):
+def get_projected_full_path_filename(intermediate_dir, n_comp, pca_center, which_components):
 
-    return f"{intermediate_dir}/n_comp_{n_comp}_pca_center_{pca_center}_projected_full_path"
+    return f"{intermediate_dir}/n_comp_{n_comp}_pca_center_{pca_center}_which_components_{which_components}_projected_full_path"
 def get_eval_returns_filename(intermediate_dir, xnum, ynum, n_comp, pca_center):
 
     return f"{intermediate_dir}/xnum_{xnum}_ynum_{ynum}_n_comp_{n_comp}_pca_center_{pca_center}_eval_returns"

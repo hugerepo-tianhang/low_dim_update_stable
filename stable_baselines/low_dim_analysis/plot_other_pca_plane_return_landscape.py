@@ -99,7 +99,8 @@ if __name__ == '__main__':
 
     if not os.path.exists(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=2))\
         or not os.path.exists(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=2))\
-        or not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2, pca_center=pca_center)):
+        or not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir,
+                                                               n_comp=2, pca_center=pca_center, which_components=[9,10])):
 
         tic = time.time()
         concat_matrix_diff = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
@@ -122,7 +123,7 @@ if __name__ == '__main__':
 
         pcs_components = final_pca.components_
 
-        the_9_and_10_pcs = pcs_components[9:11]
+        the_9_and_10_pcs = pcs_components[8:10]
         explained_variance_ratio = final_pca.explained_variance_ratio_
 
         np.savetxt(get_pcs_filename(intermediate_dir=intermediate_data_dir,
@@ -149,7 +150,7 @@ if __name__ == '__main__':
             proj_ycoord.append(y)
 
         proj_coords = np.array([proj_xcoord, proj_ycoord])
-        np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2, pca_center=pca_center), proj_coords, delimiter=',')
+        np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2, pca_center=pca_center, which_components=[9,10]), proj_coords, delimiter=',')
 
         print("gc the big thing")
         del concat_matrix_diff
@@ -158,11 +159,11 @@ if __name__ == '__main__':
 
     else:
         pcs_components = np.loadtxt(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=plot_args.n_components), delimiter=',')
-        the_9_and_10_pcs = pcs_components[9:11]
+        the_9_and_10_pcs = pcs_components[8:10]
 
         explained_variance_ratio = np.loadtxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=2),
                    delimiter=',')
-        proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2, pca_center=pca_center), delimiter=',')
+        proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2, pca_center=pca_center, which_components=[9,10]), delimiter=',')
 
 
     '''
