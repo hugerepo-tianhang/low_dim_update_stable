@@ -114,6 +114,8 @@ def mujoco_arg_parser():
     parser.add_argument('--env', help='environment ID', type=str, default='Hopper-v2')
     parser.add_argument('--seed', help='RNG seed', type=int, default=0)
     parser.add_argument('--run_num', default=0, type=int, help='which run number')
+    parser.add_argument('--nminibatches', default=4, type=int, help='which run number')
+    parser.add_argument('--n_steps', default=2048, type=int, help='which run number')
 
     parser.add_argument('--num-timesteps', type=int, default=50002)
     parser.add_argument('--play', default=False, action='store_true')

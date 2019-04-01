@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
     import time
     import os
-
+    #TODO save your shits to files!!!
     from stable_baselines.low_dim_analysis.common_parser import get_common_parser
     parser = get_common_parser()
     args = parser.parse_args()
@@ -91,7 +91,7 @@ if __name__ == '__main__':
 
     plot_next_n_dir = f"{plot_dir}/next_n"
     this_run_dir = get_dir_path_for_this_run(args.alg, args.num_timesteps,
-                                             args.env, args.normalize, args.run_num)
+                                             args.env, args.normalize, args.run_num, args.n_steps, args.nminibatches)
 
     traj_params_dir_name = get_full_params_dir(this_run_dir)
     if os.path.exists(plot_next_n_dir):

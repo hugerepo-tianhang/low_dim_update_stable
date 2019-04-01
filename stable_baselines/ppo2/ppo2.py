@@ -90,6 +90,10 @@ class PPO2(ActorCriticRLModel):
         self.n_batch = None
         self.summary = None
         self.episode_reward = None
+
+
+        self.run_info = None
+
         if _init_setup_model:
             self.setup_model()
 
@@ -319,8 +323,9 @@ class PPO2(ActorCriticRLModel):
                             mb_loss_vals.append(self._train_step(lr_now, cliprangenow, *slices, writer=writer,
                                                                  update=timestep))
 
-                            flat_params = self.get_flat()
-                            self.dump(flat_params, update - 1)
+                            if self.run_info is not None:
+                                flat_params = self.get_flat()
+                                self.dump(flat_params, update - 1)
 
                     self.num_timesteps += (self.n_batch * self.noptepochs) // batch_size * update_fac
                 else:  # recurrent version
@@ -341,8 +346,10 @@ class PPO2(ActorCriticRLModel):
                             mb_states = states[mb_env_inds]
                             mb_loss_vals.append(self._train_step(lr_now, cliprangenow, *slices, update=timestep,
                                                                  writer=writer, states=mb_states))
-                            flat_params = self.get_flat()
-                            self.dump(flat_params, update - 1)
+                            if self.run_info is not None:
+
+                                flat_params = self.get_flat()
+                                self.dump(flat_params, update - 1)
 
                     self.num_timesteps += (self.n_envs * self.noptepochs) // envs_per_batch * update_fac
 
@@ -376,9 +383,9 @@ class PPO2(ActorCriticRLModel):
                     if callback(locals(), globals()) is False:
                         break
 
-
-            flat_params = self.get_flat()
-            self.dump(flat_params, "final")
+            if self.run_info is not None:
+                flat_params = self.get_flat()
+                self.dump(flat_params, "final")
 
             return self
 

@@ -7,8 +7,9 @@ def get_project_dir():
     return project_dir
 
 
-def get_dir_path_for_this_run(alg, total_timesteps, env_id, normalize, run_num):
-    return f'{get_project_dir()}/stable_baselines/{alg}/env_{env_id}_time_step_{total_timesteps}_normalize_{normalize}_run_{run_num}'
+def get_dir_path_for_this_run(alg, total_timesteps, env_id, normalize, run_num, n_steps, nminibatches):
+    return f'{get_project_dir()}/stable_baselines/{alg}/env_{env_id}_time_step_{total_timesteps}_' \
+           f'normalize_{normalize}_n_steps_{n_steps}_nminibatches_{nminibatches}_run_{run_num}'
 
 def get_log_dir(this_run_dir):
     return f"{this_run_dir}/the_log_dir"

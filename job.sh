@@ -3,7 +3,7 @@
 repeat_num=3
 start_index=0
 
-time_steps=675000
+time_steps=5002
 cores_to_use=-1
 xnum=50
 ynum=50
@@ -16,6 +16,7 @@ cma_num_timesteps=1000000
 eval_num_timesteps=2048
 even_check_point_num=5
 normalize=True
+
 
 plot_final_param_plane () {
     local run=$1
@@ -71,9 +72,13 @@ plot_final_plane_with_9_10 () {
 run () {
     local run=$1
     local env=$2
+    local nminibatches=$3
+    local n_steps=$4
 
     echo "Welcome to RUN: run number  $env $run"
-    python -m stable_baselines.ppo2.run_mujoco --env=$env --num-timesteps=$time_steps --run_num=$run --normalize=$normalize
+    python -m stable_baselines.ppo2.run_mujoco --env=$env --num-timesteps=$time_steps\
+            --run_num=$run --normalize=$normalize --nminibatches=$nminibatches\
+            --n_steps=$n_steps
 
 }
 
@@ -98,7 +103,8 @@ cma_once () {
 next_n_once () {
     local run=$1
     local env=$2
-
+    local nminibatches=$3
+    local n_steps=$4
     echo "Welcome to next_n: run number $env $run"
 
 #    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
@@ -109,34 +115,28 @@ next_n_once () {
                                     --num-timesteps=$time_steps --run_num=$run --env=$env\
                                     --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
                                     --n_comp_to_use=$n_comp_to_use --n_components=$n_components \
-                                    --even_check_point_num=$even_check_point_num --normalize=$normalize
+                                    --even_check_point_num=$even_check_point_num --normalize=$normalize \
+                                    --nminibatches=$nminibatches --n_steps=$n_steps
 }
 
 
-for (( run_num=$start_index; run_num<$repeat_num; run_num++ ))
-do
-    sleep 1; run $run_num 'Hopper-v2' & sleep 1; ps
-    sleep 1; run $run_num 'Walker2d-v2' & sleep 1; ps
 
-done
+sleep 1; run 0 'Hopper-v2' 2 2048& sleep 1; ps
+sleep 1; run 0 'Hopper-v2' 4 2048& sleep 1; ps
+#sleep 1; run 0 'Hopper-v2' 8 2048& sleep 1; ps
+#sleep 1; run 0 'Hopper-v2' 16 2048& sleep 1; ps
+#sleep 1; run 0 'Hopper-v2' 16 4096& sleep 1; ps
+#sleep 1; run 0 'Hopper-v2' 16 8192& sleep 1; ps
+
 
 wait
 
-for (( run_num=$start_index; run_num<$repeat_num; run_num++ ))
-do
 
-    sleep 1; plot_final_plane_with_9_10 $run_num 'Hopper-v2' ; sleep 1; ps
-    sleep 1; plot_final_plane_with_9_10 $run_num 'Walker2d-v2' ; sleep 1; ps
+sleep 1; next_n_once 0 'Hopper-v2' 2 2048; sleep 1; ps
+sleep 1; next_n_once 0 'Hopper-v2' 4 2048; sleep 1; ps
+#sleep 1; next_n_once 0 'Hopper-v2' 8 2048; sleep 1; ps
+#sleep 1; next_n_once 0 'Hopper-v2' 16 2048; sleep 1; ps
+#sleep 1; next_n_once 0 'Hopper-v2' 16 4096; sleep 1; ps
+#sleep 1; next_n_once 0 'Hopper-v2' 16 8192; sleep 1; ps
 
-    sleep 1; plot_mean_param_plane $run_num 'Hopper-v2' ; sleep 1; ps
-    sleep 1; plot_mean_param_plane $run_num 'Walker2d-v2' ; sleep 1; ps
 
-    sleep 1; plot_final_param_plane $run_num 'Hopper-v2' ; sleep 1; ps
-    sleep 1; plot_final_param_plane $run_num 'Walker2d-v2' ; sleep 1; ps
-
-    sleep 1; cma_once $run_num 'Hopper-v2' ; sleep 1; ps
-    sleep 1; cma_once $run_num 'Walker2d-v2' ; sleep 1; ps
-
-    sleep 1; next_n_once $run_num 'Hopper-v2' ; sleep 1; ps
-    sleep 1; next_n_once $run_num 'Walker2d-v2' ; sleep 1; ps
-done

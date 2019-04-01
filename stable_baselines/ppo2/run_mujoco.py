@@ -36,7 +36,7 @@ def train(args):
     args, argv = mujoco_arg_parser().parse_known_args(args)
     logger.log(f"#######TRAIN: {args}")
 
-    this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps, args.env, args.normalize, args.run_num)
+    this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps, args.env, args.normalize, args.run_num, args.n_steps, args.nminibatches)
     if os.path.exists(this_run_dir):
         import shutil
         shutil.rmtree(this_run_dir)
@@ -79,8 +79,7 @@ def train(args):
                 "env_id": args.env,
                 "full_param_traj_dir_path": full_param_traj_dir_path}
 
-
-    model = PPO2(policy=policy, env=env, n_steps=2048, nminibatches=32, lam=0.95, gamma=0.99, noptepochs=10,
+    model = PPO2(policy=policy, env=env, n_steps=args.n_steps, nminibatches=args.nminibatches, lam=0.95, gamma=0.99, noptepochs=10,
                  ent_coef=0.0, learning_rate=3e-4, cliprange=0.2)
     model.tell_run_info(run_info)
 
