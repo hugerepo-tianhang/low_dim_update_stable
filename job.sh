@@ -149,12 +149,12 @@ next_n_once () {
 #sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
 
 #
-sleep 1; run 0 'Hopper-v2' 512 2048& sleep 1; ps
-sleep 1; run 0 'Hopper-v2' 256 2048& sleep 1; ps
+sleep 1; run 0 'DartHopper-v1' 512 2048& sleep 1; ps
+sleep 1; run 0 'DartHopper-v1' 256 2048& sleep 1; ps
 #sleep 1; run 0 'Hopper-v2' 32 2048& sleep 1; ps
 
-sleep 1; run 0 'Walker2d-v2' 512 2048& sleep 1; ps
-sleep 1; run 0 'Walker2d-v2' 256 2048& sleep 1; ps
+sleep 1; run 0 'DartWalker2d-v1' 512 2048& sleep 1; ps
+sleep 1; run 0 'DartWalker2d-v1' 256 2048& sleep 1; ps
 #sleep 1; run 0 'Walker2d-v2' 32 2048& sleep 1; ps
 #sleep 1; run 0 'Walker2d-v2' 16 2048& sleep 1; ps
 #sleep 1; run 0 'Walker2d-v2' 8 2048& sleep 1; ps
@@ -163,27 +163,27 @@ wait
 
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
 
-sleep 1; cma_once 0 'Hopper-v2' 8 2048; sleep 1; ps
-sleep 1; cma_once 0 'Hopper-v2' 8 2048; sleep 1; ps
-sleep 1; cma_once 0 'Hopper-v2' 8 2048; sleep 1; ps
+sleep 1; cma_once 0 'DartHopper-v1' 8 2048; sleep 1; ps
+sleep 1; cma_once 0 'DartHopper-v1' 8 2048; sleep 1; ps
+sleep 1; cma_once 0 'DartHopper-v1' 8 2048; sleep 1; ps
 
 
-sleep 1; cma_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
-sleep 1; cma_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
-sleep 1; cma_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 8 2048; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 8 2048; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 8 2048; sleep 1; ps
 
 
 
 
-sleep 1; next_n_once 0 'Hopper-v2' 512 2048; sleep 1; ps
-sleep 1; next_n_once 0 'Hopper-v2' 256 2048; sleep 1; ps
-sleep 1; cma_once 0 'Hopper-v2' 512 2048; sleep 1; ps
+sleep 1; next_n_once 0 'DartHopper-v1' 512 2048; sleep 1; ps
+sleep 1; next_n_once 0 'DartHopper-v1' 256 2048; sleep 1; ps
+sleep 1; cma_once 0 'DartHopper-v1' 512 2048; sleep 1; ps
 
 #sleep 1; next_n_once 0 'Hopper-v2' 32 2048; sleep 1; ps
 
-sleep 1; next_n_once 0 'Walker2d-v2' 512 2048; sleep 1; ps
-sleep 1; next_n_once 0 'Walker2d-v2' 256 2048; sleep 1; ps
-sleep 1; cma_once 0 'Walker2d-v2' 512 2048; sleep 1; ps
+sleep 1; next_n_once 0 'DartWalker2d-v1' 512 2048; sleep 1; ps
+sleep 1; next_n_once 0 'DartWalker2d-v1' 256 2048; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 512 2048; sleep 1; ps
 
 #sleep 1; next_n_once 0 'Walker2d-v2' 32 2048; sleep 1; ps
 #sleep 1; next_n_once 0 'Walker2d-v2' 16 2048; sleep 1; ps
