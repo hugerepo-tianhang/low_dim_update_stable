@@ -111,13 +111,13 @@ def mujoco_arg_parser():
     parser = arg_parser()
     parser.register('type', 'bool', str2bool)
     parser.add_argument("--normalize", type='bool', default=False)
-    parser.add_argument('--env', help='environment ID', type=str, default='Hopper-v2')
+    parser.add_argument('--env', help='environment ID', type=str, default='DartHopper-v1')
     parser.add_argument('--seed', help='RNG seed', type=int, default=0)
     parser.add_argument('--run_num', default=0, type=int, help='which run number')
     parser.add_argument('--nminibatches', default=4, type=int, help='which run number')
     parser.add_argument('--n_steps', default=2048, type=int, help='which run number')
 
-    parser.add_argument('--num-timesteps', type=int, default=10002)
+    parser.add_argument('--num-timesteps', type=int, default=50002)
     parser.add_argument('--play', default=False, action='store_true')
     return parser
 
