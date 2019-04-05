@@ -49,6 +49,8 @@ def train(args):
 
     def make_env():
         env_out = gym.make(args.env)
+        env_out.env.disableViewer = True
+        env_out.env.visualize = False
         env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
         return env_out
 
@@ -98,6 +100,8 @@ def eval_return(args, save_dir, theta,  eval_timesteps, i):
 
     def make_env():
         env_out = gym.make(args.env)
+        env_out.env.disableViewer = True
+        env_out.env.visualize = False
         env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
         return env_out
     env = DummyVecEnv([make_env])

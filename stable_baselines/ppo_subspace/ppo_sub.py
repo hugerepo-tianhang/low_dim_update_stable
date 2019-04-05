@@ -143,6 +143,9 @@ def do_ppos(ppos_args, result, intermediate_data_dir, origin_param):
 
     def make_env():
         env_out = gym.make(ppos_args.env)
+        env_out.env.disableViewer = True
+        env_out.env.visualize = False
+
         env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
         return env_out
 

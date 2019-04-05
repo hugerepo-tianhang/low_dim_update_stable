@@ -117,7 +117,7 @@ def mujoco_arg_parser():
     parser.add_argument('--nminibatches', default=4, type=int, help='which run number')
     parser.add_argument('--n_steps', default=2048, type=int, help='which run number')
 
-    parser.add_argument('--num-timesteps', type=int, default=50002)
+    parser.add_argument('--num-timesteps', type=int, default=5000)
     parser.add_argument('--play', default=False, action='store_true')
     return parser
 
