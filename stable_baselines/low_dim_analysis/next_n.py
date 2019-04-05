@@ -87,11 +87,10 @@ if __name__ == '__main__':
     threads_or_None = 'threads' if args.use_threads else None
     logger.log(f"THREADS OR NOT: {threads_or_None}")
 
-    plot_dir = get_plot_dir(args.alg, args.num_timesteps, args.env, args.normalize, args.run_num)
+    plot_dir = get_plot_dir(args)
 
     plot_next_n_dir = f"{plot_dir}/next_n"
-    this_run_dir = get_dir_path_for_this_run(args.alg, args.num_timesteps,
-                                             args.env, args.normalize, args.run_num, args.n_steps, args.nminibatches)
+    this_run_dir = get_dir_path_for_this_run(args)
 
     traj_params_dir_name = get_full_params_dir(this_run_dir)
     if os.path.exists(plot_next_n_dir):
@@ -163,7 +162,7 @@ if __name__ == '__main__':
 
     distances_traveled = get_distances(concat_matrix_diff)
     plot_distances(plot_next_n_dir, distances_traveled, show=False)
-    dump_my(plot_next_n_dir, np.sum(distances_traveled), "total distance travelled")
+    dump_my(plot_next_n_dir, final_pca.explained_variance_ratio_, "explained_var")
 
 
     print("gc the big thing")

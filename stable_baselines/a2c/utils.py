@@ -3,7 +3,7 @@ from collections import deque
 
 import numpy as np
 import tensorflow as tf
-
+from stable_baselines.ppo_subspace.constant import mult_conllection_prefix
 
 def sample(logits):
     """
@@ -127,6 +127,38 @@ def conv(input_tensor, scope, *, n_filters, filter_size, stride,
         if not one_dim_bias and data_format == 'NHWC':
             bias = tf.reshape(bias, bshape)
         return bias + tf.nn.conv2d(input_tensor, weight, strides=strides, padding=pad, data_format=data_format)
+
+
+def get_mult_variable(mult_tensors, name, shape, initializer, collection_name=mult_conllection_prefix):
+    final_weight = tf.get_variable(f"{name}_origin", shape, initializer=initializer,
+                                 collections=[tf.GraphKeys.GLOBAL_VARIABLES, f"{collection_name}_origin"])
+    for i, mult_tensor in enumerate(mult_tensors):
+
+        weight = tf.get_variable(f"{name}_{i}", shape, initializer=initializer,
+                                 collections=[tf.GraphKeys.GLOBAL_VARIABLES, f"{collection_name}_{i}"])
+
+        final_weight = tf.add(final_weight, tf.multiply(mult_tensor, weight))
+    return final_weight
+
+def linear_with_mult(mult_tensors, input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0):
+    """
+    Creates a fully connected layer for TensorFlow
+
+    :param input_tensor: (TensorFlow Tensor) The input tensor for the fully connected layer
+    :param scope: (str) The TensorFlow variable scope
+    :param n_hidden: (int) The number of hidden neurons
+    :param init_scale: (int) The initialization scale
+    :param init_bias: (int) The initialization offset bias
+    :return: (TensorFlow Tensor) fully connected layer
+    """
+    with tf.variable_scope(scope):
+        n_input = input_tensor.get_shape()[1].value
+
+        final_weight = get_mult_variable(mult_tensors, "w_mult", [n_input, n_hidden], ortho_init(init_scale))
+        final_bias = get_mult_variable(mult_tensors, "b_mult", [n_hidden], tf.constant_initializer(init_bias))
+
+
+        return tf.matmul(input_tensor, final_weight) + final_bias
 
 
 def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0):

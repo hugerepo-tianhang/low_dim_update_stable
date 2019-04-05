@@ -35,8 +35,8 @@ def train(args):
     """
     args, argv = mujoco_arg_parser().parse_known_args(args)
     logger.log(f"#######TRAIN: {args}")
-
-    this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps, args.env, args.normalize, args.run_num, args.n_steps, args.nminibatches)
+    args.alg = "ppo2"
+    this_run_dir = get_dir_path_for_this_run(args)
     if os.path.exists(this_run_dir):
         import shutil
         shutil.rmtree(this_run_dir)

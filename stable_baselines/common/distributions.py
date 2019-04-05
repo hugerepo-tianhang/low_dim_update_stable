@@ -3,7 +3,7 @@ import tensorflow as tf
 from tensorflow.python.ops import math_ops
 from gym import spaces
 
-from stable_baselines.a2c.utils import linear
+from stable_baselines.a2c.utils import linear,linear_with_mult, get_mult_variable
 
 
 class ProbabilityDistribution(object):
@@ -164,11 +164,15 @@ class CategoricalProbabilityDistributionType(ProbabilityDistributionType):
     def probability_distribution_class(self):
         return CategoricalProbabilityDistribution
 
-    def proba_distribution_from_latent(self, pi_latent_vector, vf_latent_vector, init_scale=1.0, init_bias=0.0):
-        pdparam = linear(pi_latent_vector, 'pi', self.n_cat, init_scale=init_scale, init_bias=init_bias)
-        q_values = linear(vf_latent_vector, 'q', self.n_cat, init_scale=init_scale, init_bias=init_bias)
-        return self.proba_distribution_from_flat(pdparam), pdparam, q_values
-
+    def proba_distribution_from_latent(self, pi_latent_vector, vf_latent_vector, init_scale=1.0, init_bias=0.0, mult_tensors=None):
+        if mult_tensors is not None:
+            pdparam = linear_with_mult(mult_tensors, pi_latent_vector, 'pi', self.n_cat, init_scale=init_scale, init_bias=init_bias)
+            q_values = linear_with_mult(mult_tensors, vf_latent_vector, 'q', self.n_cat, init_scale=init_scale, init_bias=init_bias)
+            return self.proba_distribution_from_flat(pdparam), pdparam, q_values
+        else:
+            pdparam = linear(pi_latent_vector, 'pi', self.n_cat, init_scale=init_scale, init_bias=init_bias)
+            q_values = linear(vf_latent_vector, 'q', self.n_cat, init_scale=init_scale, init_bias=init_bias)
+            return self.proba_distribution_from_flat(pdparam), pdparam, q_values
     def param_shape(self):
         return [self.n_cat]
 
@@ -197,10 +201,15 @@ class MultiCategoricalProbabilityDistributionType(ProbabilityDistributionType):
     def proba_distribution_from_flat(self, flat):
         return MultiCategoricalProbabilityDistribution(self.n_vec, flat)
 
-    def proba_distribution_from_latent(self, pi_latent_vector, vf_latent_vector, init_scale=1.0, init_bias=0.0):
-        pdparam = linear(pi_latent_vector, 'pi', sum(self.n_vec), init_scale=init_scale, init_bias=init_bias)
-        q_values = linear(vf_latent_vector, 'q', sum(self.n_vec), init_scale=init_scale, init_bias=init_bias)
-        return self.proba_distribution_from_flat(pdparam), pdparam, q_values
+    def proba_distribution_from_latent(self, pi_latent_vector, vf_latent_vector, init_scale=1.0, init_bias=0.0, mult_tensors=None):
+        if mult_tensors is not None:
+            pdparam = linear_with_mult(mult_tensors, pi_latent_vector, 'pi', sum(self.n_vec), init_scale=init_scale, init_bias=init_bias)
+            q_values = linear_with_mult(mult_tensors, vf_latent_vector, 'q', sum(self.n_vec), init_scale=init_scale, init_bias=init_bias)
+            return self.proba_distribution_from_flat(pdparam), pdparam, q_values
+        else:
+            pdparam = linear(pi_latent_vector, 'pi', sum(self.n_vec), init_scale=init_scale, init_bias=init_bias)
+            q_values = linear(vf_latent_vector, 'q', sum(self.n_vec), init_scale=init_scale, init_bias=init_bias)
+            return self.proba_distribution_from_flat(pdparam), pdparam, q_values
 
     def param_shape(self):
         return [sum(self.n_vec)]
@@ -233,12 +242,22 @@ class DiagGaussianProbabilityDistributionType(ProbabilityDistributionType):
         """
         return self.probability_distribution_class()(flat)
 
-    def proba_distribution_from_latent(self, pi_latent_vector, vf_latent_vector, init_scale=1.0, init_bias=0.0):
-        mean = linear(pi_latent_vector, 'pi', self.size, init_scale=init_scale, init_bias=init_bias)
-        logstd = tf.get_variable(name='pi/logstd', shape=[1, self.size], initializer=tf.zeros_initializer())
-        pdparam = tf.concat([mean, mean * 0.0 + logstd], axis=1)
-        q_values = linear(vf_latent_vector, 'q', self.size, init_scale=init_scale, init_bias=init_bias)
-        return self.proba_distribution_from_flat(pdparam), mean, q_values
+    def proba_distribution_from_latent(self, pi_latent_vector, vf_latent_vector, init_scale=1.0, init_bias=0.0, mult_tensors=None):
+        if mult_tensors is not None:
+            mean = linear_with_mult(mult_tensors, pi_latent_vector, 'pi', self.size, init_scale=init_scale, init_bias=init_bias)
+            logstd = get_mult_variable(mult_tensors, name="pi/logstd", shape=[1, self.size],
+                                       initializer=tf.zeros_initializer())
+
+            pdparam = tf.concat([mean, mean * 0.0 + logstd], axis=1)
+            q_values = linear_with_mult(mult_tensors, vf_latent_vector, 'q', self.size,
+                                        init_scale=init_scale, init_bias=init_bias)
+            return self.proba_distribution_from_flat(pdparam), mean, q_values
+        else:
+            mean = linear(pi_latent_vector, 'pi', self.size, init_scale=init_scale, init_bias=init_bias)
+            logstd = tf.get_variable(name='pi/logstd', shape=[1, self.size], initializer=tf.zeros_initializer())
+            pdparam = tf.concat([mean, mean * 0.0 + logstd], axis=1)
+            q_values = linear(vf_latent_vector, 'q', self.size, init_scale=init_scale, init_bias=init_bias)
+            return self.proba_distribution_from_flat(pdparam), mean, q_values
 
     def param_shape(self):
         return [2 * self.size]

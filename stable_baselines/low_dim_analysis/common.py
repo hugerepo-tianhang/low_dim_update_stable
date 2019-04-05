@@ -6,6 +6,153 @@ from sklearn.decomposition import IncrementalPCA, PCA
 import csv
 from collections.abc import Iterable
 from stable_baselines.low_dim_analysis.eval_util import *
+from stable_baselines import logger
+import time
+from joblib import Parallel, delayed
+
+def gen_subspace_coords(plot_args, proj_coord):
+    proj_xcoord, proj_ycoord = proj_coord[0], proj_coord[1]
+
+    xmin, xmax = np.min(proj_xcoord), np.max(proj_xcoord)
+    ymin, ymax = np.min(proj_ycoord), np.max(proj_ycoord)
+
+    x_len = xmax - xmin
+    y_len = ymax - ymin
+    assert(x_len>=0)
+    assert(y_len>=0)
+
+    xmin -= plot_args.padding_fraction * x_len
+    xmax += plot_args.padding_fraction * x_len
+    ymin -= plot_args.padding_fraction * y_len
+    ymax += plot_args.padding_fraction * y_len
+
+    xcoordinates_to_eval = np.linspace(xmin, xmax, plot_args.xnum)
+    ycoordinates_to_eval = np.linspace(ymin, ymax, plot_args.ynum)
+
+    np.insert(xcoordinates_to_eval, xcoordinates_to_eval.searchsorted(0), 0)
+    np.insert(ycoordinates_to_eval, ycoordinates_to_eval.searchsorted(0), 0)
+
+    return xcoordinates_to_eval, ycoordinates_to_eval
+
+def do_proj_(concat_matrix_diff, first_n_pcs, intermediate_data_dir, mean_param, origin="final_param"):
+    logger.log(f"project all params")
+    proj_xcoord, proj_ycoord = [], []
+    for param in concat_matrix_diff:
+        x, y = project_2D_final_param_origin(d=param, dx=first_n_pcs[0], dy=first_n_pcs[1])
+
+        proj_xcoord.append(x)
+        proj_ycoord.append(y)
+
+    proj_coords = np.array([proj_xcoord, proj_ycoord])
+
+    return proj_coords
+
+def do_proj(concat_matrix_diff, first_n_pcs, intermediate_data_dir, mean_param, origin="final_param"):
+    components = first_n_pcs[:2]
+    if "final_param" == origin:
+        proj_coords = concat_matrix_diff.dot(components.T)
+    else:
+        proj_coords = (concat_matrix_diff - mean_param).dot(components.T)
+    return proj_coords.T
+
+def do_eval_returns(plot_args, intermediate_data_dir, first_n_pcs, origin_param, xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center="final_param"):
+
+    eval_string = f"xnum_{np.min(xcoordinates_to_eval)}:{np.max(xcoordinates_to_eval)}:{plot_args.xnum}_" \
+                    f"ynum_{np.min(ycoordinates_to_eval)}:{np.max(ycoordinates_to_eval)}:{plot_args.ynum}"
+
+    if not os.path.exists(get_eval_returns_filename(intermediate_dir=intermediate_data_dir,
+                                                    eval_string=eval_string, n_comp=2, pca_center=pca_center)):
+
+        from stable_baselines.ppo2.run_mujoco import eval_return
+
+        tic = time.time()
+        thetas_to_eval = [origin_param + x * first_n_pcs[0] + y * first_n_pcs[1] for y in ycoordinates_to_eval for x in xcoordinates_to_eval]
+
+        eval_returns = Parallel(n_jobs=plot_args.cores_to_use, max_nbytes='100M')\
+            (delayed(eval_return)(plot_args, save_dir, theta, plot_args.eval_num_timesteps, i) for (i, theta) in enumerate(thetas_to_eval))
+        toc = time.time()
+        logger.log(f"####################################1st version took {toc-tic} seconds")
+
+
+        np.savetxt(get_eval_returns_filename(intermediate_dir=intermediate_data_dir,
+                                             eval_string=eval_string, n_comp=2, pca_center=pca_center), eval_returns, delimiter=',')
+    else:
+        eval_returns = np.loadtxt(get_eval_returns_filename(intermediate_dir=intermediate_data_dir,
+                                                            eval_string=eval_string, n_comp=2, pca_center=pca_center), delimiter=',')
+
+    return eval_returns
+
+
+def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_dir, proj, origin="final_param"):
+    logger.log("grab final params")
+    final_file = get_full_param_traj_file_path(traj_params_dir_name, "final")
+    final_concat_params = pd.read_csv(final_file, header=None).values[0]
+    proj_coords = None
+    if not os.path.exists(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components))\
+        or not os.path.exists(get_mean_param_filename(intermediate_dir=intermediate_data_dir)) \
+        or (proj and not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2, pca_center=origin))):
+
+
+        tic = time.time()
+        concat_matrix_diff = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
+                                                             final_concat_params=final_concat_params)
+        toc = time.time()
+        print('\nElapsed time getting the full concat diff took {:.2f} s\n'
+              .format(toc - tic))
+
+
+
+        final_pca = PCA(n_components=n_components) # for sparse PCA to speed up
+
+        tic = time.time()
+        final_pca.fit(concat_matrix_diff)
+        toc = time.time()
+        logger.log('\nElapsed time computing the full PCA {:.2f} s\n'
+              .format(toc - tic))
+
+        logger.log(final_pca.explained_variance_ratio_)
+
+        pcs_components = final_pca.components_
+
+        first_n_pcs = pcs_components[:n_comp_to_use]
+        mean_param = final_pca.mean_
+        explained_variance_ratio = final_pca.explained_variance_ratio_
+
+        if proj:
+            proj_coords = do_proj(concat_matrix_diff, first_n_pcs, intermediate_data_dir, mean_param, origin)
+            np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2, pca_center=origin),
+                        proj_coords, delimiter=',')
+        np.savetxt(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components), pcs_components, delimiter=',')
+        np.savetxt(get_mean_param_filename(intermediate_dir=intermediate_data_dir), mean_param, delimiter=',')
+        np.savetxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=2),
+                   explained_variance_ratio, delimiter=',')
+
+        print("gc the big thing")
+        del concat_matrix_diff
+        import gc
+        gc.collect()
+    else:
+        pcs_components = np.loadtxt(
+            get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components), delimiter=',')
+        first_n_pcs = pcs_components[:n_comp_to_use]
+        mean_param = np.loadtxt(get_mean_param_filename(intermediate_dir=intermediate_data_dir), delimiter=',')
+        explained_variance_ratio = np.loadtxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=2),
+                   delimiter=',')
+        if proj:
+            proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2, pca_center=origin), delimiter=',')
+
+
+    result = {
+        "pcs_components": pcs_components,
+        "first_n_pcs": first_n_pcs,
+        "mean_param":mean_param,
+        "final_concat_params":final_concat_params,
+        "explained_variance_ratio":explained_variance_ratio,
+        "proj_coords":proj_coords
+    }
+    return result
+
+
 
 def get_projected_data_in_old_basis(pca, data, num_axis_to_use):
     components = pca.components_[:num_axis_to_use]
@@ -100,7 +247,7 @@ def project_2D_final_param_origin(d, dx, dy, proj_method='lstsq'):
 
 
 def plot_contour_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, proj_xcoord, proj_ycoord, explained_variance_ratio,
-                            num_levels=40, show=False):
+                            num_levels=40, show=False, cma_path=None, cma_path_mean=None):
     """2D contour + trajectory"""
 
     X, Y = np.meshgrid(xcoordinates, ycoordinates)
@@ -114,6 +261,13 @@ def plot_contour_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, p
     cbar = plt.colorbar()
     # plot trajectories
     plt.plot(proj_xcoord, proj_ycoord, marker='.')
+
+    if cma_path is not None:
+        plt.plot(cma_path[0], cma_path[1], 'bo')
+    if cma_path_mean is not None:
+        plt.plot(cma_path_mean[0], cma_path_mean[1], marker='8')
+
+
     plt.annotate('end', xy=(proj_xcoord[-1], proj_ycoord[-1]), xytext=(proj_xcoord[-1] + 0.2, proj_ycoord[-1] +0.2),
                 arrowprops=dict(facecolor='black', shrink=0.05),
                 )

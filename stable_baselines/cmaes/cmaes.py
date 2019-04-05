@@ -1,4 +1,5 @@
-
+from stable_baselines.ppo2.run_mujoco import eval_return
+import cma
 
 import numpy as np
 from stable_baselines.low_dim_analysis.eval_util import *
@@ -10,7 +11,10 @@ from sklearn.decomposition import PCA
 
 from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
-
+import time
+import os
+from stable_baselines.common.cmd_util import mujoco_arg_parser
+from stable_baselines.low_dim_analysis.common_parser import get_common_parser
 
 def get_allinone_concat_matrix_diff(dir_name, final_concat_params):
     index = 0
@@ -91,100 +95,11 @@ def get_cma_run_num(intermediate_data_dir, n_comp):
     return run_num
 
 
-if __name__ == '__main__':
-
-    import time
-    import os
-    from stable_baselines.common.cmd_util import mujoco_arg_parser
-    from stable_baselines.low_dim_analysis.common_parser import get_common_parser
-    from stable_baselines.cmaes.cma_arg_parser import get_cma_parser
-    openai_arg_parser = mujoco_arg_parser()
-    cma_arg_parser = get_cma_parser()
-
-    cma_args, cma_unknown_args = cma_arg_parser.parse_known_args()
-    openai_args, openai_unknown_args = openai_arg_parser.parse_known_args()
-
-
-
-    this_run_dir = get_dir_path_for_this_run(cma_args.alg, cma_args.num_timesteps,
-                                             cma_args.env, cma_args.normalize, cma_args.run_num)
-
-    traj_params_dir_name = get_full_params_dir(this_run_dir)
-    intermediate_data_dir = get_intermediate_data_dir(this_run_dir)
-    save_dir = get_save_dir( this_run_dir)
-
-
-    if not os.path.exists(intermediate_data_dir):
-        os.makedirs(intermediate_data_dir)
-
-
-    '''
-    ==========================================================================================
-    get the pc vectors
-    ==========================================================================================
-    '''
-
-    if not os.path.exists(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=cma_args.n_components))\
-        or not os.path.exists(get_mean_param_filename(intermediate_dir=intermediate_data_dir)):
-
-        logger.log("grab final params")
-        final_file = get_full_param_traj_file_path(traj_params_dir_name, "final")
-        final_concat_params = pd.read_csv(final_file, header=None).values[0]
-
-        tic = time.time()
-        concat_matrix_diff = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
-                                                             final_concat_params=final_concat_params)
-        toc = time.time()
-        print('\nElapsed time getting the full concat diff took {:.2f} s\n'
-              .format(toc - tic))
-
-
-
-        final_pca = PCA(n_components=cma_args.n_components) # for sparse PCA to speed up
-
-        tic = time.time()
-        final_pca.fit(concat_matrix_diff)
-        toc = time.time()
-        logger.log('\nElapsed time computing the full PCA {:.2f} s\n'
-              .format(toc - tic))
-
-        logger.log(final_pca.explained_variance_ratio_)
-
-        pcs_components = final_pca.components_
-
-        first_n_pcs = pcs_components[:cma_args.n_comp_to_use]
-        mean_param = final_pca.mean_
-
-        np.savetxt(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=cma_args.n_components), pcs_components, delimiter=',')
-        np.savetxt(get_mean_param_filename(intermediate_dir=intermediate_data_dir), mean_param, delimiter=',')
-
-
-
-        print("gc the big thing")
-        del concat_matrix_diff
-        import gc
-        gc.collect()
-
-    else:
-        pcs_components = np.loadtxt(
-            get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=cma_args.n_components), delimiter=',')
-        first_n_pcs = pcs_components[:cma_args.n_comp_to_use]
-        mean_param = np.loadtxt(get_mean_param_filename(intermediate_dir=intermediate_data_dir), delimiter=',')
-
-
-    '''
-    ==========================================================================================
-    eval all xy coords
-    ==========================================================================================
-    '''
-
-    from stable_baselines.ppo2.run_mujoco import eval_return
+def do_cma(cma_args, first_n_pcs, orgin_param, save_dir, starting_coord):
 
     tic = time.time()
 
-    import cma
     #TODO better starting locations, record how many samples,
-    starting_coord = np.zeros((1, cma_args.n_comp_to_use)) # use mean
     es = cma.CMAEvolutionStrategy(starting_coord, 2)
     total_num_of_evals = 0
     total_num_timesteps = 0
@@ -194,12 +109,16 @@ if __name__ == '__main__':
     min_rets = []
     max_rets = []
     eval_returns = None
+
+    optimization_path = []
     while total_num_timesteps < cma_args.cma_num_timesteps and not es.stop():
         solutions = es.ask()
-        thetas = [np.matmul(coord, first_n_pcs) + mean_param for coord in solutions]
+        optimization_path.extend(solutions)
+        thetas = [np.matmul(coord, first_n_pcs) + orgin_param for coord in solutions]
         logger.log(f"eval num: {cma_args.eval_num_timesteps}")
         eval_returns = Parallel(n_jobs=cma_args.cores_to_use) \
-            (delayed(eval_return)(openai_args, save_dir, theta, cma_args.eval_num_timesteps, i) for (i, theta) in enumerate(thetas))
+            (delayed(eval_return)(cma_args, save_dir, theta, cma_args.eval_num_timesteps, i) for
+             (i, theta) in enumerate(thetas))
 
 
         mean_rets.append(np.mean(eval_returns))
@@ -221,32 +140,109 @@ if __name__ == '__main__':
     toc = time.time()
     logger.log(f"####################################CMA took {toc-tic} seconds")
 
+    es_logger = es.logger
+
+    if not hasattr(es_logger, 'xmean'):
+        es_logger.load()
+
+    optimization_path_mean = es_logger.xmean[:,5:5+2]
+    return mean_rets, min_rets, max_rets, np.array(optimization_path).T, optimization_path_mean.T
+
+
+def main(origin="final_param"):
+    import sys
+    logger.log(sys.argv)
+    common_arg_parser = get_common_parser()
+    cma_args, cma_unknown_args = common_arg_parser.parse_known_args()
+
+
+    this_run_dir = get_dir_path_for_this_run(cma_args)
+
+    traj_params_dir_name = get_full_params_dir(this_run_dir)
+    intermediate_data_dir = get_intermediate_data_dir(this_run_dir)
+    save_dir = get_save_dir( this_run_dir)
+
+
+    if not os.path.exists(intermediate_data_dir):
+        os.makedirs(intermediate_data_dir)
+
+
+    '''
+    ==========================================================================================
+    get the pc vectors
+    ==========================================================================================
+    '''
+    from stable_baselines.low_dim_analysis.common import do_pca
+    result = do_pca(cma_args.n_components, cma_args.n_comp_to_use, traj_params_dir_name, intermediate_data_dir, proj=True, origin=origin)
+    '''
+    ==========================================================================================
+    eval all xy coords
+    ==========================================================================================
+    '''
+    from stable_baselines.low_dim_analysis.common import plot_3d_trajectory, plot_contour_trajectory, gen_subspace_coords,do_eval_returns
+    proj_coord = result["proj_coords"]
+    proj_xcoord = proj_coord[0]
+    proj_ycoord = proj_coord[1]
+
+    # starting_coord = np.zeros((1, cma_args.n_comp_to_use)) # use mean
+    starting_coord = (np.random.uniform(np.min(proj_xcoord), np.max(proj_xcoord)),
+                    np.random.uniform(np.min(proj_ycoord), np.max(proj_ycoord)))
+    logger.log(f"CMA STASRTING CORRD: {starting_coord}")
+
+    if origin=="final_param":
+        origin_param = result["final_concat_params"]
+    else:
+        origin_param = result["mean_param"]
+
+
 
     cma_run_num = get_cma_run_num(intermediate_data_dir, n_comp=cma_args.n_comp_to_use)
     cma_intermediate_data_dir = get_cma_returns_dirname(intermediate_data_dir, cma_args.n_comp_to_use, cma_run_num)
     if not os.path.exists(cma_intermediate_data_dir):
         os.makedirs(cma_intermediate_data_dir)
 
+
+
+
+    # starting_coord = (1/2*np.max(xcoordinates_to_eval), 1/2*np.max(ycoordinates_to_eval)) # use mean
+    assert result["first_n_pcs"].shape[0] == 2
+    mean_rets, min_rets, max_rets, opt_path, opt_path_mean = do_cma(cma_args, result["first_n_pcs"],
+                                                                    origin_param, save_dir, starting_coord)
+
     np.savetxt(f"{cma_intermediate_data_dir}/mean_rets.txt",mean_rets, delimiter=',')
     np.savetxt(f"{cma_intermediate_data_dir}/min_rets.txt", min_rets, delimiter=',')
     np.savetxt(f"{cma_intermediate_data_dir}/max_rets.txt", max_rets, delimiter=',')
 
 
-    plot_dir = get_plot_dir(cma_args.alg, cma_args.num_timesteps, cma_args.env, cma_args.normalize, cma_args.run_num)
+    plot_dir = get_plot_dir(cma_args)
     cma_plot_dir = get_cma_plot_dir(plot_dir, cma_args.n_comp_to_use, cma_run_num)
     if not os.path.exists(cma_plot_dir):
         os.makedirs(cma_plot_dir)
-
-
-    es.result_pretty()
-    cma.plot()  # shortcut for es.logger.plot()
-    plt.savefig(f'{cma_plot_dir}/cma_plot.png')  # save current figure
 
     ret_plot_name = f"cma return on {cma_args.n_comp_to_use} dim space of real pca plane"
     plot_cma_returns(cma_plot_dir, ret_plot_name, mean_rets, min_rets, max_rets, show=False)
 
 
 
+
+    xcoordinates_to_eval, ycoordinates_to_eval = gen_subspace_coords(cma_args, np.hstack((proj_coord, opt_path_mean)))
+
+    eval_returns = do_eval_returns(cma_args, intermediate_data_dir, result["first_n_pcs"], origin_param,
+                    xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center=origin)
+
+    plot_contour_trajectory(cma_plot_dir, "end_point_origin_eval_return_contour_plot", xcoordinates_to_eval, ycoordinates_to_eval, eval_returns, proj_xcoord, proj_ycoord,
+                            result["explained_variance_ratio"][:2],
+                            num_levels=15, show=False, cma_path=opt_path, cma_path_mean=opt_path_mean)
+    # plot_3d_trajectory(cma_plot_dir, "end_point_origin_eval_return_3d_plot", xcoordinates_to_eval, ycoordinates_to_eval,
+    #                         eval_returns, proj_xcoord, proj_ycoord,
+    #                         result["explained_variance_ratio"][:2],
+    #                         num_levels=15, show=False)
+
+
+
+if __name__ == '__main__':
+
+    main()
 
 #TODO Give filenames more info to identify which hyperparameter is the data for
 

@@ -7,9 +7,10 @@ def get_project_dir():
     return project_dir
 
 
-def get_dir_path_for_this_run(alg, total_timesteps, env_id, normalize, run_num, n_steps, nminibatches):
-    return f'{get_project_dir()}/stable_baselines/{alg}/env_{env_id}_time_step_{total_timesteps}_' \
-           f'normalize_{normalize}_n_steps_{n_steps}_nminibatches_{nminibatches}_run_{run_num}'
+def get_dir_path_for_this_run(args):
+    return f'{get_project_dir()}/stable_baselines/{args.alg}/env_{args.env}_time_step_{args.num_timesteps}_' \
+           f'normalize_{args.normalize}_n_steps_{args.n_steps}_nminibatches_{args.nminibatches}_run_{args.run_num}'
+
 
 def get_log_dir(this_run_dir):
     return f"{this_run_dir}/the_log_dir"
@@ -37,11 +38,13 @@ def get_full_param_traj_file_path(dir_name, index):
 
 
 
-def get_plot_dir(alg, total_timesteps, env_id, normalize, run_num):
-    return f'{get_project_dir()}/plots/{alg}/env_{env_id}_time_step_{total_timesteps}_normalize_{normalize}_run_{run_num}'
+def get_plot_dir(args):
+    return f'{get_project_dir()}/plots/{args.alg}/env_{args.env}_time_step_{args.num_timesteps}_normalize_{args.normalize}_n_steps_{args.n_steps}_nminibatches_{args.nminibatches}_run_{args.run_num}'
 
 def get_cma_plot_dir(plot_dir, n_comp_to_use, cma_run_num):
     return f'{plot_dir}/cma/cma_n_comp_{n_comp_to_use}_run_num_{cma_run_num}'
+def get_ppos_plot_dir(plot_dir, n_comp_to_use, cma_run_num):
+    return f'{plot_dir}/ppos/ppos_n_comp_{n_comp_to_use}_run_num_{cma_run_num}'
 
 
 
@@ -58,13 +61,16 @@ def get_explain_ratios_filename(intermediate_dir, n_comp):
 def get_projected_full_path_filename(intermediate_dir, n_comp, pca_center, which_components=(1,2)):
 
     return f"{intermediate_dir}/n_comp_{n_comp}_pca_center_{pca_center}_which_components_{which_components}_projected_full_path"
-def get_eval_returns_filename(intermediate_dir, xnum, ynum, n_comp, pca_center, which_components=(1,2)):
+def get_eval_returns_filename(intermediate_dir, eval_string, n_comp, pca_center, which_components=(1,2)):
 
-    return f"{intermediate_dir}/xnum_{xnum}_ynum_{ynum}_n_comp_{n_comp}_pca_center_{pca_center}_which_components_{which_components}eval_returns"
+    return f"{intermediate_dir}/{eval_string}_n_comp_{n_comp}_pca_center_{pca_center}_which_components_{which_components}eval_returns"
 
 def get_cma_returns_dirname(intermediate_dir, n_comp, run_num):
 
     return f"{intermediate_dir}/cma/cma_n_comp_{n_comp}_run_num_{run_num}"
+def get_ppos_returns_dirname(intermediate_dir, n_comp, run_num):
+
+    return f"{intermediate_dir}/ppos/ppos_n_comp_{n_comp}_run_num_{run_num}"
 
 
 
