@@ -23,7 +23,6 @@ from stable_baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 from stable_baselines.low_dim_analysis.eval_util import get_full_param_traj_file_path, get_full_params_dir, get_dir_path_for_this_run, get_log_dir, get_save_dir
 import time
 import os
-from stable_baselines.common.cmd_util import mujoco_arg_parser
 from stable_baselines.low_dim_analysis.common_parser import get_common_parser
 
 
