@@ -1,18 +1,15 @@
 #!/bin/bash
 
-repeat_num=3
-start_index=0
 
-time_steps=5000
-cores_to_use=6
-xnum=3
-ynum=3
+cores_to_use=-1
+xnum=50
+ynum=50
 
 padding_fraction=0.4
 n_components=15
 
 n_comp_to_use=2
-cma_num_timesteps=20000
+cma_num_timesteps=15000
 ppos_num_timesteps=1500000
 eval_num_timesteps=1024
 even_check_point_num=5
@@ -75,6 +72,7 @@ run () {
     local env=$2
     local nminibatches=$3
     local n_steps=$4
+    local time_steps=$5
 
     echo "Welcome to RUN: run number  $env $run"
     python -m stable_baselines.ppo2.run_mujoco --env=$env --num-timesteps=$time_steps\
@@ -88,6 +86,7 @@ cma_once () {
     local env=$2
     local nminibatches=$3
     local n_steps=$4
+    local time_steps=$5
 
     echo "Welcome to cma: run number  $env $run"
 
@@ -110,6 +109,8 @@ ppos_once () {
     local env=$2
     local nminibatches=$3
     local n_steps=$4
+    local time_steps=$5
+
     echo "Welcome to cma: run number  $env $run"
 
 #    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
@@ -129,6 +130,8 @@ next_n_once () {
     local env=$2
     local nminibatches=$3
     local n_steps=$4
+    local time_steps=$5
+
     echo "Welcome to next_n: run number $env $run"
 
 #    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
@@ -149,11 +152,15 @@ next_n_once () {
 #sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
 
 #
-sleep 1; run 0 'DartHopper-v1' 512 2048& sleep 1; ps
-#sleep 1; run 0 'DartHopper-v1' 256 2048& sleep 1; ps
+#sleep 1; run 0 'DartHopper-v1' 512 2048 1000000& sleep 1; ps
+#sleep 1; run 0 'DartHopper-v1' 2 2048& sleep 1; ps
+sleep 1; run 0 'DartHopper-v1' 32 2048 5000& sleep 1; ps
+#sleep 1; run 0 'DartHopper-v1' 256 2048 1000000& sleep 1; ps
 #sleep 1; run 0 'Hopper-v2' 32 2048& sleep 1; ps
-
+#
 #sleep 1; run 0 'DartWalker2d-v1' 512 2048& sleep 1; ps
+##sleep 1; run 0 'DartWalker2d-v1' 2 2048& sleep 1; ps
+#sleep 1; run 0 'DartWalker2d-v1' 32 2048& sleep 1; ps
 #sleep 1; run 0 'DartWalker2d-v1' 256 2048& sleep 1; ps
 #sleep 1; run 0 'Walker2d-v2' 32 2048& sleep 1; ps
 #sleep 1; run 0 'Walker2d-v2' 16 2048& sleep 1; ps
@@ -163,24 +170,26 @@ wait
 
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
 
-sleep 1; cma_once 0 'DartHopper-v1' 512 2048; sleep 1; ps
-#sleep 1; cma_once 0 'DartHopper-v1' 8 2048; sleep 1; ps
-#sleep 1; cma_once 0 'DartHopper-v1' 8 2048; sleep 1; ps
+#sleep 1; cma_once 0 'DartHopper-v1' 512 2048 1000000; sleep 1; ps
+sleep 1; cma_once 0 'DartHopper-v1' 32 2048 5000; sleep 1; ps
+#sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000; sleep 1; ps
+
+#sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
 
 
-#sleep 1; cma_once 0 'DartWalker2d-v1' 8 2048; sleep 1; ps
-#sleep 1; cma_once 0 'DartWalker2d-v1' 8 2048; sleep 1; ps
-#sleep 1; cma_once 0 'DartWalker2d-v1' 8 2048; sleep 1; ps
+#sleep 1; cma_once 0 'DartWalker2d-v1' 512 2048 675000; sleep 1; ps
+#sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000; sleep 1; ps
+#sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000; sleep 1; ps
 
 
 
-
+#
 #sleep 1; next_n_once 0 'DartHopper-v1' 512 2048; sleep 1; ps
 #sleep 1; next_n_once 0 'DartHopper-v1' 256 2048; sleep 1; ps
-#sleep 1; cma_once 0 'DartHopper-v1' 512 2048; sleep 1; ps
-
-#sleep 1; next_n_once 0 'Hopper-v2' 32 2048; sleep 1; ps
-
+##sleep 1; cma_once 0 'DartHopper-v1' 512 2048; sleep 1; ps
+#
+##sleep 1; next_n_once 0 'Hopper-v2' 32 2048; sleep 1; ps
+#
 #sleep 1; next_n_once 0 'DartWalker2d-v1' 512 2048; sleep 1; ps
 #sleep 1; next_n_once 0 'DartWalker2d-v1' 256 2048; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 512 2048; sleep 1; ps

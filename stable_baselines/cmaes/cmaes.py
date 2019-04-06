@@ -179,14 +179,15 @@ def main(origin="final_param"):
     eval all xy coords
     ==========================================================================================
     '''
-    from stable_baselines.low_dim_analysis.common import plot_3d_trajectory, plot_contour_trajectory, gen_subspace_coords,do_eval_returns
+    from stable_baselines.low_dim_analysis.common import plot_contour_trajectory, gen_subspace_coords,do_eval_returns
     proj_coord = result["proj_coords"]
     proj_xcoord = proj_coord[0]
     proj_ycoord = proj_coord[1]
 
     # starting_coord = np.zeros((1, cma_args.n_comp_to_use)) # use mean
-    starting_coord = (np.random.uniform(np.min(proj_xcoord), np.max(proj_xcoord)),
-                    np.random.uniform(np.min(proj_ycoord), np.max(proj_ycoord)))
+    # starting_coord = (np.random.uniform(np.min(proj_xcoord), np.max(proj_xcoord)),
+    #                 np.random.uniform(np.min(proj_ycoord), np.max(proj_ycoord)))
+    starting_coord = (proj_xcoord[0],proj_ycoord[0])
     logger.log(f"CMA STASRTING CORRD: {starting_coord}")
 
     if origin=="final_param":
@@ -230,9 +231,10 @@ def main(origin="final_param"):
     eval_returns = do_eval_returns(cma_args, intermediate_data_dir, result["first_n_pcs"], origin_param,
                     xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center=origin)
 
-    plot_contour_trajectory(cma_plot_dir, "end_point_origin_eval_return_contour_plot", xcoordinates_to_eval, ycoordinates_to_eval, eval_returns, proj_xcoord, proj_ycoord,
+    plot_contour_trajectory(cma_plot_dir, "end_point_origin_eval_return_contour_plot", xcoordinates_to_eval,
+                            ycoordinates_to_eval, eval_returns, proj_xcoord, proj_ycoord,
                             result["explained_variance_ratio"][:2],
-                            num_levels=15, show=False, cma_path=opt_path, cma_path_mean=opt_path_mean)
+                            num_levels=25, show=False, sub_alg_path=opt_path_mean)
     # plot_3d_trajectory(cma_plot_dir, "end_point_origin_eval_return_3d_plot", xcoordinates_to_eval, ycoordinates_to_eval,
     #                         eval_returns, proj_xcoord, proj_ycoord,
     #                         result["explained_variance_ratio"][:2],

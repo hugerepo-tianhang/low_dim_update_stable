@@ -90,7 +90,8 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
     proj_coords = None
     if not os.path.exists(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components))\
         or not os.path.exists(get_mean_param_filename(intermediate_dir=intermediate_data_dir)) \
-        or (proj and not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2, pca_center=origin))):
+        or (proj and not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir,
+                                                                         n_comp=n_components, pca_center=origin))):
 
 
         tic = time.time()
@@ -120,11 +121,11 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
 
         if proj:
             proj_coords = do_proj(concat_matrix_diff, first_n_pcs, intermediate_data_dir, mean_param, origin)
-            np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2, pca_center=origin),
+            np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components, pca_center=origin),
                         proj_coords, delimiter=',')
         np.savetxt(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components), pcs_components, delimiter=',')
         np.savetxt(get_mean_param_filename(intermediate_dir=intermediate_data_dir), mean_param, delimiter=',')
-        np.savetxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=2),
+        np.savetxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components),
                    explained_variance_ratio, delimiter=',')
 
         print("gc the big thing")
@@ -136,10 +137,10 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
             get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components), delimiter=',')
         first_n_pcs = pcs_components[:n_comp_to_use]
         mean_param = np.loadtxt(get_mean_param_filename(intermediate_dir=intermediate_data_dir), delimiter=',')
-        explained_variance_ratio = np.loadtxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=2),
+        explained_variance_ratio = np.loadtxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components),
                    delimiter=',')
         if proj:
-            proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=2, pca_center=origin), delimiter=',')
+            proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components, pca_center=origin), delimiter=',')
 
 
     result = {
@@ -247,7 +248,7 @@ def project_2D_final_param_origin(d, dx, dy, proj_method='lstsq'):
 
 
 def plot_contour_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, proj_xcoord, proj_ycoord, explained_variance_ratio,
-                            num_levels=40, show=False, cma_path=None, cma_path_mean=None):
+                            num_levels=40, show=False, sub_alg_path=None):
     """2D contour + trajectory"""
 
     X, Y = np.meshgrid(xcoordinates, ycoordinates)
@@ -262,16 +263,24 @@ def plot_contour_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, p
     # plot trajectories
     plt.plot(proj_xcoord, proj_ycoord, marker='.')
 
-    if cma_path is not None:
-        plt.plot(cma_path[0], cma_path[1], 'bo')
-    if cma_path_mean is not None:
-        plt.plot(cma_path_mean[0], cma_path_mean[1], marker='8')
+    # if cma_path is not None:
+    #     plt.plot(cma_path[0], cma_path[1], 'bo')
+    if sub_alg_path is not None:
+        plt.plot(sub_alg_path[0], sub_alg_path[1], marker='8')
 
 
     plt.annotate('end', xy=(proj_xcoord[-1], proj_ycoord[-1]), xytext=(proj_xcoord[-1] + 0.2, proj_ycoord[-1] +0.2),
                 arrowprops=dict(facecolor='black', shrink=0.05),
                 )
 
+    plt.annotate('sub alg end', xy=(sub_alg_path[0][-1], sub_alg_path[1][-1]), xytext=(sub_alg_path[0][-1] + 0.2, sub_alg_path[1][-1] +0.2),
+                arrowprops=dict(facecolor='blue', shrink=0.05),
+                )
+
+    plt.annotate('sub alg start', xy=(sub_alg_path[0][0], sub_alg_path[1][0]),
+                 xytext=(sub_alg_path[0][0] + 0.2, sub_alg_path[1][0] + 0.2),
+                 arrowprops=dict(facecolor='blue', shrink=0.05),
+                 )
     # plot red points when learning rate decays
     # for e in [150, 225, 275]:
     #     plt.plot([pf['proj_xcoord'][e]], [pf['proj_ycoord'][e]], marker='.', color='r')
@@ -329,7 +338,7 @@ def plot_3d_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, proj_x
     if show: plt.show()
 
 
-def get_allinone_concat_matrix_diff(dir_name, final_concat_params):
+def get_allinone_concat_matrix_diff(dir_name, final_concat_params, num_index_to_take=None):
     index = 0
     theta_file = get_full_param_traj_file_path(dir_name, index)
 
@@ -339,7 +348,7 @@ def get_allinone_concat_matrix_diff(dir_name, final_concat_params):
 
     index += 1
 
-    while os.path.exists(get_full_param_traj_file_path(dir_name, index)):
+    while os.path.exists(get_full_param_traj_file_path(dir_name, index)) and (num_index_to_take is None or index < num_index_to_take):
         theta_file = get_full_param_traj_file_path(dir_name, index)
 
         part_concat_df = pd.read_csv(theta_file, header=None)

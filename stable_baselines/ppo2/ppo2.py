@@ -281,7 +281,32 @@ class PPO2(ActorCriticRLModel):
 
     def learn(self, total_timesteps, callback=None, seed=None, log_interval=1, tb_log_name="PPO2",
               reset_num_timesteps=True):
-        # Transform to callable if needed
+
+
+        def decide_next_skip(prob_of_down, up, down):
+            r = np.random.random_sample()
+            if r > prob_of_down:
+                current_skip_num = up
+            else:
+                current_skip_num = down
+            return current_skip_num
+
+        memory_size_threshold = 800000
+        current_non_skipped = 0
+        total_num_dumped = 0
+
+        if total_timesteps > memory_size_threshold:
+            down_sample_fraction = (total_timesteps - memory_size_threshold)/total_timesteps
+            down = int(1 / down_sample_fraction)
+            up = down + 1
+            prob_of_down = (down_sample_fraction - 1 / up) * up * down
+
+
+            current_skip_num = decide_next_skip(prob_of_down, up, down)
+
+
+
+                # Transform to callable if needed
         self.learning_rate = get_schedule_fn(self.learning_rate)
         self.cliprange = get_schedule_fn(self.cliprange)
 
@@ -289,6 +314,10 @@ class PPO2(ActorCriticRLModel):
 
         with SetVerbosity(self.verbose), TensorboardWriter(self.graph, self.tensorboard_log, tb_log_name, new_tb_log) \
                 as writer:
+
+            if self.run_info is not None:
+                flat_params = self.get_flat()
+                self.dump(flat_params, "start")
             self._setup_learn(seed)
 
             runner = Runner(env=self.env, model=self, n_steps=self.n_steps, gamma=self.gamma, lam=self.lam)
@@ -324,8 +353,14 @@ class PPO2(ActorCriticRLModel):
                                                                  update=timestep))
 
                             if self.run_info is not None:
-                                flat_params = self.get_flat()
-                                self.dump(flat_params, update - 1)
+                                if total_timesteps > memory_size_threshold and current_non_skipped >= current_skip_num:
+                                    current_skip_num = decide_next_skip(prob_of_down, up, down)
+                                    current_non_skipped = 0
+                                else:
+                                    flat_params = self.get_flat()
+                                    self.dump(flat_params, 0)
+                                    current_non_skipped += 1
+                                    total_num_dumped += 1
 
                     self.num_timesteps += (self.n_batch * self.noptepochs) // batch_size * update_fac
                 else:  # recurrent version
@@ -347,9 +382,9 @@ class PPO2(ActorCriticRLModel):
                             mb_loss_vals.append(self._train_step(lr_now, cliprangenow, *slices, update=timestep,
                                                                  writer=writer, states=mb_states))
                             if self.run_info is not None:
-
+                                raise NotImplemented()
                                 flat_params = self.get_flat()
-                                self.dump(flat_params, update - 1)
+                                self.dump(flat_params, 0)
 
                     self.num_timesteps += (self.n_envs * self.noptepochs) // envs_per_batch * update_fac
 
@@ -386,7 +421,7 @@ class PPO2(ActorCriticRLModel):
             if self.run_info is not None:
                 flat_params = self.get_flat()
                 self.dump(flat_params, "final")
-
+                self.dump([total_num_dumped], "total_num_dumped")
             return self
 
     def save(self, save_path):
