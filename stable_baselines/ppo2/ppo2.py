@@ -293,7 +293,7 @@ class PPO2(ActorCriticRLModel):
         #
         # memory_size_threshold = 800000
         # current_non_skipped = 0
-        # total_num_dumped = 0
+        total_num_dumped = 0
 
         # if total_timesteps > memory_size_threshold:
         #     down_sample_fraction = (total_timesteps - memory_size_threshold)/total_timesteps
@@ -360,7 +360,7 @@ class PPO2(ActorCriticRLModel):
                                 flat_params = self.get_flat()
                                 self.dump(flat_params, 0)
                                     # current_non_skipped += 1
-                                    # total_num_dumped += 1
+                                total_num_dumped += 1
 
                     self.num_timesteps += (self.n_batch * self.noptepochs) // batch_size * update_fac
                 else:  # recurrent version
