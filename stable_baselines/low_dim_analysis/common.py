@@ -182,7 +182,8 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
 
         print("gc the big thing")
         del concat_df
-        del concat_matrix_diff
+        # if not use_IPCA:
+        #     del concat_matrix_diff
         import gc
         gc.collect()
     else:
