@@ -156,7 +156,7 @@ next_n_once () {
 #
 #sleep 1; run 0 'DartHopper-v1' 512 2048 1000000& sleep 1; ps
 #sleep 1; run 0 'DartHopper-v1' 2 2048& sleep 1; ps
-#sleep 1; run 0 'DartHopper-v1' 32 2048 5000& sleep 1; ps
+sleep 1; run 0 'DartHopper-v1' 32 2048 5000& sleep 1; ps
 #sleep 1; run 0 'DartHopper-v1' 256 2048 1000000& sleep 1; ps
 #sleep 1; run 0 'Hopper-v2' 32 2048& sleep 1; ps
 #

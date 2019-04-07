@@ -16,27 +16,7 @@ import os
 from stable_baselines.common.cmd_util import mujoco_arg_parser
 from stable_baselines.low_dim_analysis.common_parser import get_common_parser
 
-def get_allinone_concat_matrix_diff(dir_name, final_concat_params):
-    index = 0
-    theta_file = get_full_param_traj_file_path(dir_name, index)
 
-    concat_df = pd.read_csv(theta_file, header=None)
-
-    result_matrix_diff = concat_df.sub(final_concat_params, axis='columns')
-
-    index += 1
-
-    while os.path.exists(get_full_param_traj_file_path(traj_params_dir_name, index)):
-        theta_file = get_full_param_traj_file_path(dir_name, index)
-
-        part_concat_df = pd.read_csv(theta_file, header=None)
-
-        part_concat_df = part_concat_df.sub(final_concat_params, axis='columns')
-
-        result_matrix_diff = result_matrix_diff.append(part_concat_df, ignore_index=True)
-        index += 1
-
-    return result_matrix_diff.values
 
 
 def parse_unknown_args(args):
@@ -249,7 +229,7 @@ def main(origin="final_param"):
 
 if __name__ == '__main__':
 
-    main()
+    main(origin="mean_param")
 
 #TODO Give filenames more info to identify which hyperparameter is the data for
 
