@@ -59,13 +59,13 @@ def do_proj_on_first_2_IPCA(concat_df, final_concat_params, first_n_pcs, mean_pa
     # IPCA
     assert isinstance(concat_df, pd.io.parsers.TextFileReader)
     first_chunk = concat_df.__next__()
-    first_chunk_matrix_diff = first_chunk.sub(final_concat_params, axis='columns').values
+    first_chunk_matrix_diff = first_chunk.sub(final_concat_params, axis='columns')
     result = do_proj_on_first_2(first_chunk_matrix_diff.values, first_n_pcs, mean_param, origin)
 
     for chunk in concat_df:
-        chunk_matrix_diff = chunk.sub(final_concat_params, axis='columns').values
+        chunk_matrix_diff = chunk.sub(final_concat_params, axis='columns')
 
-        result = result.vstack(do_proj_on_first_2(chunk_matrix_diff.values, first_n_pcs, mean_param, origin))
+        result = np.hstack(result, (do_proj_on_first_2(chunk_matrix_diff.values, first_n_pcs, mean_param, origin)))
 
     return result
 
