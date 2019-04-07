@@ -108,13 +108,13 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
         or (proj and not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir,
                                                                          n_comp=n_components, pca_center=origin))):
         if use_IPCA:
-            assert chunk_size is not None
+            assert chunk_size != 0
             final_pca = IncrementalPCA(n_components=n_components)  # for sparse PCA to speed up
 
             tic = time.time()
             concat_df = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
                                                          final_concat_params=final_concat_params,
-                                                        chunk_size=chunk_size)
+                                                        use_IPCA=use_IPCA, chunk_size=chunk_size)
             toc = time.time()
             print('\nElapsed time getting the chunk concat diff took {:.2f} s\n'
                   .format(toc - tic))
@@ -170,7 +170,7 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
             if use_IPCA:
                 concat_df = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
                                                             final_concat_params=final_concat_params,
-                                                            chunk_size=chunk_size)
+                                                            use_IPCA=use_IPCA, chunk_size=chunk_size)
                 proj_coords = do_proj_on_first_2_IPCA(concat_df, final_concat_params, first_n_pcs, mean_param, origin)
 
             else:
@@ -392,10 +392,12 @@ def plot_3d_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, proj_x
     if show: plt.show()
 
 
-def get_allinone_concat_matrix_diff(dir_name, final_concat_params, num_index_to_take=None, chunk_size=None):
+def get_allinone_concat_matrix_diff(dir_name, final_concat_params, num_index_to_take=None, use_IPCA=False, chunk_size=None):
     index = 0
     theta_file = get_full_param_traj_file_path(dir_name, index)
-    if chunk_size is not None:
+    if use_IPCA:
+        assert chunk_size is not None
+        assert chunk_size != 0
         concat_df = pd.read_csv(theta_file, header=None, chunksize=chunk_size)
     else:
         concat_df = pd.read_csv(theta_file, header=None)
