@@ -10,6 +10,8 @@ def get_common_parser():
     parser = argparse.ArgumentParser(description='load and pca')
     parser.register('type', 'bool', str2bool)
     parser.add_argument("--normalize", type='bool', default=False)
+    parser.add_argument('--use_IPCA', type='bool', default=False)
+    parser.add_argument('--chunk_size', default=50000, type=int, help='total timesteps agent runs')
 
     # PCA parameters
     parser.add_argument('--alg', default='ppo2', help='algorithm to train on')
@@ -30,7 +32,6 @@ def get_common_parser():
 
     parser.add_argument('--even_check_point_num', default=5, type=int, help='even_check_point_num')
     parser.add_argument('--explain_ratio_threshold', default=0.97, type=float)
-    parser.add_argument('--use_IPCA', action='store_true', default=False)
     parser.add_argument('--use_threads', action='store_true', default=False)
 
     parser.add_argument('--other_pca_index', default="8:9", help='cores to use to parallel')

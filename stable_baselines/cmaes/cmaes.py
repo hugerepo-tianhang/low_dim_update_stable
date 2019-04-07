@@ -100,6 +100,8 @@ def do_cma(cma_args, first_n_pcs, orgin_param, save_dir, starting_coord):
     tic = time.time()
 
     #TODO better starting locations, record how many samples,
+
+    logger.log(f"CMAES STARTING :{starting_coord}")
     es = cma.CMAEvolutionStrategy(starting_coord, 2)
     total_num_of_evals = 0
     total_num_timesteps = 0
@@ -145,8 +147,10 @@ def do_cma(cma_args, first_n_pcs, orgin_param, save_dir, starting_coord):
     if not hasattr(es_logger, 'xmean'):
         es_logger.load()
 
-    optimization_path_mean = es_logger.xmean[:,5:5+2]
-    return mean_rets, min_rets, max_rets, np.array(optimization_path).T, optimization_path_mean.T
+    optimization_path_mean = [starting_coord]
+    optimization_path_mean.extend(es_logger.xmean[:,5:5+2])
+
+    return mean_rets, min_rets, max_rets, np.array(optimization_path).T, np.array(optimization_path_mean).T
 
 
 def main(origin="final_param"):
@@ -173,7 +177,8 @@ def main(origin="final_param"):
     ==========================================================================================
     '''
     from stable_baselines.low_dim_analysis.common import do_pca
-    result = do_pca(cma_args.n_components, cma_args.n_comp_to_use, traj_params_dir_name, intermediate_data_dir, proj=True, origin=origin)
+    result = do_pca(cma_args.n_components, cma_args.n_comp_to_use, traj_params_dir_name, intermediate_data_dir, proj=True,
+                    origin=origin, use_IPCA=cma_args.use_IPCA, chunk_size=cma_args.chunk_size)
     '''
     ==========================================================================================
     eval all xy coords

@@ -47,13 +47,27 @@ def do_proj_(concat_matrix_diff, first_n_pcs, intermediate_data_dir, mean_param,
 
     return proj_coords
 
-def do_proj(concat_matrix_diff, first_n_pcs, intermediate_data_dir, mean_param, origin="final_param"):
+def do_proj_on_first_2(concat_matrix_diff, first_n_pcs, mean_param, origin="final_param"):
     components = first_n_pcs[:2]
     if "final_param" == origin:
         proj_coords = concat_matrix_diff.dot(components.T)
     else:
         proj_coords = (concat_matrix_diff - mean_param).dot(components.T)
     return proj_coords.T
+
+def do_proj_on_first_2_IPCA(concat_df, final_concat_params, first_n_pcs, mean_param, origin="final_param"):
+    # IPCA
+    first_chunk = concat_df.__next__()
+    first_chunk_matrix_diff = first_chunk.sub(final_concat_params, axis='columns').values
+    result = do_proj_on_first_2(first_chunk_matrix_diff.values, first_n_pcs, mean_param, origin)
+
+    for chunk in concat_df:
+        chunk_matrix_diff = chunk.sub(final_concat_params, axis='columns').values
+
+        result = result.vstack(do_proj_on_first_2(chunk_matrix_diff.values, first_n_pcs, mean_param, origin))
+
+    return result
+
 
 def do_eval_returns(plot_args, intermediate_data_dir, first_n_pcs, origin_param, xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center="final_param"):
 
@@ -83,7 +97,7 @@ def do_eval_returns(plot_args, intermediate_data_dir, first_n_pcs, origin_param,
     return eval_returns
 
 
-def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_dir, proj, origin="final_param"):
+def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_dir, proj, origin="final_param", use_IPCA=False, chunk_size=None):
     logger.log("grab final params")
     final_file = get_full_param_traj_file_path(traj_params_dir_name, "final")
     final_concat_params = pd.read_csv(final_file, header=None).values[0]
@@ -92,24 +106,50 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
         or not os.path.exists(get_mean_param_filename(intermediate_dir=intermediate_data_dir)) \
         or (proj and not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir,
                                                                          n_comp=n_components, pca_center=origin))):
+        if use_IPCA:
+            assert chunk_size is not None
+            final_pca = IncrementalPCA(n_components=n_components)  # for sparse PCA to speed up
+
+            tic = time.time()
+            concat_df = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
+                                                         final_concat_params=final_concat_params,
+                                                        chunk_size=chunk_size)
+            toc = time.time()
+            print('\nElapsed time getting the chunk concat diff took {:.2f} s\n'
+                  .format(toc - tic))
+
+            tic = time.time()
+            for chunk in concat_df:
+                if chunk.shape[0] < n_components:
+                    logger.log(f"last column too few: {chunk.shape[0]}")
+                    continue
+                chunk_matrix_diff = chunk.sub(final_concat_params, axis='columns').values
+                final_pca.partial_fit(chunk_matrix_diff)
+
+            toc = time.time()
+            logger.log('\nElapsed time computing the chunked PCA {:.2f} s\n'
+                  .format(toc - tic))
+
+        else:
+            tic = time.time()
+            concat_df = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
+                                                                 final_concat_params=final_concat_params)
+            concat_df = concat_df.sub(final_concat_params, axis='columns')
+            concat_matrix_diff = concat_df.values
+
+            toc = time.time()
+            print('\nElapsed time getting the full concat diff took {:.2f} s\n'
+                  .format(toc - tic))
 
 
-        tic = time.time()
-        concat_matrix_diff = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
-                                                             final_concat_params=final_concat_params)
-        toc = time.time()
-        print('\nElapsed time getting the full concat diff took {:.2f} s\n'
-              .format(toc - tic))
 
+            final_pca = PCA(n_components=n_components) # for sparse PCA to speed up
 
-
-        final_pca = PCA(n_components=n_components) # for sparse PCA to speed up
-
-        tic = time.time()
-        final_pca.fit(concat_matrix_diff)
-        toc = time.time()
-        logger.log('\nElapsed time computing the full PCA {:.2f} s\n'
-              .format(toc - tic))
+            tic = time.time()
+            final_pca.fit(concat_matrix_diff)
+            toc = time.time()
+            logger.log('\nElapsed time computing the full PCA {:.2f} s\n'
+                  .format(toc - tic))
 
         logger.log(final_pca.explained_variance_ratio_)
 
@@ -119,16 +159,25 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
         mean_param = final_pca.mean_
         explained_variance_ratio = final_pca.explained_variance_ratio_
 
-        if proj:
-            proj_coords = do_proj(concat_matrix_diff, first_n_pcs, intermediate_data_dir, mean_param, origin)
-            np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components, pca_center=origin),
-                        proj_coords, delimiter=',')
+
         np.savetxt(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components), pcs_components, delimiter=',')
         np.savetxt(get_mean_param_filename(intermediate_dir=intermediate_data_dir), mean_param, delimiter=',')
         np.savetxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components),
                    explained_variance_ratio, delimiter=',')
 
+        if proj:
+            if use_IPCA:
+                proj_coords = do_proj_on_first_2_IPCA(concat_df, final_concat_params, first_n_pcs, mean_param, origin)
+
+            else:
+                proj_coords = do_proj_on_first_2(concat_matrix_diff, first_n_pcs, mean_param, origin)
+
+            np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components,
+                                                            pca_center=origin),
+                           proj_coords, delimiter=',')
+
         print("gc the big thing")
+        del concat_df
         del concat_matrix_diff
         import gc
         gc.collect()
@@ -338,27 +387,27 @@ def plot_3d_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, proj_x
     if show: plt.show()
 
 
-def get_allinone_concat_matrix_diff(dir_name, final_concat_params, num_index_to_take=None):
+def get_allinone_concat_matrix_diff(dir_name, final_concat_params, num_index_to_take=None, chunk_size=None):
     index = 0
     theta_file = get_full_param_traj_file_path(dir_name, index)
+    if chunk_size is not None:
+        concat_df = pd.read_csv(theta_file, header=None, chunksize=chunk_size)
+    else:
+        concat_df = pd.read_csv(theta_file, header=None)
 
-    concat_df = pd.read_csv(theta_file, header=None)
+    # index += 1
 
-    result_matrix_diff = concat_df.sub(final_concat_params, axis='columns')
+    # while os.path.exists(get_full_param_traj_file_path(dir_name, index)) and (num_index_to_take is None or index < num_index_to_take):
+    #     theta_file = get_full_param_traj_file_path(dir_name, index)
+    #
+    #     part_concat_df = pd.read_csv(theta_file, header=None)
+    #
+    #     part_concat_df = part_concat_df.sub(final_concat_params, axis='columns')
+    #
+    #     result_matrix_diff = result_matrix_diff.append(part_concat_df, ignore_index=True)
+    #     index += 1
 
-    index += 1
-
-    while os.path.exists(get_full_param_traj_file_path(dir_name, index)) and (num_index_to_take is None or index < num_index_to_take):
-        theta_file = get_full_param_traj_file_path(dir_name, index)
-
-        part_concat_df = pd.read_csv(theta_file, header=None)
-
-        part_concat_df = part_concat_df.sub(final_concat_params, axis='columns')
-
-        result_matrix_diff = result_matrix_diff.append(part_concat_df, ignore_index=True)
-        index += 1
-
-    return result_matrix_diff.values
+    return concat_df
 
 
 

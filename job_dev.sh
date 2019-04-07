@@ -2,8 +2,8 @@
 
 
 cores_to_use=-1
-xnum=50
-ynum=50
+xnum=3
+ynum=3
 
 padding_fraction=0.4
 n_components=15
@@ -87,6 +87,8 @@ cma_once () {
     local nminibatches=$3
     local n_steps=$4
     local time_steps=$5
+    local use_IPCA=$6
+    local chunk_size=$7
 
     echo "Welcome to cma: run number  $env $run"
 
@@ -102,7 +104,7 @@ cma_once () {
                                     --n_components=$n_components --cma_num_timesteps=$cma_num_timesteps\
                                     --n_comp_to_use=$n_comp_to_use --eval_num_timesteps=$eval_num_timesteps\
                                      --normalize=$normalize --nminibatches=$nminibatches\
-                                     --n_steps=$n_steps
+                                     --n_steps=$n_steps --use_IPCA=$use_IPCA --chunk_size=$chunk_size
 }
 ppos_once () {
     local run=$1
@@ -154,7 +156,7 @@ next_n_once () {
 #
 #sleep 1; run 0 'DartHopper-v1' 512 2048 1000000& sleep 1; ps
 #sleep 1; run 0 'DartHopper-v1' 2 2048& sleep 1; ps
-sleep 1; run 0 'DartHopper-v1' 32 2048 5000& sleep 1; ps
+#sleep 1; run 0 'DartHopper-v1' 32 2048 5000& sleep 1; ps
 #sleep 1; run 0 'DartHopper-v1' 256 2048 1000000& sleep 1; ps
 #sleep 1; run 0 'Hopper-v2' 32 2048& sleep 1; ps
 #
@@ -171,7 +173,7 @@ wait
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
 
 #sleep 1; cma_once 0 'DartHopper-v1' 512 2048 1000000; sleep 1; ps
-sleep 1; cma_once 0 'DartHopper-v1' 32 2048 5000; sleep 1; ps
+sleep 1; cma_once 0 'DartHopper-v1' 32 2048 5000 True 100; sleep 1; ps
 #sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000; sleep 1; ps
 
 #sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
