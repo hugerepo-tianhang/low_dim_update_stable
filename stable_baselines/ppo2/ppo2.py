@@ -283,26 +283,26 @@ class PPO2(ActorCriticRLModel):
               reset_num_timesteps=True):
 
 
-        def decide_next_skip(prob_of_down, up, down):
-            r = np.random.random_sample()
-            if r > prob_of_down:
-                current_skip_num = up
-            else:
-                current_skip_num = down
-            return current_skip_num
+        # def decide_next_skip(prob_of_down, up, down):
+        #     r = np.random.random_sample()
+        #     if r > prob_of_down:
+        #         current_skip_num = up
+        #     else:
+        #         current_skip_num = down
+        #     return current_skip_num
+        #
+        # memory_size_threshold = 800000
+        # current_non_skipped = 0
+        # total_num_dumped = 0
 
-        memory_size_threshold = 800000
-        current_non_skipped = 0
-        total_num_dumped = 0
-
-        if total_timesteps > memory_size_threshold:
-            down_sample_fraction = (total_timesteps - memory_size_threshold)/total_timesteps
-            down = int(1 / down_sample_fraction)
-            up = down + 1
-            prob_of_down = (down_sample_fraction - 1 / up) * up * down
-
-
-            current_skip_num = decide_next_skip(prob_of_down, up, down)
+        # if total_timesteps > memory_size_threshold:
+        #     down_sample_fraction = (total_timesteps - memory_size_threshold)/total_timesteps
+        #     down = int(1 / down_sample_fraction)
+        #     up = down + 1
+        #     prob_of_down = (down_sample_fraction - 1 / up) * up * down
+        #
+        #
+        #     current_skip_num = decide_next_skip(prob_of_down, up, down)
 
 
 
@@ -353,14 +353,14 @@ class PPO2(ActorCriticRLModel):
                                                                  update=timestep))
 
                             if self.run_info is not None:
-                                if total_timesteps > memory_size_threshold and current_non_skipped >= current_skip_num:
-                                    current_skip_num = decide_next_skip(prob_of_down, up, down)
-                                    current_non_skipped = 0
-                                else:
-                                    flat_params = self.get_flat()
-                                    self.dump(flat_params, 0)
-                                    current_non_skipped += 1
-                                    total_num_dumped += 1
+                                # if total_timesteps > memory_size_threshold and current_non_skipped >= current_skip_num:
+                                #     current_skip_num = decide_next_skip(prob_of_down, up, down)
+                                #     current_non_skipped = 0
+                                # else:
+                                flat_params = self.get_flat()
+                                self.dump(flat_params, 0)
+                                    # current_non_skipped += 1
+                                    # total_num_dumped += 1
 
                     self.num_timesteps += (self.n_batch * self.noptepochs) // batch_size * update_fac
                 else:  # recurrent version
