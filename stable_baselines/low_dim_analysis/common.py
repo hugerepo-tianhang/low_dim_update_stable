@@ -65,7 +65,7 @@ def do_proj_on_first_2_IPCA(concat_df, final_concat_params, first_n_pcs, mean_pa
     for chunk in concat_df:
         chunk_matrix_diff = chunk.sub(final_concat_params, axis='columns')
 
-        result = np.hstack(result, (do_proj_on_first_2(chunk_matrix_diff.values, first_n_pcs, mean_param, origin)))
+        result = np.hstack((result, do_proj_on_first_2(chunk_matrix_diff.values, first_n_pcs, mean_param, origin)))
 
     return result
 
