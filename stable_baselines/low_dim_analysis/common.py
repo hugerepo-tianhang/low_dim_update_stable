@@ -57,6 +57,7 @@ def do_proj_on_first_2(concat_matrix_diff, first_n_pcs, mean_param, origin="fina
 
 def do_proj_on_first_2_IPCA(concat_df, final_concat_params, first_n_pcs, mean_param, origin="final_param"):
     # IPCA
+    assert isinstance(concat_df, pd.io.parsers.TextFileReader)
     first_chunk = concat_df.__next__()
     first_chunk_matrix_diff = first_chunk.sub(final_concat_params, axis='columns').values
     result = do_proj_on_first_2(first_chunk_matrix_diff.values, first_n_pcs, mean_param, origin)
@@ -167,6 +168,9 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
 
         if proj:
             if use_IPCA:
+                concat_df = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
+                                                            final_concat_params=final_concat_params,
+                                                            chunk_size=chunk_size)
                 proj_coords = do_proj_on_first_2_IPCA(concat_df, final_concat_params, first_n_pcs, mean_param, origin)
 
             else:

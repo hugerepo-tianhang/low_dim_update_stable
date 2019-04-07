@@ -9,9 +9,9 @@ def str2bool(v):
 def get_common_parser():
     parser = argparse.ArgumentParser(description='load and pca')
     parser.register('type', 'bool', str2bool)
-    parser.add_argument("--normalize", type='bool', default=False)
-    parser.add_argument('--use_IPCA', type='bool', default=False)
-    parser.add_argument('--chunk_size', default=50000, type=int, help='total timesteps agent runs')
+    parser.add_argument("--normalize", type='bool', default=True)
+    parser.add_argument('--use_IPCA', type='bool', default=True)
+    parser.add_argument('--chunk_size', default=100, type=int, help='total timesteps agent runs')
 
     # PCA parameters
     parser.add_argument('--alg', default='ppo2', help='algorithm to train on')
@@ -19,7 +19,7 @@ def get_common_parser():
     parser.add_argument('--num-timesteps', default=5000, type=int, help='total timesteps agent runs')
     parser.add_argument('--run_num', default=0, type=int, help='which run number')
 
-    parser.add_argument('--nminibatches', default=4, type=int, help='which run number')
+    parser.add_argument('--nminibatches', default=32, type=int, help='which run number')
     parser.add_argument('--n_steps', default=2048, type=int, help='which run number')
 
     parser.add_argument('--cores_to_use', default=-1, type=int, help='cores to use to parallel')
