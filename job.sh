@@ -6,7 +6,7 @@ xnum=50
 ynum=50
 
 padding_fraction=0.4
-n_components=500
+n_components=300
 
 n_comp_to_use=2
 cma_num_timesteps=1500000
@@ -202,8 +202,8 @@ final_projection_on_mean_performance () {
 wait
 
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
-sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 50000 "mean_param" 15; sleep 1; ps
-sleep 1; final_projection_on_mean_performance 0 'DartHopper-v1' 32 2048 1000000 True 50000 500; sleep 1; ps
+sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 50000 "mean_param" 50; sleep 1; ps
+sleep 1; final_projection_on_mean_performance 0 'DartHopper-v1' 32 2048 1000000 True 50000 $n_components; sleep 1; ps
 
 #sleep 1; cma_once 0 'DartHopper-v1' 512 2048 1000000 True 50000; sleep 1; ps
 #sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000; sleep 1; ps
@@ -212,8 +212,12 @@ sleep 1; final_projection_on_mean_performance 0 'DartHopper-v1' 32 2048 1000000 
 
 
 #sleep 1; cma_once 0 'DartWalker2d-v1' 512 2048 675000; sleep 1; ps
-sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" 15; sleep 1; ps
-sleep 1; final_projection_on_mean_performance 0 'DartWalker2d-v1' 32 2048 675000 False 0 500; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" 50; sleep 1; ps
+#sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" 50; sleep 1; ps
+
+sleep 1; final_projection_on_mean_performance 0 'DartWalker2d-v1' 32 2048 675000 False 0 $n_components; sleep 1; ps
+
+sleep 1; cma_once 0 'DartWalker2d-v1' 512 2048 675000 True 50000 "mean_param" 50; sleep 1; ps
 
 #sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000; sleep 1; ps
 
