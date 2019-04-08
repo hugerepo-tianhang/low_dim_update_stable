@@ -34,38 +34,41 @@ def gen_subspace_coords(plot_args, proj_coord):
 
     return xcoordinates_to_eval, ycoordinates_to_eval
 
-def do_proj_(concat_matrix_diff, first_n_pcs, intermediate_data_dir, mean_param, origin="final_param"):
-    logger.log(f"project all params")
-    proj_xcoord, proj_ycoord = [], []
-    for param in concat_matrix_diff:
-        x, y = project_2D_final_param_origin(d=param, dx=first_n_pcs[0], dy=first_n_pcs[1])
+# def do_proj_(concat_matrix_diff, first_n_pcs, intermediate_data_dir, mean_param, origin="final_param"):
+#     logger.log(f"project all params")
+#     proj_xcoord, proj_ycoord = [], []
+#     for param in concat_matrix_diff:
+#         x, y = project_2D_final_param_origin(d=param, dx=first_n_pcs[0], dy=first_n_pcs[1])
+#
+#         proj_xcoord.append(x)
+#         proj_ycoord.append(y)
+#
+#     proj_coords = np.array([proj_xcoord, proj_ycoord])
+#
+#     return proj_coords
 
-        proj_xcoord.append(x)
-        proj_ycoord.append(y)
+def do_proj_on_first_n(concat_matrix_diff, first_n_pcs, mean_param=None, origin="final_param"):
+    components = first_n_pcs
+    if len(concat_matrix_diff.shape) == 1:
+        concat_matrix_diff = concat_matrix_diff.reshape(1, -1)
 
-    proj_coords = np.array([proj_xcoord, proj_ycoord])
-
-    return proj_coords
-
-def do_proj_on_first_2(concat_matrix_diff, first_n_pcs, mean_param, origin="final_param"):
-    components = first_n_pcs[:2]
     if "final_param" == origin:
         proj_coords = concat_matrix_diff.dot(components.T)
     else:
         proj_coords = (concat_matrix_diff - mean_param).dot(components.T)
     return proj_coords.T
 
-def do_proj_on_first_2_IPCA(concat_df, final_concat_params, first_n_pcs, mean_param, origin="final_param"):
+def do_proj_on_first_n_IPCA(concat_df, final_concat_params, first_n_pcs, mean_param, origin="final_param"):
     # IPCA
     assert isinstance(concat_df, pd.io.parsers.TextFileReader)
     first_chunk = concat_df.__next__()
     first_chunk_matrix_diff = first_chunk.sub(final_concat_params, axis='columns')
-    result = do_proj_on_first_2(first_chunk_matrix_diff.values, first_n_pcs, mean_param, origin)
+    result = do_proj_on_first_n(first_chunk_matrix_diff.values, first_n_pcs, mean_param, origin)
 
     for chunk in concat_df:
         chunk_matrix_diff = chunk.sub(final_concat_params, axis='columns')
 
-        result = np.hstack((result, do_proj_on_first_2(chunk_matrix_diff.values, first_n_pcs, mean_param, origin)))
+        result = np.hstack((result, do_proj_on_first_n(chunk_matrix_diff.values, first_n_pcs, mean_param, origin)))
 
     return result
 
@@ -79,9 +82,9 @@ def do_eval_returns(plot_args, intermediate_data_dir, first_n_pcs, origin_param,
                                                     eval_string=eval_string, n_comp=2, pca_center=pca_center)):
 
         from stable_baselines.ppo2.run_mujoco import eval_return
+        thetas_to_eval = [origin_param + x * first_n_pcs[0] + y * first_n_pcs[1] for y in ycoordinates_to_eval for x in xcoordinates_to_eval]
 
         tic = time.time()
-        thetas_to_eval = [origin_param + x * first_n_pcs[0] + y * first_n_pcs[1] for y in ycoordinates_to_eval for x in xcoordinates_to_eval]
 
         eval_returns = Parallel(n_jobs=plot_args.cores_to_use, max_nbytes='100M')\
             (delayed(eval_return)(plot_args, save_dir, theta, plot_args.eval_num_timesteps, i) for (i, theta) in enumerate(thetas_to_eval))
@@ -171,10 +174,10 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
                 concat_df = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
                                                             final_concat_params=final_concat_params,
                                                             use_IPCA=use_IPCA, chunk_size=chunk_size)
-                proj_coords = do_proj_on_first_2_IPCA(concat_df, final_concat_params, first_n_pcs, mean_param, origin)
+                proj_coords = do_proj_on_first_n_IPCA(concat_df, final_concat_params, first_n_pcs, mean_param, origin)
 
             else:
-                proj_coords = do_proj_on_first_2(concat_matrix_diff, first_n_pcs, mean_param, origin)
+                proj_coords = do_proj_on_first_n(concat_matrix_diff, first_n_pcs, mean_param, origin)
 
             np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components,
                                                             pca_center=origin),
@@ -209,18 +212,18 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
 
 
 
-def get_projected_data_in_old_basis(pca, data, num_axis_to_use):
-    components = pca.components_[:num_axis_to_use]
+def get_projected_data_in_old_basis(mean_param, all_pcs, data, num_axis_to_use):
+    components = all_pcs[:num_axis_to_use]
 
-    projected_data = (data - pca.mean_).dot(components.T)
+    projected_data = (data - mean_param).dot(components.T)
 
     # goes back to original data space with mean restored.
-    projected_data_in_old_basis = projected_data.dot(components) + pca.mean_
+    projected_data_in_old_basis = projected_data.dot(components) + mean_param
 
     return projected_data_in_old_basis
 
-def calculate_projection_error(pca, data, num_axis_to_use):
-    projected_data_in_old_basis = get_projected_data_in_old_basis(pca, data, num_axis_to_use)
+def calculate_projection_error(mean_param, all_pcs, data, num_axis_to_use):
+    projected_data_in_old_basis = get_projected_data_in_old_basis(mean_param, all_pcs, data, num_axis_to_use)
     # assert_array_almost_equal(X_projected, X_projected2)
     # losses = LA.norm((data - projected_data_in_old_basis), ord=2, axis=1) #TODO: check this
     losses = []
@@ -419,28 +422,29 @@ def get_allinone_concat_matrix_diff(dir_name, final_concat_params, num_index_to_
 
 
 if __name__ == "__main__":
-    from numpy.testing import assert_array_almost_equal
-
-    X_train = np.random.randn(100, 50)
-
-    pca = PCA(n_components=2)
-    test_pca = PCA(n_components=5)
-    pca.fit(X_train)
-    test_pca.fit(X_train)
-
-
-    X_train_pca = pca.transform(X_train)
-    X_train_pca2 = (X_train - test_pca.mean_).dot(test_pca.components_[:2].T)
-
-    assert_array_almost_equal(X_train_pca, X_train_pca2)
-
-    X_projected = pca.inverse_transform(X_train_pca)
-    X_projected2 = X_train_pca.dot(test_pca.components_[:2]) + test_pca.mean_
-    k = get_projected_data_in_old_basis(test_pca, X_train, num_axis_to_use=2)
-    assert_array_almost_equal(X_projected, k)
-
-    # assert_array_almost_equal(X_projected, X_projected2)
-    a = calculate_projection_error(test_pca, X_train, num_axis_to_use=2)
-    loss = LA.norm((X_train - X_projected2), ord=2, axis=1)
-    assert_array_almost_equal(a, loss)
+    pass
+    # from numpy.testing import assert_array_almost_equal
+    #
+    # X_train = np.random.randn(100, 50)
+    #
+    # pca = PCA(n_components=2)
+    # test_pca = PCA(n_components=5)
+    # pca.fit(X_train)
+    # test_pca.fit(X_train)
+    #
+    #
+    # X_train_pca = pca.transform(X_train)
+    # X_train_pca2 = (X_train - test_pca.mean_).dot(test_pca.components_[:2].T)
+    #
+    # assert_array_almost_equal(X_train_pca, X_train_pca2)
+    #
+    # X_projected = pca.inverse_transform(X_train_pca)
+    # X_projected2 = X_train_pca.dot(test_pca.components_[:2]) + test_pca.mean_
+    # k = get_projected_data_in_old_basis(test_pca, X_train, num_axis_to_use=2)
+    # assert_array_almost_equal(X_projected, k)
+    #
+    # # assert_array_almost_equal(X_projected, X_projected2)
+    # a = calculate_projection_error(test_pca, X_train, num_axis_to_use=2)
+    # loss = LA.norm((X_train - X_projected2), ord=2, axis=1)
+    # assert_array_almost_equal(a, loss)
 

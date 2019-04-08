@@ -6,10 +6,10 @@ xnum=3
 ynum=3
 
 padding_fraction=0.4
-n_components=15
+n_components=50
 
 n_comp_to_use=2
-cma_num_timesteps=15000
+cma_num_timesteps=40000
 ppos_num_timesteps=1500000
 eval_num_timesteps=1024
 even_check_point_num=5
@@ -89,6 +89,8 @@ cma_once () {
     local time_steps=$5
     local use_IPCA=$6
     local chunk_size=$7
+    local origin=$8
+    local n_comp_to_use=$9
 
     echo "Welcome to cma: run number  $env $run"
 
@@ -96,7 +98,7 @@ cma_once () {
 #                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
 #                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
 #                                    --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps
-    python -m stable_baselines.cmaes.cmaes \
+    python -m stable_baselines.cmaes.cma_n_comp \
                                     --num-timesteps=$time_steps --run_num=$run --env=$env\
                                     --cores_to_use=$cores_to_use \
                                     --xnum=$xnum --ynum=$ynum\
@@ -104,8 +106,11 @@ cma_once () {
                                     --n_components=$n_components --cma_num_timesteps=$cma_num_timesteps\
                                     --n_comp_to_use=$n_comp_to_use --eval_num_timesteps=$eval_num_timesteps\
                                      --normalize=$normalize --nminibatches=$nminibatches\
-                                     --n_steps=$n_steps --use_IPCA=$use_IPCA --chunk_size=$chunk_size
+                                     --n_steps=$n_steps --use_IPCA=$use_IPCA --chunk_size=$chunk_size\
+                                     --origin=$origin
 }
+
+
 ppos_once () {
     local run=$1
     local env=$2
@@ -148,6 +153,34 @@ next_n_once () {
                                     --nminibatches=$nminibatches --n_steps=$n_steps
 }
 
+final_projection_on_mean_performance () {
+    local run=$1
+    local env=$2
+    local nminibatches=$3
+    local n_steps=$4
+    local time_steps=$5
+    local use_IPCA=$6
+    local chunk_size=$7
+    local origin=$8
+    local n_components=$9
+
+    echo "Welcome to cma: run number  $env $run"
+
+#    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
+#                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
+#                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
+#                                    --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps
+    python -m stable_baselines.low_dim_analysis.final_projection_on_mean_performance \
+                                    --num-timesteps=$time_steps --run_num=$run --env=$env --normalize=$normalize \
+                                    --nminibatches=$nminibatches --n_steps=$n_steps\
+                                    --cores_to_use=$cores_to_use \
+                                    --n_components=$n_components \
+                                    --eval_num_timesteps=$eval_num_timesteps\
+                                     --use_IPCA=$use_IPCA --chunk_size=$chunk_size
+}
+
+
+
 #sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
 #
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
@@ -156,7 +189,7 @@ next_n_once () {
 #
 #sleep 1; run 0 'DartHopper-v1' 512 2048 1000000& sleep 1; ps
 #sleep 1; run 0 'DartHopper-v1' 2 2048& sleep 1; ps
-sleep 1; run 0 'DartHopper-v1' 32 2048 5000& sleep 1; ps
+#sleep 1; run 0 'DartHopper-v1' 32 2048 5000& sleep 1; ps
 #sleep 1; run 0 'DartHopper-v1' 256 2048 1000000& sleep 1; ps
 #sleep 1; run 0 'Hopper-v2' 32 2048& sleep 1; ps
 #
@@ -173,7 +206,9 @@ wait
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
 
 #sleep 1; cma_once 0 'DartHopper-v1' 512 2048 1000000; sleep 1; ps
-sleep 1; cma_once 0 'DartHopper-v1' 32 2048 5000 True 100; sleep 1; ps
+#sleep 1; cma_once 0 'DartHopper-v1' 32 2048 5000 True 100 "mean_param" 50; sleep 1; ps
+sleep 1; final_projection_on_mean_performance 0 'DartHopper-v1' 32 2048 5000 True 100 "mean_param" 50; sleep 1; ps
+#sleep 1; cma_once 0 'DartHopper-v1' 32 2048 5000 True 100 "mean_param" 40; sleep 1; ps
 #sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000; sleep 1; ps
 
 #sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps

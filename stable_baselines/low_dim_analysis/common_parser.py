@@ -38,6 +38,7 @@ def get_common_parser():
 
     #cma params
     parser.add_argument('--cma_num_timesteps', default=15000, type=int, help='total timesteps agent runs')
+    parser.add_argument("--origin", type=str,  default="final_param")
 
     #PPOs
     parser.add_argument('--ppos_num_timesteps', default=10000, type=int, help='total timesteps agent runs')

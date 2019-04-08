@@ -43,6 +43,8 @@ def get_plot_dir(args):
 
 def get_cma_plot_dir(plot_dir, n_comp_to_use, cma_run_num):
     return f'{plot_dir}/cma/cma_n_comp_{n_comp_to_use}_run_num_{cma_run_num}'
+
+
 def get_ppos_plot_dir(plot_dir, n_comp_to_use, cma_run_num):
     return f'{plot_dir}/ppos/ppos_n_comp_{n_comp_to_use}_run_num_{cma_run_num}'
 
@@ -64,6 +66,9 @@ def get_projected_full_path_filename(intermediate_dir, n_comp, pca_center, which
 def get_eval_returns_filename(intermediate_dir, eval_string, n_comp, pca_center, which_components=(1,2)):
 
     return f"{intermediate_dir}/{eval_string}_n_comp_{n_comp}_pca_center_{pca_center}_which_components_{which_components}eval_returns"
+def get_projected_finals_eval_returns_filename(intermediate_dir, n_comp_start, np_comp_end, pca_center):
+
+    return f"{intermediate_dir}/n_comp_start_{n_comp_start}_np_comp_end_{np_comp_end}_pca_center_{pca_center}eval_returns"
 
 def get_cma_returns_dirname(intermediate_dir, n_comp, run_num):
 
