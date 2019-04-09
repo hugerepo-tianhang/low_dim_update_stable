@@ -34,7 +34,7 @@ def plot_final_project_returns_returns(plot_dir_alg, name, projected_returns, st
     if show: plt.show()
 
 
-def main(n_comp_start=2):
+def main(n_comp_start=2, do_eval=True):
 
 
     import sys
@@ -59,7 +59,8 @@ def main(n_comp_start=2):
     get the pc vectors
     ==========================================================================================
     '''
-    from stable_baselines.low_dim_analysis.common import do_pca, get_projected_data_in_old_basis
+    from stable_baselines.low_dim_analysis.common import do_pca, get_projected_data_in_old_basis, \
+        calculate_projection_errors, plot_2d
 
     origin = "mean_param"
     result = do_pca(cma_args.n_components, cma_args.n_comp_to_use, traj_params_dir_name, intermediate_data_dir, proj=False,
@@ -69,52 +70,58 @@ def main(n_comp_start=2):
     all_pcs = result["pcs_components"]
     mean_param = result["mean_param"]
     projected = []
+    projection_errors = []
 
     for num_pcs in range(n_comp_start, all_pcs.shape[0]+1):
         projected.append( get_projected_data_in_old_basis(mean_param, all_pcs, final_params, num_pcs) )
-
-
-    if not os.path.exists(get_projected_finals_eval_returns_filename(intermediate_dir=intermediate_data_dir,
-                                                                     n_comp_start=n_comp_start,
-                                                                     np_comp_end=all_pcs.shape[0],
-                                                                     pca_center=origin)):
-
-        from stable_baselines.ppo2.run_mujoco import eval_return
-        thetas_to_eval = projected
-
-        tic = time.time()
-
-        eval_returns = Parallel(n_jobs=cma_args.cores_to_use, max_nbytes='100M') \
-            (delayed(eval_return)(cma_args, save_dir, theta, cma_args.eval_num_timesteps, i) for (i, theta) in
-             enumerate(thetas_to_eval))
-        toc = time.time()
-        logger.log(f"####################################1st version took {toc-tic} seconds")
-
-        np.savetxt(get_projected_finals_eval_returns_filename(intermediate_dir=intermediate_data_dir,
-                                                                     n_comp_start=n_comp_start,
-                                                                     np_comp_end=all_pcs.shape[0],
-                                                                     pca_center=origin),
-                   eval_returns, delimiter=',')
-    else:
-        eval_returns = np.loadtxt(get_projected_finals_eval_returns_filename(intermediate_dir=intermediate_data_dir,
-                                                                     n_comp_start=n_comp_start,
-                                                                     np_comp_end=all_pcs.shape[0],
-                                                                     pca_center=origin), delimiter=',')
-
+        proj_to_n_pcs_error = calculate_projection_errors(mean_param, all_pcs, final_params, num_pcs)
+        assert len(proj_to_n_pcs_error) == 1
+        projection_errors.extend(proj_to_n_pcs_error)
 
     plot_dir = get_plot_dir(cma_args)
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
 
-    ret_plot_name = f"final project performances on start: {n_comp_start} end:{all_pcs.shape[0]} dim space of mean pca plane, "
-    plot_final_project_returns_returns(plot_dir, ret_plot_name, eval_returns, n_comp_start, all_pcs.shape[0], show=False)
+    if do_eval:
+        if not os.path.exists(get_projected_finals_eval_returns_filename(intermediate_dir=intermediate_data_dir,
+                                                                         n_comp_start=n_comp_start,
+                                                                         np_comp_end=all_pcs.shape[0],
+                                                                         pca_center=origin)):
 
+            from stable_baselines.ppo2.run_mujoco import eval_return
+            thetas_to_eval = projected
+
+            tic = time.time()
+
+            eval_returns = Parallel(n_jobs=cma_args.cores_to_use, max_nbytes='100M') \
+                (delayed(eval_return)(cma_args, save_dir, theta, cma_args.eval_num_timesteps, i) for (i, theta) in
+                 enumerate(thetas_to_eval))
+            toc = time.time()
+            logger.log(f"####################################1st version took {toc-tic} seconds")
+
+            np.savetxt(get_projected_finals_eval_returns_filename(intermediate_dir=intermediate_data_dir,
+                                                                         n_comp_start=n_comp_start,
+                                                                         np_comp_end=all_pcs.shape[0],
+                                                                         pca_center=origin),
+                       eval_returns, delimiter=',')
+        else:
+            eval_returns = np.loadtxt(get_projected_finals_eval_returns_filename(intermediate_dir=intermediate_data_dir,
+                                                                         n_comp_start=n_comp_start,
+                                                                         np_comp_end=all_pcs.shape[0],
+                                                                         pca_center=origin), delimiter=',')
+        ret_plot_name = f"final project performances on start: {n_comp_start} end:{all_pcs.shape[0]} dim space of mean pca plane, "
+        plot_final_project_returns_returns(plot_dir, ret_plot_name, eval_returns, n_comp_start, all_pcs.shape[0], show=False)
+
+
+
+    error_plot_name = f"final project errors on start: {n_comp_start} end:{all_pcs.shape[0]} dim space of mean pca plane, "
+    plot_2d(plot_dir, error_plot_name, np.arange(n_comp_start, all_pcs.shape[0]+1), projection_errors, "num of pcs", "projection error", False)
 
 
 
 if __name__ == '__main__':
 
-    main()
+    main(do_eval=True)
 
 #TODO Give filenames more info to identify which hyperparameter is the data for
 

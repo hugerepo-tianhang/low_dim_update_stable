@@ -47,15 +47,15 @@ def gen_subspace_coords(plot_args, proj_coord):
 #
 #     return proj_coords
 
-def do_proj_on_first_n(concat_matrix_diff, first_n_pcs, mean_param=None, origin="final_param"):
+def do_proj_on_first_n(all_param_matrix, first_n_pcs, mean_param=None, origin="final_param"):
     components = first_n_pcs
-    if len(concat_matrix_diff.shape) == 1:
-        concat_matrix_diff = concat_matrix_diff.reshape(1, -1)
+    if len(all_param_matrix.shape) == 1:
+        all_param_matrix = all_param_matrix.reshape(1, -1)
 
     if "final_param" == origin:
-        proj_coords = concat_matrix_diff.dot(components.T)
+        proj_coords = all_param_matrix.dot(components.T)
     else:
-        proj_coords = (concat_matrix_diff - mean_param).dot(components.T)
+        proj_coords = (all_param_matrix - mean_param).dot(components.T)
     return proj_coords.T
 
 def do_proj_on_first_n_IPCA(concat_df, final_concat_params, first_n_pcs, mean_param, origin="final_param"):
@@ -115,9 +115,8 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
             final_pca = IncrementalPCA(n_components=n_components)  # for sparse PCA to speed up
 
             tic = time.time()
-            concat_df = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
-                                                         final_concat_params=final_concat_params,
-                                                        use_IPCA=use_IPCA, chunk_size=chunk_size)
+            concat_df = get_allinone_concat_df(dir_name=traj_params_dir_name,
+                                               use_IPCA=use_IPCA, chunk_size=chunk_size)
             toc = time.time()
             print('\nElapsed time getting the chunk concat diff took {:.2f} s\n'
                   .format(toc - tic))
@@ -127,8 +126,7 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
                 if chunk.shape[0] < n_components:
                     logger.log(f"last column too few: {chunk.shape[0]}")
                     continue
-                chunk_matrix_diff = chunk.sub(final_concat_params, axis='columns').values
-                final_pca.partial_fit(chunk_matrix_diff)
+                final_pca.partial_fit(chunk)
 
             toc = time.time()
             logger.log('\nElapsed time computing the chunked PCA {:.2f} s\n'
@@ -136,10 +134,8 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
 
         else:
             tic = time.time()
-            concat_df = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
-                                                                 final_concat_params=final_concat_params)
-            concat_df = concat_df.sub(final_concat_params, axis='columns')
-            concat_matrix_diff = concat_df.values
+            concat_df = get_allinone_concat_df(dir_name=traj_params_dir_name)
+            concat_matrix = concat_df.values
 
             toc = time.time()
             print('\nElapsed time getting the full concat diff took {:.2f} s\n'
@@ -150,7 +146,7 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
             final_pca = PCA(n_components=n_components) # for sparse PCA to speed up
 
             tic = time.time()
-            final_pca.fit(concat_matrix_diff)
+            final_pca.fit(concat_matrix)
             toc = time.time()
             logger.log('\nElapsed time computing the full PCA {:.2f} s\n'
                   .format(toc - tic))
@@ -171,13 +167,12 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
 
         if proj:
             if use_IPCA:
-                concat_df = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
-                                                            final_concat_params=final_concat_params,
-                                                            use_IPCA=use_IPCA, chunk_size=chunk_size)
+                concat_df = get_allinone_concat_df(dir_name=traj_params_dir_name,
+                                                   use_IPCA=use_IPCA, chunk_size=chunk_size)
                 proj_coords = do_proj_on_first_n_IPCA(concat_df, final_concat_params, first_n_pcs, mean_param, origin)
 
             else:
-                proj_coords = do_proj_on_first_n(concat_matrix_diff, first_n_pcs, mean_param, origin)
+                proj_coords = do_proj_on_first_n(concat_matrix, first_n_pcs, mean_param, origin)
 
             np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components,
                                                             pca_center=origin),
@@ -222,11 +217,14 @@ def get_projected_data_in_old_basis(mean_param, all_pcs, data, num_axis_to_use):
 
     return projected_data_in_old_basis
 
-def calculate_projection_error(mean_param, all_pcs, data, num_axis_to_use):
+def calculate_projection_errors(mean_param, all_pcs, data, num_axis_to_use):
     projected_data_in_old_basis = get_projected_data_in_old_basis(mean_param, all_pcs, data, num_axis_to_use)
     # assert_array_almost_equal(X_projected, X_projected2)
     # losses = LA.norm((data - projected_data_in_old_basis), ord=2, axis=1) #TODO: check this
     losses = []
+    if len(data.shape) == 1:
+        data = data.reshape(1,-1)
+
     for d in (data - projected_data_in_old_basis):
         losses.append(LA.norm(d, ord=2))
     return losses
@@ -273,12 +271,24 @@ def dump_rows_append_csv(dir_name, data, file_name):
     for row in data:
         dump_row_append_csv(dir_name, row, file_name)
 
+def dump_rows_write_csv(dir_name, data, file_name):
+    var_output_file = f"{dir_name}/{file_name}.csv"
+    if os.path.isfile(var_output_file):
+        os.remove(var_output_file)
+
+    for row in data:
+        dump_row_append_csv(dir_name, row, file_name)
+
 
 
 def project_1D(w, d):
     assert len(w) == len(d), 'dimension does not match for w and '
     scale = np.dot(w, d) / LA.norm(d, 2)
     return scale
+
+
+
+
 
 def project_2D_pca_mean_origin(d, components, pca_mean):
 
@@ -348,10 +358,31 @@ def plot_contour_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, p
     plt.ylabel('2nd PC: %.2f %%' % (ratio_y*100), fontsize='xx-large')
     plt.clabel(CS1, inline=1, fontsize=6)
     print(f"~~~~~~~~~~~~~~~~~~~~~~saving to {plot_dir_alg}/{name}.pdf")
-
-    fig.savefig(f"{plot_dir_alg}/{name}.pdf", dpi=300,
+    file_path = f"{plot_dir_alg}/{name}.pdf"
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+    fig.savefig(file_path, dpi=300,
                 bbox_inches='tight', format='pdf')
     if show: plt.show()
+
+
+
+def plot_2d(plot_dir_alg, name, X, Y, xlabel, ylabel, show):
+
+
+    fig, ax = plt.subplots()
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+
+    ax.plot(X, Y)
+    file_path = f"{plot_dir_alg}/{name}.pdf"
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+    logger.log(f"####saving to {file_path}")
+    fig.savefig(file_path, dpi=300,
+                bbox_inches='tight', format='pdf')
+    if show: plt.show()
+
 
 
 def plot_3d_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, proj_xcoord, proj_ycoord, explained_variance_ratio,
@@ -389,13 +420,15 @@ def plot_3d_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, proj_x
     plt.ylabel('2nd PC: %.2f %%' % (ratio_y*100), fontsize='xx-large')
 
     print(f"~~~~~~~~~~~~~~~~~~~~~~saving to {plot_dir_alg}/{name}.pdf")
-
-    fig.savefig(f"{plot_dir_alg}/{name}.pdf", dpi=300,
+    file_path = f"{plot_dir_alg}/{name}.pdf"
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+    fig.savefig(file_path, dpi=300,
                 bbox_inches='tight', format='pdf')
     if show: plt.show()
 
 
-def get_allinone_concat_matrix_diff(dir_name, final_concat_params, num_index_to_take=None, use_IPCA=False, chunk_size=None):
+def get_allinone_concat_df(dir_name, num_index_to_take=None, use_IPCA=False, chunk_size=None):
     index = 0
     theta_file = get_full_param_traj_file_path(dir_name, index)
     if use_IPCA:
