@@ -17,20 +17,8 @@ import time
 import os
 from stable_baselines.common.cmd_util import mujoco_arg_parser
 from stable_baselines.low_dim_analysis.common_parser import get_common_parser
+from stable_baselines.low_dim_analysis.common import cal_angle_plane
 
-def unit_vector(vector):
-    """ Returns the unit vector of the vector.  """
-    return vector / np.linalg.norm(vector)
-
-def cal_angle(v1, v2):
-
-    v1_u = unit_vector(v1)
-    v2_u = unit_vector(v2)
-    return math.degrees(np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)))
-
-def cal_angle_plane(V, pcs):
-    projected = get_projected_vector_in_old_basis(V, pcs, len(pcs))
-    return cal_angle(projected, V)
 
 def main():
 
@@ -73,6 +61,9 @@ def main():
 
     ipca = IncrementalPCA(n_components=cma_args.n_comp_to_use)  # for sparse PCA to speed up
     for chunk in all_param_iterator:
+        if chunk.shape[0] < cma_args.n_comp_to_use:
+            logger.log("skipping too few data")
+            continue
         logger.log(f"currently at {all_param_iterator._currow}")
         ipca.partial_fit(chunk.values)
         pcs = ipca.components_[:cma_args.n_comp_to_use]

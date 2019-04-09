@@ -9,6 +9,7 @@ from stable_baselines.low_dim_analysis.eval_util import *
 from stable_baselines import logger
 import time
 from joblib import Parallel, delayed
+import math
 
 def gen_subspace_coords(plot_args, proj_coord):
     proj_xcoord, proj_ycoord = proj_coord[0], proj_coord[1]
@@ -209,6 +210,20 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
         "proj_coords":proj_coords
     }
     return result
+
+def unit_vector(vector):
+    """ Returns the unit vector of the vector.  """
+    return vector / np.linalg.norm(vector)
+
+def cal_angle(v1, v2):
+
+    v1_u = unit_vector(v1)
+    v2_u = unit_vector(v2)
+    return math.degrees(np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)))
+
+def cal_angle_plane(V, pcs):
+    projected = get_projected_vector_in_old_basis(V, pcs, len(pcs))
+    return cal_angle(projected, V)
 
 def get_projected_vector_in_old_basis(vector, all_pcs, num_axis_to_use):
     components = all_pcs[:num_axis_to_use]
