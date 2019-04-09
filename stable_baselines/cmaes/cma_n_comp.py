@@ -32,6 +32,8 @@ def plot_cma_returns(plot_dir_alg, name, mean_rets, min_rets, max_rets, show):
     file_path = f"{plot_dir_alg}/{name}.pdf"
     if os.path.isfile(file_path):
         os.remove(file_path)
+
+    logger.log(f"saving cma plot to {file_path}")
     fig.savefig(file_path, dpi=300,
                 bbox_inches='tight', format='pdf')
     if show: plt.show()

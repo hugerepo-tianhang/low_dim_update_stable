@@ -259,28 +259,30 @@ wait
 #sleep 1; final_projection_on_mean_performance 0 'DartHopper-v1' 32 2048 1000000 True 50000 $n_components; sleep 1; ps
 
 #sleep 1; cma_once 0 'DartHopper-v1' 512 2048 1000000 True 50000; sleep 1; ps
-sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" $n_components; sleep 1; ps
-sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" 15; sleep 1; ps
 #sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" $n_components; sleep 1; ps
-
-#sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
-sleep 1; final_projection_on_mean_performance 0 'DartWalker2d-v1' 32 2048 1000000 True 10000 $n_components; sleep 1; ps
-sleep 1; first_comp_angle_with_diff 0 'DartWalker2d-v1' 32 2048 1000000 True 10000 $n_components $n_components; sleep 1; ps
-sleep 1; how_many_steps_can_you_go 0 'DartWalker2d-v1' 32 2048 1000000 True 1000 100 $n_components; sleep 1; ps
+#sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" 15; sleep 1; ps
+##sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" $n_components; sleep 1; ps
+#
+##sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
+#sleep 1; final_projection_on_mean_performance 0 'DartWalker2d-v1' 32 2048 1000000 True 10000 $n_components; sleep 1; ps
+#sleep 1; first_comp_angle_with_diff 0 'DartWalker2d-v1' 32 2048 1000000 True 10000 $n_components $n_components; sleep 1; ps
+#sleep 1; how_many_steps_can_you_go 0 'DartWalker2d-v1' 32 2048 1000000 True 1000 100 $n_components; sleep 1; ps
 
 #sleep 1; cma_once 0 'DartWalker2d-v1' 512 2048 675000; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" 50; sleep 1; ps
-sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" $n_components; sleep 1; ps
-sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" 15; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" $n_components; sleep 1; ps
-sleep 1; final_projection_on_mean_performance 0 'DartWalker2d-v1' 32 2048 675000 True 10000 $n_components; sleep 1; ps
-sleep 1; first_comp_angle_with_diff 0 'DartWalker2d-v1' 32 2048 675000 True 10000 $n_components $n_components; sleep 1; ps
-
-
-sleep 1; how_many_steps_can_you_go 0 'DartWalker2d-v1' 32 2048 675000 True 1000 100 $n_components; sleep 1; ps
-sleep 1; how_many_steps_can_you_go 0 'DartWalker2d-v1' 32 2048 675000 True 3000 100 $n_components; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" 50; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" 70; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" 100; sleep 1; ps
+#sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" $n_components; sleep 1; ps
 #sleep 1; final_projection_on_mean_performance 0 'DartWalker2d-v1' 32 2048 675000 True 10000 $n_components; sleep 1; ps
-sleep 1; how_many_steps_can_you_go 0 'DartWalker2d-v1' 32 2048 1000000 True 3000 100 $n_components; sleep 1; ps
+#sleep 1; first_comp_angle_with_diff 0 'DartWalker2d-v1' 32 2048 675000 True 10000 $n_components $n_components; sleep 1; ps
+#
+#
+#sleep 1; how_many_steps_can_you_go 0 'DartWalker2d-v1' 32 2048 675000 True 1000 100 $n_components; sleep 1; ps
+#sleep 1; how_many_steps_can_you_go 0 'DartWalker2d-v1' 32 2048 675000 True 3000 100 $n_components; sleep 1; ps
+#sleep 1; final_projection_on_mean_performance 0 'DartWalker2d-v1' 32 2048 675000 True 10000 $n_components; sleep 1; ps
+#sleep 1; how_many_steps_can_you_go 0 'DartWalker2d-v1' 32 2048 1000000 True 3000 100 $n_components; sleep 1; ps
 
 #sleep 1; cma_once 0 'DartWalker2d-v1' 512 2048 675000 True 50000 "mean_param" 50; sleep 1; ps
 
