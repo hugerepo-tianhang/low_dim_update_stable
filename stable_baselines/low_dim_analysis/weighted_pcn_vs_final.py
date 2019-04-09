@@ -66,8 +66,8 @@ def main():
             continue
         logger.log(f"currently at {all_param_iterator._currow}")
         ipca.partial_fit(chunk.values)
-        pcs = ipca.components_[:cma_args.n_comp_to_use]
-        angle = cal_angle(V, pcs)
+        pcs_weighted_direction = np.matmul(ipca.explained_variance_ratio_[:cma_args.n_comp_to_use], ipca.components_[:cma_args.n_comp_to_use])
+        angle = cal_angle(V, pcs_weighted_direction)
         angles_along_the_way.append(angle)
 
 
@@ -75,7 +75,7 @@ def main():
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
 
-    angles_plot_name = f"angles algone the way start start n_comp_used :{cma_args.n_comp_to_use} dim space of mean pca plane, " \
+    angles_plot_name = f"weighted angles algone the way start start n_comp_used :{cma_args.n_comp_to_use} dim space of mean pca plane, " \
                        f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
     plot_2d(plot_dir, angles_plot_name, np.arange(len(angles_along_the_way)), angles_along_the_way, "num of chunks", "angle with diff in degrees", False)
 

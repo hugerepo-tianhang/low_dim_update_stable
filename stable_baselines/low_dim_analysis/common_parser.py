@@ -27,7 +27,7 @@ def get_common_parser():
     parser.add_argument('--padding_fraction', default=0.4, type=float)
     parser.add_argument('--xnum', default=3, type=int)
     parser.add_argument('--ynum', default=3, type=int)
-    parser.add_argument('--n_comp_to_use', default=1, type=int, help='n_components of PCA')
+    parser.add_argument('--n_comp_to_use', default=10, type=int, help='n_components of PCA')
     parser.add_argument('--n_components', default=400, type=int, help='n_components of PCA')
 
     parser.add_argument('--even_check_point_num', default=5, type=int, help='even_check_point_num')
@@ -45,7 +45,7 @@ def get_common_parser():
 
     #pc1 chunk size
     parser.add_argument('--pc1_chunk_size', default=100, type=int, help='total timesteps agent runs')
-
+    parser.add_argument('--deque_len', default=200, type=int, help='total timesteps agent runs')
 
 
     return parser

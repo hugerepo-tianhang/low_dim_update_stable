@@ -5,11 +5,12 @@ from stable_baselines.low_dim_analysis.common import do_pca, plot_2d, get_allino
 import math
 import numpy as np
 from stable_baselines.low_dim_analysis.eval_util import *
+from collections import deque
 
 from stable_baselines import logger
 
 import pandas as pd
-from sklearn.decomposition import IncrementalPCA
+from sklearn.decomposition import PCA
 
 from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
@@ -59,15 +60,25 @@ def main():
     all_param_iterator = get_allinone_concat_df(dir_name=traj_params_dir_name, use_IPCA=True, chunk_size=cma_args.pc1_chunk_size)
     angles_along_the_way = []
 
-    ipca = IncrementalPCA(n_components=cma_args.n_comp_to_use)  # for sparse PCA to speed up
+
+
+    latest_thetas = deque(maxlen=cma_args.deque_len)
+
     for chunk in all_param_iterator:
+        pca = PCA(n_components=cma_args.n_comp_to_use)  # for sparse PCA to speed up
+
         if chunk.shape[0] < cma_args.n_comp_to_use:
             logger.log("skipping too few data")
             continue
+
+
+        latest_thetas.extend(chunk.values)
+
         logger.log(f"currently at {all_param_iterator._currow}")
-        ipca.partial_fit(chunk.values)
-        pcs = ipca.components_[:cma_args.n_comp_to_use]
-        angle = cal_angle(V, pcs)
+
+        pca.fit(latest_thetas)
+        pcs = pca.components_[:cma_args.n_comp_to_use]
+        angle = cal_angle(V, pcs[0])
         angles_along_the_way.append(angle)
 
 
@@ -75,7 +86,7 @@ def main():
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
 
-    angles_plot_name = f"angles algone the way start start n_comp_used :{cma_args.n_comp_to_use} dim space of mean pca plane, " \
+    angles_plot_name = f"lastest angles algone the way start start n_comp_used :{cma_args.n_comp_to_use} dim space of mean pca plane, " \
                        f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
     plot_2d(plot_dir, angles_plot_name, np.arange(len(angles_along_the_way)), angles_along_the_way, "num of chunks", "angle with diff in degrees", False)
 

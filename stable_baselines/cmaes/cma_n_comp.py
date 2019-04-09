@@ -3,7 +3,7 @@ import cma
 
 import numpy as np
 from stable_baselines.low_dim_analysis.eval_util import *
-from stable_baselines.low_dim_analysis.common import do_pca, plot_2d, dump_rows_write_csv
+from stable_baselines.low_dim_analysis.common import do_pca, plot_2d, dump_rows_write_csv, generate_run_dir
 
 from stable_baselines import logger
 
@@ -39,11 +39,6 @@ def plot_cma_returns(plot_dir_alg, name, mean_rets, min_rets, max_rets, show):
     if show: plt.show()
 
 
-def get_cma_run_num(intermediate_data_dir, n_comp):
-    run_num = 0
-    while os.path.exists(get_cma_returns_dirname(intermediate_data_dir, n_comp=n_comp, run_num=run_num)):
-        run_num += 1
-    return run_num
 
 
 def do_cma(cma_args, first_n_pcs, orgin_param, save_dir, starting_coord):
@@ -128,7 +123,7 @@ def main():
     if not os.path.exists(intermediate_data_dir):
         os.makedirs(intermediate_data_dir)
 
-
+    cma_run_num, cma_intermediate_data_dir = generate_run_dir(get_cma_returns_dirname, intermediate_dir=intermediate_data_dir, n_comp=cma_args.n_comp_to_use)
     '''
     ==========================================================================================
     get the pc vectors
@@ -165,10 +160,6 @@ def main():
     logger.log(f"CMA STASRTING CORRD: {starting_coord}")
 
 
-    cma_run_num = get_cma_run_num(intermediate_data_dir, n_comp=cma_args.n_comp_to_use)
-    cma_intermediate_data_dir = get_cma_returns_dirname(intermediate_data_dir, cma_args.n_comp_to_use, cma_run_num)
-    if not os.path.exists(cma_intermediate_data_dir):
-        os.makedirs(cma_intermediate_data_dir)
 
 
 

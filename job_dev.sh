@@ -2,14 +2,14 @@
 
 
 cores_to_use=-1
-xnum=3
-ynum=3
+xnum=50
+ynum=50
 
 padding_fraction=0.4
-n_components=50
+n_components=500
 
 n_comp_to_use=2
-cma_num_timesteps=40000
+cma_num_timesteps=1000000
 ppos_num_timesteps=1500000
 eval_num_timesteps=1024
 even_check_point_num=5
@@ -152,7 +152,6 @@ next_n_once () {
                                     --even_check_point_num=$even_check_point_num --normalize=$normalize \
                                     --nminibatches=$nminibatches --n_steps=$n_steps
 }
-
 final_projection_on_mean_performance () {
     local run=$1
     local env=$2
@@ -161,8 +160,7 @@ final_projection_on_mean_performance () {
     local time_steps=$5
     local use_IPCA=$6
     local chunk_size=$7
-    local origin=$8
-    local n_components=$9
+    local n_components=$8
 
     echo "Welcome to final_projection_on_mean_performance: run number  $env $run"
 
@@ -178,6 +176,7 @@ final_projection_on_mean_performance () {
                                     --eval_num_timesteps=$eval_num_timesteps\
                                      --use_IPCA=$use_IPCA --chunk_size=$chunk_size
 }
+
 
 first_comp_angle_with_diff () {
     local run=$1
@@ -233,8 +232,29 @@ how_many_steps_can_you_go () {
 }
 
 
+pcn_vs_final_minus_start () {
+    local run=$1
+    local env=$2
+    local nminibatches=$3
+    local n_steps=$4
+    local time_steps=$5
+
+    local pc1_chunk_size=$6
+    local n_comp_to_use=$7
 
 
+    echo "Welcome to pcn_vs_final_minus_start: run number  $env $run"
+
+#    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
+#                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
+#                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
+#                                    --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps
+    python -m stable_baselines.low_dim_analysis.pcn_vs_final_minus_start \
+                                    --num-timesteps=$time_steps --run_num=$run --env=$env --normalize=$normalize \
+                                    --nminibatches=$nminibatches --n_steps=$n_steps\
+                                    --n_comp_to_use=$n_comp_to_use\
+                                    --pc1_chunk_size=$pc1_chunk_size
+}
 
 #sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
 #
@@ -244,35 +264,57 @@ how_many_steps_can_you_go () {
 #
 #sleep 1; run 0 'DartHopper-v1' 512 2048 1000000& sleep 1; ps
 #sleep 1; run 0 'DartHopper-v1' 2 2048& sleep 1; ps
-#sleep 1; run 0 'DartHopper-v1' 32 2048 5000& sleep 1; ps
-#sleep 1; run 0 'DartHopper-v1' 256 2048 1000000& sleep 1; ps
-#sleep 1; run 0 'Hopper-v2' 32 2048& sleep 1; ps
-#
-#sleep 1; run 0 'DartWalker2d-v1' 512 2048& sleep 1; ps
-##sleep 1; run 0 'DartWalker2d-v1' 2 2048& sleep 1; ps
-#sleep 1; run 0 'DartWalker2d-v1' 32 2048 5000& sleep 1; ps
-#sleep 1; run 0 'DartWalker2d-v1' 256 2048& sleep 1; ps
-#sleep 1; run 0 'Walker2d-v2' 32 2048& sleep 1; ps
-#sleep 1; run 0 'Walker2d-v2' 16 2048& sleep 1; ps
-#sleep 1; run 0 'Walker2d-v2' 8 2048& sleep 1; ps
+#sleep 1; run 0 'DartHopper-v1' 32 2048 1000000& sleep 1; ps
+#sleep 1; run 0 'DartHopper-v1' 64 2048 1000000& sleep 1; ps
+##sleep 1; run 0 'Hopper-v2' 32 2048& sleep 1; ps
+##
+#sleep 1; run 0 'DartWalker2d-v1' 512 2048 675000& sleep 1; ps
+###sleep 1; run 0 'DartWalker2d-v1' 2 2048& sleep 1; ps
+##sleep 1; run 0 'DartWalker2d-v1' 32 2048& sleep 1; ps
+##sleep 1; run 0 'DartWalker2d-v1' 256 2048& sleep 1; ps
+##sleep 1; run 0 'Walker2d-v2' 32 2048& sleep 1; ps
+##sleep 1; run 0 'Walker2d-v2' 16 2048& sleep 1; ps
+##sleep 1; run 0 'Walker2d-v2' 8 2048& sleep 1; ps
+#sleep 1; run 0 'DartWalker2d-v1' 32 2048 675000& sleep 1; ps
 
 wait
 
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
+#sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 50000 "mean_param" 300; sleep 1; ps
+#sleep 1; final_projection_on_mean_performance 0 'DartHopper-v1' 32 2048 1000000 True 50000 $n_components; sleep 1; ps
 
-#sleep 1; cma_once 0 'DartHopper-v1' 512 2048 1000000; sleep 1; ps
-#sleep 1; cma_once 0 'DartHopper-v1' 32 2048 5000 True 100 "mean_param" 50; sleep 1; ps
-sleep 1; final_projection_on_mean_performance 0 'DartWalker2d-v1' 32 2048 5000 True 10000 "mean_param" 300; sleep 1; ps
-sleep 1; first_comp_angle_with_diff 0 'DartWalker2d-v1' 32 2048 5000 True 10000 300 100; sleep 1; ps
-sleep 1; how_many_steps_can_you_go 0 'DartWalker2d-v1' 32 2048 5000 True 100 300 100; sleep 1; ps
-#sleep 1; cma_once 0 'DartHopper-v1' 32 2048 5000 True 100 "mean_param" 40; sleep 1; ps
-#sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000; sleep 1; ps
-
-#sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
-
+#sleep 1; cma_once 0 'DartHopper-v1' 512 2048 1000000 True 50000; sleep 1; ps
+#sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" $n_components; sleep 1; ps
+#sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" 15; sleep 1; ps
+##sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" $n_components; sleep 1; ps
+#
+##sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
+#sleep 1; final_projection_on_mean_performance 0 'DartWalker2d-v1' 512 2048 675000 True 10000 $n_components; sleep 1; ps
+sleep 1; pcn_vs_final_minus_start 0 'DartWalker2d-v1' 32 2048 5000 100 1; sleep 1; ps
+sleep 1; pcn_vs_final_minus_start 0 'DartWalker2d-v1' 32 2048 5000 100 100; sleep 1; ps
+#sleep 1; pcn_vs_final_minus_start 0 'DartWalker2d-v1' 32 2048 675000 3000 1; sleep 1; ps
+#sleep 1; pcn_vs_final_minus_start 0 'DartWalker2d-v1' 32 2048 675000 3000 2; sleep 1; ps
+#sleep 1; first_comp_angle_with_diff 0 'DartWalker2d-v1' 32 2048 1000000 True 10000 $n_components $n_components; sleep 1; ps
+#sleep 1; how_many_steps_can_you_go 0 'DartWalker2d-v1' 32 2048 1000000 True 1000 100 $n_components; sleep 1; ps
+#sleep 1; final_projection_on_mean_performance 0 'DartWalker2d-v1' 32 2048 675000 True 20000 $n_components; sleep 1; ps
 
 #sleep 1; cma_once 0 'DartWalker2d-v1' 512 2048 675000; sleep 1; ps
-#sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 True 10000 "mean_param" 300; sleep 1; ps
+#sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" 50; sleep 1; ps
+#sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" $n_components; sleep 1; ps
+#sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 True 20000 "mean_param" 500; sleep 1; ps
+#sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 True 20000 "mean_param" 450; sleep 1; ps
+#sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 True 20000 "mean_param" 400; sleep 1; ps
+#sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" $n_components; sleep 1; ps
+#sleep 1; first_comp_angle_with_diff 0 'DartWalker2d-v1' 32 2048 675000 True 10000 $n_components $n_components; sleep 1; ps
+#
+#
+#sleep 1; how_many_steps_can_you_go 0 'DartWalker2d-v1' 32 2048 675000 True 1000 100 $n_components; sleep 1; ps
+#sleep 1; how_many_steps_can_you_go 0 'DartWalker2d-v1' 32 2048 675000 True 3000 100 $n_components; sleep 1; ps
+#sleep 1; final_projection_on_mean_performance 0 'DartWalker2d-v1' 32 2048 675000 True 10000 $n_components; sleep 1; ps
+#sleep 1; how_many_steps_can_you_go 0 'DartWalker2d-v1' 32 2048 1000000 True 3000 100 $n_components; sleep 1; ps
+
+#sleep 1; cma_once 0 'DartWalker2d-v1' 512 2048 675000 True 50000 "mean_param" 50; sleep 1; ps
+
 #sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000; sleep 1; ps
 
 

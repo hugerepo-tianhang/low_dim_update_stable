@@ -10,7 +10,23 @@ from stable_baselines import logger
 import time
 from joblib import Parallel, delayed
 import math
+from functools import partial
+def get_run_num(file_func, **kargs):
+    f = partial(file_func, **kargs)
+    run_num = 0
+    while os.path.exists(f(run_num=run_num)):
+        run_num += 1
+    return run_num
 
+
+def generate_run_dir(get_cma_returns_dirname, **kargs):
+
+    cma_run_num = get_run_num(get_cma_returns_dirname, **kargs)
+    cma_intermediate_data_dir = get_cma_returns_dirname(run_num=cma_run_num, **kargs)
+    if not os.path.exists(cma_intermediate_data_dir):
+        os.makedirs(cma_intermediate_data_dir)
+
+    return cma_run_num, cma_intermediate_data_dir
 def gen_subspace_coords(plot_args, proj_coord):
     proj_xcoord, proj_ycoord = proj_coord[0], proj_coord[1]
 
