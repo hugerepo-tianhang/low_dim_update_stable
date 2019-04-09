@@ -47,28 +47,26 @@ def gen_subspace_coords(plot_args, proj_coord):
 #
 #     return proj_coords
 
-def do_proj_on_first_n(all_param_matrix, first_n_pcs, mean_param=None, origin="final_param"):
+def do_proj_on_first_n(all_param_matrix, first_n_pcs, origin_param):
     components = first_n_pcs
     if len(all_param_matrix.shape) == 1:
         all_param_matrix = all_param_matrix.reshape(1, -1)
 
-    if "final_param" == origin:
-        proj_coords = all_param_matrix.dot(components.T)
-    else:
-        proj_coords = (all_param_matrix - mean_param).dot(components.T)
+
+    proj_coords = (all_param_matrix - origin_param).dot(components.T)
     return proj_coords.T
 
-def do_proj_on_first_n_IPCA(concat_df, final_concat_params, first_n_pcs, mean_param, origin="final_param"):
+def do_proj_on_first_n_IPCA(concat_df, final_concat_params, first_n_pcs, origin_param):
     # IPCA
     assert isinstance(concat_df, pd.io.parsers.TextFileReader)
     first_chunk = concat_df.__next__()
     first_chunk_matrix_diff = first_chunk.sub(final_concat_params, axis='columns')
-    result = do_proj_on_first_n(first_chunk_matrix_diff.values, first_n_pcs, mean_param, origin)
+    result = do_proj_on_first_n(first_chunk_matrix_diff.values, first_n_pcs, origin_param)
 
     for chunk in concat_df:
         chunk_matrix_diff = chunk.sub(final_concat_params, axis='columns')
 
-        result = np.hstack((result, do_proj_on_first_n(chunk_matrix_diff.values, first_n_pcs, mean_param, origin)))
+        result = np.hstack((result, do_proj_on_first_n(chunk_matrix_diff.values, first_n_pcs, origin_param)))
 
     return result
 
@@ -123,6 +121,8 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
 
             tic = time.time()
             for chunk in concat_df:
+                logger.log(f"currnet at : {concat_df._currow}")
+
                 if chunk.shape[0] < n_components:
                     logger.log(f"last column too few: {chunk.shape[0]}")
                     continue
@@ -165,14 +165,19 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
         np.savetxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components),
                    explained_variance_ratio, delimiter=',')
 
+        if origin == "final_param":
+            origin_param = final_concat_params
+        else:
+            origin_param = mean_param
+
         if proj:
             if use_IPCA:
                 concat_df = get_allinone_concat_df(dir_name=traj_params_dir_name,
                                                    use_IPCA=use_IPCA, chunk_size=chunk_size)
-                proj_coords = do_proj_on_first_n_IPCA(concat_df, final_concat_params, first_n_pcs, mean_param, origin)
+                proj_coords = do_proj_on_first_n_IPCA(concat_df, final_concat_params, first_n_pcs, origin_param)
 
             else:
-                proj_coords = do_proj_on_first_n(concat_matrix, first_n_pcs, mean_param, origin)
+                proj_coords = do_proj_on_first_n(concat_matrix, first_n_pcs, origin_param)
 
             np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components,
                                                             pca_center=origin),
@@ -205,15 +210,24 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
     }
     return result
 
-
-
-def get_projected_data_in_old_basis(mean_param, all_pcs, data, num_axis_to_use):
+def get_projected_vector_in_old_basis(vector, all_pcs, num_axis_to_use):
     components = all_pcs[:num_axis_to_use]
 
-    projected_data = (data - mean_param).dot(components.T)
+    projected_vector = vector.dot(components.T) #(final * compT - start * compT )
 
     # goes back to original data space with mean restored.
-    projected_data_in_old_basis = projected_data.dot(components) + mean_param
+    projected_data_in_old_basis = projected_vector.dot(components) #(final * compT * comp - start * compT * comp )
+
+    return projected_data_in_old_basis
+
+
+def get_projected_data_in_old_basis(origin_param, all_pcs, data, num_axis_to_use):
+    components = all_pcs[:num_axis_to_use]
+
+    projected_data = (data - origin_param).dot(components.T)
+
+    # goes back to original data space with mean restored.
+    projected_data_in_old_basis = projected_data.dot(components) + origin_param
 
     return projected_data_in_old_basis
 

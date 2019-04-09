@@ -96,7 +96,7 @@ def train(args):
 
 
 def eval_return(args, save_dir, theta,  eval_timesteps, i):
-    logger.log(f"#######EVAL: {args}")
+    # logger.log(f"#######EVAL: {args}")
 
     def make_env():
         env_out = gym.make(args.env)

@@ -68,7 +68,7 @@ def do_cma(cma_args, first_n_pcs, orgin_param, save_dir, starting_coord):
         solutions = es.ask()
         optimization_path.extend(solutions)
         thetas = [np.matmul(coord, first_n_pcs) + orgin_param for coord in solutions]
-        logger.log(f"eval num: {cma_args.eval_num_timesteps}")
+        logger.log(f"current time steps num: {total_num_timesteps} total time steps: {cma_args.cma_num_timesteps}")
         eval_returns = Parallel(n_jobs=cma_args.cores_to_use) \
             (delayed(eval_return)(cma_args, save_dir, theta, cma_args.eval_num_timesteps, i) for
              (i, theta) in enumerate(thetas))
@@ -157,9 +157,7 @@ def main():
     concat_df = get_allinone_concat_df(dir_name=traj_params_dir_name,
                                        use_IPCA=True, chunk_size=1)
     matrix = concat_df.__next__().values
-
-    proj_coords = do_proj_on_first_n(matrix, result["first_n_pcs"], result["mean_param"],
-                                     origin)
+    proj_coords = do_proj_on_first_n(matrix, result["first_n_pcs"], origin_param)
     # starting_coord = np.zeros((1, cma_args.n_comp_to_use)) # use mean
     # starting_coord = (np.random.uniform(np.min(proj_xcoord), np.max(proj_xcoord)),
     #                 np.random.uniform(np.min(proj_ycoord), np.max(proj_ycoord)))
