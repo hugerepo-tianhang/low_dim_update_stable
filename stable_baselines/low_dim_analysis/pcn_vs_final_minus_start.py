@@ -67,7 +67,7 @@ def main():
         logger.log(f"currently at {all_param_iterator._currow}")
         ipca.partial_fit(chunk.values)
         pcs = ipca.components_[:cma_args.n_comp_to_use]
-        angle = cal_angle(V, pcs)
+        angle = cal_angle(V, pcs[0])
         angles_along_the_way.append(angle)
 
 
