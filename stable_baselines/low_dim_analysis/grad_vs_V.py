@@ -103,6 +103,8 @@ def main():
         ipca.partial_fit(chunk)
 
         angle = cal_angle(V, ipca.components_[0])
+        if angle > 90:
+            angle = 180 - angle
         angles_along_the_way.extend([angle]*chunk.shape[0])
 
 
@@ -110,11 +112,11 @@ def main():
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
 
-
-    #TODO ignore negative for now
-    angles_along_the_way = np.array(angles_along_the_way)
-    if angles_along_the_way[-1] > 90:
-        angles_along_the_way = 180 - angles_along_the_way
+    #
+    # #TODO ignore negative for now
+    # angles_along_the_way = np.array(angles_along_the_way)
+    # if angles_along_the_way[-1] > 90:
+    #     angles_along_the_way = 180 - angles_along_the_way
 
 
     assert len(angles_along_the_way) == len(grad_vs_Vs)

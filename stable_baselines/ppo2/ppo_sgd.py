@@ -428,7 +428,7 @@ class PPO2(ActorCriticRLModel):
 
             if self.run_info is not None:
                 flat_params = self.get_flat()
-                self.dump(flat_params, "final")
+                self.dump(flat_params, "final_")
                 self.dump([total_num_dumped], "total_num_dumped")
             return self
 

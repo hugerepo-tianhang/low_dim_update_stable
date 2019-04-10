@@ -80,6 +80,19 @@ run () {
             --n_steps=$n_steps
 
 }
+run_sgd () {
+    local run=$1
+    local env=$2
+    local nminibatches=$3
+    local n_steps=$4
+    local time_steps=$5
+
+    echo "Welcome to RUN: run number  $env $run"
+    python -m stable_baselines.ppo2.run_mujoco_sgd --env=$env --num-timesteps=$time_steps\
+            --run_num=$run --normalize=$normalize --nminibatches=$nminibatches\
+            --n_steps=$n_steps --optimizer='sgd'
+
+}
 
 cma_once () {
     local run=$1
@@ -389,7 +402,8 @@ grad_vs_V () {
 ##sleep 1; run 0 'Walker2d-v2' 32 2048& sleep 1; ps
 ##sleep 1; run 0 'Walker2d-v2' 16 2048& sleep 1; ps
 ##sleep 1; run 0 'Walker2d-v2' 8 2048& sleep 1; ps
-#sleep 1; run 0 'DartWalker2d-v1' 32 2048 675000& sleep 1; ps
+sleep 1; run_sgd 0 'DartWalker2d-v1' 32 2048 5000& sleep 1; ps
+sleep 1; run 0 'DartWalker2d-v1' 32 2048 5000& sleep 1; ps
 
 wait
 
@@ -427,7 +441,8 @@ wait
 #sleep 1; pcn_latest_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 1 1000; sleep 1;
 #
 #
-sleep 1; grad_vs_V 0 'DartWalker2d-v1' 32 2048 675000 1000; sleep 1; ps
+
+#sleep 1; grad_vs_V 0 'DartWalker2d-v1' 32 2048 675000 1000; sleep 1; ps
 
 #sleep 1; pcn_vs_final_minus_start 0 'DartWalker2d-v1' 32 2048 675000 3000 1; sleep 1; ps
 #sleep 1; pcn_vs_final_minus_start 0 'DartWalker2d-v1' 32 2048 675000 3000 2; sleep 1; ps
