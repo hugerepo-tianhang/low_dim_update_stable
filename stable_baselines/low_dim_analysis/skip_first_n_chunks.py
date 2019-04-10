@@ -64,11 +64,15 @@ def main():
 
     for chunk in all_param_iterator:
         if all_param_iterator._currow <= cma_args.pc1_chunk_size * cma_args.skipped_chunks:
+            logger.log(f"skipping: currow: {all_param_iterator._currow} skip threshold {cma_args.pc1_chunk_size * cma_args.skipped_chunks}")
             continue
 
         logger.log(f"currently at {all_param_iterator._currow}")
         ipca.partial_fit(chunk.values)
         angle = cal_angle(V, ipca.components_[0])
+        #TODO ignore 90 or 180 for now
+        if angle > 90:
+            angle = 180 - angle
         angles_along_the_way.append(angle)
 
 

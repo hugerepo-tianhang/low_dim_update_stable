@@ -406,7 +406,11 @@ wait
 #sleep 1; pcn_latest_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 1 1000; sleep 1;
 #
 #
-sleep 1; skip_first_n_chunks 0 'DartWalker2d-v1' 32 2048 5000 100 10; sleep 1; ps
+sleep 1; skip_first_n_chunks 0 'DartWalker2d-v1' 32 2048 675000 1000 5; sleep 1; ps
+sleep 1; skip_first_n_chunks 0 'DartWalker2d-v1' 32 2048 675000 1000 1; sleep 1; ps
+sleep 1; skip_first_n_chunks 0 'DartWalker2d-v1' 32 2048 675000 1000 2; sleep 1; ps
+sleep 1; skip_first_n_chunks 0 'DartWalker2d-v1' 32 2048 675000 1000 3; sleep 1; ps
+sleep 1; skip_first_n_chunks 0 'DartWalker2d-v1' 32 2048 675000 1000 4; sleep 1; ps
 #sleep 1; pcn_vs_final_minus_start 0 'DartWalker2d-v1' 32 2048 675000 3000 1; sleep 1; ps
 #sleep 1; pcn_vs_final_minus_start 0 'DartWalker2d-v1' 32 2048 675000 3000 2; sleep 1; ps
 #sleep 1; first_comp_angle_with_diff 0 'DartWalker2d-v1' 32 2048 1000000 True 10000 $n_components $n_components; sleep 1; ps
