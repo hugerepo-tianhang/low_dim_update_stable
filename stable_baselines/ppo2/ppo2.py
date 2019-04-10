@@ -14,6 +14,7 @@ from stable_baselines.common.policies import LstmPolicy, ActorCriticPolicy
 from stable_baselines.a2c.utils import total_episode_reward_logger
 from stable_baselines.low_dim_analysis.eval_util import get_full_param_traj_file_path
 import csv
+from stable_baselines.common.tf_util import numel
 
 
 class PPO2(ActorCriticRLModel):
@@ -46,7 +47,7 @@ class PPO2(ActorCriticRLModel):
     def __init__(self, policy, env, gamma=0.99, n_steps=128, ent_coef=0.01, learning_rate=2.5e-4, vf_coef=0.5,
                  max_grad_norm=0.5, lam=0.95, nminibatches=4, noptepochs=4, cliprange=0.2, verbose=1,
                  tensorboard_log=None, _init_setup_model=True, policy_kwargs=None,
-                 full_tensorboard_log=False):
+                 full_tensorboard_log=False, optimizer='adam'):
 
         super(PPO2, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=True,
                                    _init_setup_model=_init_setup_model, policy_kwargs=policy_kwargs)
@@ -63,6 +64,7 @@ class PPO2(ActorCriticRLModel):
         self.noptepochs = noptepochs
         self.tensorboard_log = tensorboard_log
         self.full_tensorboard_log = full_tensorboard_log
+        self.optimizer_type = optimizer
 
         self.graph = None
         self.sess = None
@@ -91,20 +93,16 @@ class PPO2(ActorCriticRLModel):
         self.summary = None
         self.episode_reward = None
 
-
         self.run_info = None
 
         if _init_setup_model:
             self.setup_model()
-
 
     def setup_model(self):
         with SetVerbosity(self.verbose):
 
             assert issubclass(self.policy, ActorCriticPolicy), "Error: the input policy for the PPO2 model must be " \
                                                                "an instance of common.policies.ActorCriticPolicy."
-
-
 
             self.n_batch = self.n_envs * self.n_steps
 
@@ -119,8 +117,8 @@ class PPO2(ActorCriticRLModel):
                 n_batch_step = None
                 n_batch_train = None
                 if issubclass(self.policy, LstmPolicy):
-                    assert self.n_envs % self.nminibatches == 0, "For recurrent policies, "\
-                        "the number of environments run in parallel should be a multiple of nminibatches."
+                    assert self.n_envs % self.nminibatches == 0, "For recurrent policies, " \
+                                                                 "the number of environments run in parallel should be a multiple of nminibatches."
                     n_batch_step = self.n_envs
                     n_batch_train = self.n_batch // self.nminibatches
 
@@ -175,12 +173,21 @@ class PPO2(ActorCriticRLModel):
                         if self.full_tensorboard_log:
                             for var in self.params:
                                 tf.summary.histogram(var.name, var)
-                    self.grads = tf.gradients(loss, self.params)
+                    grads = tf.gradients(loss, self.params)
                     if self.max_grad_norm is not None:
-                        self.grads, _grad_norm = tf.clip_by_global_norm(self.grads, self.max_grad_norm)
-                    grads = list(zip(self.grads, self.params))
-                trainer = tf.train.AdamOptimizer(learning_rate=self.learning_rate_ph, epsilon=1e-5)
-                # trainer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate_ph)
+                        grads, _grad_norm = tf.clip_by_global_norm(grads, self.max_grad_norm)
+
+                    self.flat_grads = tf.concat(axis=0, values=[
+                        tf.reshape(grad if grad is not None else tf.zeros_like(v), [numel(v)])
+                        for (v, grad) in zip(self.params, grads)
+                    ])
+
+                    grads = list(zip(grads, self.params))
+
+                if self.optimizer_type == 'adam':
+                    trainer = tf.train.AdamOptimizer(learning_rate=self.learning_rate_ph, epsilon=1e-5)
+                else:
+                    trainer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate_ph)
                 self._train = trainer.apply_gradients(grads)
 
                 self.loss_names = ['policy_loss', 'value_loss', 'policy_entropy', 'approxkl', 'clipfrac']
@@ -275,17 +282,14 @@ class PPO2(ActorCriticRLModel):
                     td_map)
             writer.add_summary(summary, (update * update_fac))
         else:
-            policy_loss, value_loss, policy_entropy, approxkl, clipfrac, _ = self.sess.run(
-                [self.pg_loss, self.vf_loss, self.entropy, self.approxkl, self.clipfrac, self._train],
+            policy_loss, value_loss, policy_entropy, approxkl, clipfrac, _, grads = self.sess.run(
+                [self.pg_loss, self.vf_loss, self.entropy, self.approxkl, self.clipfrac, self._train, self.flat_grads],
                 td_map)
 
-
-
-        return policy_loss, value_loss, policy_entropy, approxkl, clipfrac
+        return policy_loss, value_loss, policy_entropy, approxkl, clipfrac, grads
 
     def learn(self, total_timesteps, callback=None, seed=None, log_interval=1, tb_log_name="PPO2",
               reset_num_timesteps=True):
-
 
         # def decide_next_skip(prob_of_down, up, down):
         #     r = np.random.random_sample()
@@ -310,7 +314,7 @@ class PPO2(ActorCriticRLModel):
 
 
 
-                # Transform to callable if needed
+        # Transform to callable if needed
         self.learning_rate = get_schedule_fn(self.learning_rate)
         self.cliprange = get_schedule_fn(self.cliprange)
 
@@ -354,9 +358,9 @@ class PPO2(ActorCriticRLModel):
                             mbinds = inds[start:end]
                             slices = (arr[mbinds] for arr in (obs, returns, masks, actions, values, neglogpacs))
                             train_result = self._train_step(lr_now, cliprangenow, *slices, writer=writer,
-                                             update=timestep)
+                                                            update=timestep)
 
-                            mb_loss_vals.append(train_result)
+                            mb_loss_vals.append(train_result[:-1])
 
                             if self.run_info is not None:
                                 # if total_timesteps > memory_size_threshold and current_non_skipped >= current_skip_num:
@@ -366,7 +370,7 @@ class PPO2(ActorCriticRLModel):
                                 grads = train_result[-1]
                                 flat_params = self.get_flat()
                                 self.dump(flat_params, 0)
-                                # self.dump(grads, "grads")
+                                self.dump(grads, "grads")
                                 # current_non_skipped += 1
                                 total_num_dumped += 1
 

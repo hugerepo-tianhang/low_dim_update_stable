@@ -82,7 +82,7 @@ def train(args):
                 "full_param_traj_dir_path": full_param_traj_dir_path}
 
     model = PPO2(policy=policy, env=env, n_steps=args.n_steps, nminibatches=args.nminibatches, lam=0.95, gamma=0.99, noptepochs=10,
-                 ent_coef=0.0, learning_rate=3e-4, cliprange=0.2)
+                 ent_coef=0.0, learning_rate=3e-4, cliprange=0.2, optimizer=args.optimizer)
     model.tell_run_info(run_info)
 
     model.learn(total_timesteps=args.num_timesteps)

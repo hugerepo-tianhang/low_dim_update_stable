@@ -76,25 +76,28 @@ def main():
     V = final_params - start_params
 
     all_param_iterator = get_allinone_concat_df(dir_name=traj_params_dir_name, use_IPCA=True, chunk_size=cma_args.pc1_chunk_size)
-    all_grads_iterator = get_allinone_concat_df(dir_name=traj_params_dir_name, use_IPCA=True, chunk_size=cma_args.pc1_chunk_size, index="grads")
-
     angles_along_the_way = []
     grad_vs_Vs = []
 
 
     ipca = IncrementalPCA(n_components=cma_args.n_comp_to_use)  # for sparse PCA to speed up
+    last_chunk_last = start_params
     for chunk in all_param_iterator:
-        grads = all_grads_iterator.__next__().values
         chunk = chunk.values
         if chunk.shape[0] < cma_args.n_comp_to_use:
             logger.log("skipping too few data")
             continue
 
-        for grad in grads:
+        for i in range(chunk.shape[0]):
+            if i == 0:
+                grad = chunk[i] - last_chunk_last
+            else:
+                grad = chunk[i] - chunk[i-1]
 
             grad_angle = cal_angle(grad, V)
             grad_vs_Vs.append(grad_angle)
 
+        last_chunk_last = chunk[-1]
 
         logger.log(f"currently at {all_param_iterator._currow}")
         ipca.partial_fit(chunk)
@@ -118,7 +121,7 @@ def main():
 
     assert len(angles_along_the_way) == len(grad_vs_Vs)
 
-    angles_plot_name = f"in so far grad and pc1 vs final - start " \
+    angles_plot_name = f"in so far update direction and pc1 vs final - start " \
                        f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
     plot_2d_2(plot_dir, angles_plot_name, np.arange(len(grad_vs_Vs)),grad_vs_v=grad_vs_Vs, pc1_vs_V=angles_along_the_way,
               xlabel="num of chunks", ylabel="angle with diff in degrees", show=False)

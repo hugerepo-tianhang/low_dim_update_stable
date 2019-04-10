@@ -473,8 +473,8 @@ def plot_3d_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, proj_x
     if show: plt.show()
 
 
-def get_allinone_concat_df(dir_name, num_index_to_take=None, use_IPCA=False, chunk_size=None):
-    index = 0
+def get_allinone_concat_df(dir_name, num_index_to_take=None, use_IPCA=False, chunk_size=None, index = 0):
+
     theta_file = get_full_param_traj_file_path(dir_name, index)
     if use_IPCA:
         assert chunk_size is not None

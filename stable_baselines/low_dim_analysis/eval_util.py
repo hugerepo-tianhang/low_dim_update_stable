@@ -8,7 +8,7 @@ def get_project_dir():
 
 
 def get_dir_path_for_this_run(args):
-    return f'{get_project_dir()}/stable_baselines/{args.alg}/env_{args.env}_time_step_{args.num_timesteps}_' \
+    return f'{get_project_dir()}/stable_baselines/{args.alg}/optimizer_{args.optimizer}_env_{args.env}_time_step_{args.num_timesteps}_' \
            f'normalize_{args.normalize}_n_steps_{args.n_steps}_nminibatches_{args.nminibatches}_run_{args.run_num}'
 
 
