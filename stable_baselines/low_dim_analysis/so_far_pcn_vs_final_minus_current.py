@@ -85,13 +85,13 @@ def main():
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
 
-    angles_plot_name = f"angles algone the way start start n_comp_used :{cma_args.n_comp_to_use} dim space of mean pca plane, " \
+    angles_plot_name = f"so far angles algone the way start start n_comp_used :{cma_args.n_comp_to_use} dim space of mean pca plane, " \
                        f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
     plot_2d(plot_dir, angles_plot_name, np.arange(len(angles_with_pc1_along_the_way)), angles_with_pc1_along_the_way, "num of chunks", "angle with diff in degrees", False)
-    angles_plot_name = f"weighted angles algone the way start start n_comp_used :{cma_args.n_comp_to_use} dim space of mean pca plane, " \
+    angles_plot_name = f"so far weighted angles algone the way start start n_comp_used :{cma_args.n_comp_to_use} dim space of mean pca plane, " \
                        f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
     plot_2d(plot_dir, angles_plot_name, np.arange(len(angles_with_weighted_along_the_way)), angles_with_weighted_along_the_way, "num of chunks", "angle with diff in degrees", False)
-    angles_plot_name = f"angle_diff_pc1_vs_weighted n_comp_used :{cma_args.n_comp_to_use} dim space of mean pca plane, " \
+    angles_plot_name = f"so far angle_diff_pc1_vs_weighted n_comp_used :{cma_args.n_comp_to_use} dim space of mean pca plane, " \
                        f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
     plot_2d(plot_dir, angles_plot_name, np.arange(len(angle_diff_pc1_vs_weighted)), angle_diff_pc1_vs_weighted, "num of chunks", "angle with diff in degrees", False)
 

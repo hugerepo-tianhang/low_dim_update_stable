@@ -46,6 +46,7 @@ def get_common_parser():
     #pc1 chunk size
     parser.add_argument('--pc1_chunk_size', default=100, type=int, help='total timesteps agent runs')
     parser.add_argument('--deque_len', default=200, type=int, help='total timesteps agent runs')
+    parser.add_argument('--skipped_chunks', default=10, type=int, help='total timesteps agent runs')
 
 
     return parser
