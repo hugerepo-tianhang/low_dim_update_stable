@@ -179,8 +179,8 @@ class PPO2(ActorCriticRLModel):
                     if self.max_grad_norm is not None:
                         self.grads, _grad_norm = tf.clip_by_global_norm(self.grads, self.max_grad_norm)
                     grads = list(zip(self.grads, self.params))
-                trainer = tf.train.AdamOptimizer(learning_rate=self.learning_rate_ph, epsilon=1e-5)
-                # trainer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate_ph)
+                # trainer = tf.train.AdamOptimizer(learning_rate=self.learning_rate_ph, epsilon=1e-5)
+                trainer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate_ph)
                 self._train = trainer.apply_gradients(grads)
 
                 self.loss_names = ['policy_loss', 'value_loss', 'policy_entropy', 'approxkl', 'clipfrac']
@@ -264,14 +264,14 @@ class PPO2(ActorCriticRLModel):
                 run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
                 run_metadata = tf.RunMetadata()
                 summary, policy_loss, value_loss, policy_entropy, approxkl, clipfrac, _, grads = self.sess.run(
-                    [self.summary, self.pg_loss, self.vf_loss, self.entropy, self.approxkl, self.clipfrac, self._train
-                     ],
+                    [self.summary, self.pg_loss, self.vf_loss, self.entropy, self.approxkl, self.clipfrac, self._train,
+                     self.grads],
                     td_map, options=run_options, run_metadata=run_metadata)
                 writer.add_run_metadata(run_metadata, 'step%d' % (update * update_fac))
             else:
                 summary, policy_loss, value_loss, policy_entropy, approxkl, clipfrac, _, grads = self.sess.run(
-                    [self.summary, self.pg_loss, self.vf_loss, self.entropy, self.approxkl, self.clipfrac, self._train
-                     ],
+                    [self.summary, self.pg_loss, self.vf_loss, self.entropy, self.approxkl, self.clipfrac, self._train,
+                     self.grads],
                     td_map)
             writer.add_summary(summary, (update * update_fac))
         else:
