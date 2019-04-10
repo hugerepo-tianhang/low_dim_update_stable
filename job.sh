@@ -336,12 +336,23 @@ wait
 #
 ##sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
 #sleep 1; weighted_pcn_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 100; sleep 1;
-#sleep 1; weighted_pcn_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 100; sleep 1;
-sleep 1; pcn_latest_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 1 20000; sleep 1;
-sleep 1; pcn_latest_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 1 10000; sleep 1;
-sleep 1; pcn_latest_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 1 5000; sleep 1;
-sleep 1; pcn_latest_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 1 3000; sleep 1;
-sleep 1; pcn_latest_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 1 1000; sleep 1;
+sleep 1; weighted_pcn_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 50; sleep 1;
+sleep 1; weighted_pcn_vs_final 0 'DartWalker2d-v1' 32 2048 675000 3000 50; sleep 1;
+sleep 1; weighted_pcn_vs_final 0 'DartWalker2d-v1' 32 2048 675000 5000 50; sleep 1;
+
+sleep 1; weighted_pcn_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 3; sleep 1;
+sleep 1; weighted_pcn_vs_final 0 'DartWalker2d-v1' 32 2048 675000 3000 3; sleep 1;
+sleep 1; weighted_pcn_vs_final 0 'DartWalker2d-v1' 32 2048 675000 5000 3; sleep 1;
+
+sleep 1; weighted_pcn_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 2; sleep 1;
+sleep 1; weighted_pcn_vs_final 0 'DartWalker2d-v1' 32 2048 675000 3000 2; sleep 1;
+sleep 1; weighted_pcn_vs_final 0 'DartWalker2d-v1' 32 2048 675000 5000 2; sleep 1;
+
+#sleep 1; pcn_latest_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 1 20000; sleep 1;
+#sleep 1; pcn_latest_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 1 10000; sleep 1;
+#sleep 1; pcn_latest_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 1 5000; sleep 1;
+#sleep 1; pcn_latest_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 1 3000; sleep 1;
+#sleep 1; pcn_latest_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 1 1000; sleep 1;
 #
 #
 #sleep 1; pcn_vs_final_minus_start 0 'DartWalker2d-v1' 32 2048 675000 1000 2; sleep 1; ps
@@ -350,7 +361,7 @@ sleep 1; pcn_latest_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 1 1000; sle
 #sleep 1; first_comp_angle_with_diff 0 'DartWalker2d-v1' 32 2048 1000000 True 10000 $n_components $n_components; sleep 1; ps
 #sleep 1; how_many_steps_can_you_go 0 'DartWalker2d-v1' 32 2048 1000000 True 1000 100 $n_components; sleep 1; ps
 #sleep 1; final_projection_on_mean_performance 0 'DartWalker2d-v1' 32 2048 675000 True 20000 $n_components; sleep 1; ps
-sleep 1; final_projection_on_mean_performance 0 'DartWalker2d-v1' 512 2048 675000 True 10000 $n_components; sleep 1; ps
+#sleep 1; final_projection_on_mean_performance 0 'DartWalker2d-v1' 512 2048 675000 True 10000 $n_components; sleep 1; ps
 
 #sleep 1; cma_once 0 'DartWalker2d-v1' 512 2048 675000; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 32 2048 675000 False 0 "mean_param" 50; sleep 1; ps
