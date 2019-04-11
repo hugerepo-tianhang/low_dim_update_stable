@@ -71,13 +71,29 @@ def main():
     V = final_params - start_params
 
     all_param_iterator = get_allinone_concat_df(dir_name=traj_params_dir_name, use_IPCA=True, chunk_size=cma_args.pc1_chunk_size)
-    angles_along_the_way = []
-
+    unduped_angles_along_the_way = []
+    duped_angles_along_the_way = []
+    diff_along = []
     num = 2 #TODO hardcode!
+    undup_ipca = IncrementalPCA(n_components=1)  # for sparse PCA to speed up
 
     all_matrix_buffer = []
     for chunk in all_param_iterator:
         chunk = chunk.values
+        undup_ipca.partial_fit(chunk)
+        unduped_angle = cal_angle(V, undup_ipca.components_[0])
+
+        #TODO ignore 90 or 180 for now
+        if unduped_angle > 90:
+            unduped_angle = 180 - unduped_angle
+        unduped_angles_along_the_way.append(unduped_angle)
+
+
+
+
+
+
+
         all_matrix_buffer.extend(chunk)
 
         last_percentage = gen_last_percentage(all_param_iterator._currow, total_num)
@@ -94,9 +110,14 @@ def main():
             else:
                 ipca.partial_fit(duped_in_so_far[i: i + cma_args.chunk_size])
 
-        angle = cal_angle(V, ipca.components_[0])
-        angles_along_the_way.append(angle)
+        duped_angle = cal_angle(V, ipca.components_[0])
 
+
+        #TODO ignore 90 or 180 for now
+        if duped_angle > 90:
+            duped_angle = 180 - duped_angle
+        duped_angles_along_the_way.append(duped_angle)
+        diff_along.append(unduped_angle - duped_angle)
 
     plot_dir = get_plot_dir(cma_args)
     if not os.path.exists(plot_dir):
@@ -104,8 +125,21 @@ def main():
 
     angles_plot_name = f"duped exponential 2, num dup: {num}" \
                        f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
-    plot_2d(plot_dir, angles_plot_name, np.arange(len(angles_along_the_way)), angles_along_the_way, "num of chunks", "angle with diff in degrees", False)
+    plot_2d(plot_dir, angles_plot_name, np.arange(len(duped_angles_along_the_way)), duped_angles_along_the_way, "num of chunks", "angle with diff in degrees", False)
 
+    angles_plot_name = f"unduped exponential 2, num dup: {num}" \
+                       f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
+    plot_2d(plot_dir, angles_plot_name, np.arange(len(unduped_angles_along_the_way)), unduped_angles_along_the_way, "num of chunks", "angle with diff in degrees", False)
+
+
+    angles_plot_name = f"undup - dup diff_along exponential 2, num dup: {num}" \
+                       f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
+    plot_2d(plot_dir, angles_plot_name, np.arange(len(diff_along)), diff_along, "num of chunks", "angle with diff in degrees", False)
+
+
+    del all_matrix_buffer
+    import gc
+    gc.collect()
 
 if __name__ == '__main__':
 

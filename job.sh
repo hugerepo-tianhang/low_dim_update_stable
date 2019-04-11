@@ -394,6 +394,32 @@ update_dir_vs_final_min_start () {
                                     --nminibatches=$nminibatches --n_steps=$n_steps\
                                     --pc1_chunk_size=$pc1_chunk_size --optimizer=$optimizer
 }
+
+
+dup_last_part_to_approx_pc1 () {
+    local run=$1
+    local env=$2
+    local nminibatches=$3
+    local n_steps=$4
+    local time_steps=$5
+
+    local pc1_chunk_size=$6
+    local chunk_size=$7
+    local optimizer=$8
+
+    echo "Welcome to dup_last_part_to_approx_pc1: run number  $env $run"
+
+#    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
+#                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
+#                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
+#                                    --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps
+    python -m stable_baselines.low_dim_analysis.dup_last_part_to_approx_pc1 \
+                                    --num-timesteps=$time_steps --run_num=$run --env=$env --normalize=$normalize \
+                                    --nminibatches=$nminibatches --n_steps=$n_steps\
+                                    --pc1_chunk_size=$pc1_chunk_size\
+                                    --chunk_size=$chunk_size --optimizer=$optimizer
+}
+
 #sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
 #
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
@@ -456,11 +482,12 @@ wait
 #
 #
 
-sleep 1; grad_vs_V 0 'DartWalker2d-v1' 32 2048 1000000 100 'sgd'; sleep 1; ps
-sleep 1; grad_vs_V 1 'DartWalker2d-v1' 32 2048 1000000 100 'sgd'; sleep 1; ps
-sleep 1; grad_vs_V 0 'DartWalker2d-v1' 32 2048 675000 100 'adam'; sleep 1; ps
-sleep 1; grad_vs_V 1 'DartWalker2d-v1' 32 2048 675000 100 'adam'; sleep 1; ps
-sleep 1; grad_vs_V 2 'DartWalker2d-v1' 32 2048 675000 100 'adam'; sleep 1; ps
+sleep 1; dup_last_part_to_approx_pc1 0 'DartWalker2d-v1' 32 2048 1000000 100 10000 'sgd'; sleep 1; ps
+sleep 1; dup_last_part_to_approx_pc1 1 'DartWalker2d-v1' 32 2048 1000000 100 10000 'sgd'; sleep 1; ps
+sleep 1; dup_last_part_to_approx_pc1 0 'DartWalker2d-v1' 32 2048 675000 100 10000 'adam'; sleep 1; ps
+sleep 1; dup_last_part_to_approx_pc1 1 'DartWalker2d-v1' 32 2048 675000 100 10000 'adam'; sleep 1; ps
+sleep 1; dup_last_part_to_approx_pc1 2 'DartWalker2d-v1' 32 2048 675000 100 10000 'adam'; sleep 1; ps
+
 #sleep 1; grad_vs_V 0 'DartWalker2d-v1' 32 2048 675000 100 'sgd'; sleep 1; ps
 
 #sleep 1; pcn_vs_final_minus_start 0 'DartWalker2d-v1' 32 2048 675000 3000 1; sleep 1; ps

@@ -7,9 +7,12 @@ def get_project_dir():
     return project_dir
 
 
-def get_dir_path_for_this_run(args):
-    return f'{get_project_dir()}/stable_baselines/{args.alg}/optimizer_{args.optimizer}_env_{args.env}_time_step_{args.num_timesteps}_' \
+def get_run_name(args):
+    return f'optimizer_{args.optimizer}_env_{args.env}_time_step_{args.num_timesteps}_' \
            f'normalize_{args.normalize}_n_steps_{args.n_steps}_nminibatches_{args.nminibatches}_run_{args.run_num}'
+
+def get_dir_path_for_this_run(args):
+    return f'{get_project_dir()}/stable_baselines/{args.alg}/{get_run_name(args)}'
 
 
 def get_log_dir(this_run_dir):
@@ -39,7 +42,8 @@ def get_full_param_traj_file_path(dir_name, index):
 
 
 def get_plot_dir(args):
-    return f'{get_project_dir()}/plots/{args.alg}/env_{args.env}_time_step_{args.num_timesteps}_normalize_{args.normalize}_n_steps_{args.n_steps}_nminibatches_{args.nminibatches}_run_{args.run_num}'
+    return f'{get_project_dir()}/plots/{args.alg}/{get_run_name(args)}'
+
 
 def get_cma_plot_dir(plot_dir, n_comp_to_use, cma_run_num):
     return f'{plot_dir}/cma/cma_n_comp_{n_comp_to_use}_run_num_{cma_run_num}'
