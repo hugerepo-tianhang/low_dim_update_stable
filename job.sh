@@ -481,11 +481,11 @@ sleep 1; so_far_pcn_vs_final_minus_current 2 'DartWalker2d-v1' 32 2048 675000 10
 #
 #
 
-sleep 1; dup_last_part_to_approx_pc1 0 'DartWalker2d-v1' 32 2048 1000000 100 10000 'sgd'; sleep 1; ps
-sleep 1; dup_last_part_to_approx_pc1 1 'DartWalker2d-v1' 32 2048 1000000 100 10000 'sgd'; sleep 1; ps
-sleep 1; dup_last_part_to_approx_pc1 0 'DartWalker2d-v1' 32 2048 675000 100 10000 'adam'; sleep 1; ps
-sleep 1; dup_last_part_to_approx_pc1 1 'DartWalker2d-v1' 32 2048 675000 100 10000 'adam'; sleep 1; ps
-sleep 1; dup_last_part_to_approx_pc1 2 'DartWalker2d-v1' 32 2048 675000 100 10000 'adam'; sleep 1; ps
+sleep 1; dup_last_part_to_approx_pc1 0 'DartWalker2d-v1' 32 2048 1000000 3000 20000 'sgd'; sleep 1; ps
+#sleep 1; dup_last_part_to_approx_pc1 1 'DartWalker2d-v1' 32 2048 1000000 100 10000 'sgd'; sleep 1; ps
+sleep 1; dup_last_part_to_approx_pc1 0 'DartWalker2d-v1' 32 2048 675000 3000 20000 'adam'; sleep 1; ps
+sleep 1; dup_last_part_to_approx_pc1 1 'DartWalker2d-v1' 32 2048 675000 3000 20000 'adam'; sleep 1; ps
+#sleep 1; dup_last_part_to_approx_pc1 2 'DartWalker2d-v1' 32 2048 675000 100 10000 'adam'; sleep 1; ps
 
 #sleep 1; grad_vs_V 0 'DartWalker2d-v1' 32 2048 675000 100 'sgd'; sleep 1; ps
 
