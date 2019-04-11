@@ -51,49 +51,46 @@ def main():
     final_params = pd.read_csv(final_file, header=None).values[0]
 
     all_param_iterator = get_allinone_concat_df(dir_name=traj_params_dir_name, use_IPCA=True, chunk_size=cma_args.pc1_chunk_size)
+    all_grads_iterator = get_allinone_concat_df(dir_name=traj_params_dir_name, use_IPCA=True, chunk_size=cma_args.pc1_chunk_size, index="grads")
+
+
     angles_with_pc1_along_the_way = []
-    angles_with_weighted_along_the_way = []
-    angle_diff_pc1_vs_weighted = []
-    ipca = IncrementalPCA(n_components=cma_args.n_comp_to_use)  # for sparse PCA to speed up
+    grad_vs_final_min_current_param = []
+    ipca = IncrementalPCA(1)  # for sparse PCA to speed up
     for chunk in all_param_iterator:
-        if chunk.shape[0] < cma_args.n_comp_to_use:
-            logger.log("skipping too few data")
-            continue
+
         logger.log(f"currently at {all_param_iterator._currow}")
 
         target_direction = final_params - chunk.values[-1]
 
         ipca.partial_fit(chunk.values)
-        pcs = ipca.components_[:cma_args.n_comp_to_use]
-        angle_with_pc1 = cal_angle(target_direction, pcs[0])
+        angle_with_pc1 = cal_angle(target_direction, ipca.components_[0])
 
-        pcs_weighted_direction = np.matmul(ipca.explained_variance_ratio_[:cma_args.n_comp_to_use], ipca.components_[:cma_args.n_comp_to_use])
-
-        angle_with_weighted = cal_angle(target_direction, pcs_weighted_direction)
 
         #TODO ignore 90 or 180 for now
         if angle_with_pc1 > 90:
             angle_with_pc1 = 180 - angle_with_pc1
-        if angle_with_weighted > 90:
-            angle_with_weighted = 180 - angle_with_weighted
 
         angles_with_pc1_along_the_way.append(angle_with_pc1)
-        angles_with_weighted_along_the_way.append(angle_with_weighted)
-        angle_diff_pc1_vs_weighted.append(angle_with_pc1 - angle_with_weighted)
+
+
+        grads = all_grads_iterator.__next__().values
+        for i, grad in enumerate(grads):
+
+            grad_angle = cal_angle(grad, final_params - chunk.values[i])
+            grad_vs_final_min_current_param.append(grad_angle)
+
 
     plot_dir = get_plot_dir(cma_args)
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
 
-    angles_plot_name = f"so far angles algone the way start start n_comp_used :{cma_args.n_comp_to_use} dim space of mean pca plane, " \
-                       f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
+    angles_plot_name = f"final - current VS so far pc1" \
+                       f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size}"
     plot_2d(plot_dir, angles_plot_name, np.arange(len(angles_with_pc1_along_the_way)), angles_with_pc1_along_the_way, "num of chunks", "angle with diff in degrees", False)
-    angles_plot_name = f"so far weighted angles algone the way start start n_comp_used :{cma_args.n_comp_to_use} dim space of mean pca plane, " \
-                       f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
-    plot_2d(plot_dir, angles_plot_name, np.arange(len(angles_with_weighted_along_the_way)), angles_with_weighted_along_the_way, "num of chunks", "angle with diff in degrees", False)
-    angles_plot_name = f"so far angle_diff_pc1_vs_weighted n_comp_used :{cma_args.n_comp_to_use} dim space of mean pca plane, " \
-                       f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
-    plot_2d(plot_dir, angles_plot_name, np.arange(len(angle_diff_pc1_vs_weighted)), angle_diff_pc1_vs_weighted, "num of chunks", "angle with diff in degrees", False)
+    grad_vs_current_plot_name = f"##final - current param VS current grad" \
+                       f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size}"
+    plot_2d(plot_dir, grad_vs_current_plot_name, np.arange(len(grad_vs_final_min_current_param)), grad_vs_final_min_current_param, "num of chunks", "angle with diff in degrees", False)
 
 
 if __name__ == '__main__':
