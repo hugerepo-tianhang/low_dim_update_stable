@@ -9,7 +9,7 @@ from stable_baselines.low_dim_analysis.eval_util import *
 from stable_baselines import logger
 
 import pandas as pd
-from sklearn.decomposition import IncrementalPCA
+from sklearn.decomposition import IncrementalPCA, PCA
 
 from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
@@ -18,6 +18,18 @@ import os
 from stable_baselines.common.cmd_util import mujoco_arg_parser
 from stable_baselines.low_dim_analysis.common_parser import get_common_parser
 from stable_baselines.low_dim_analysis.common import cal_angle_plane
+
+def dup_so_far_buffer(all_params_so_far, last_percentage, num):
+    total = len(all_params_so_far)
+    last_start_index = int(total * last_percentage)
+    repeats = np.zeros(total, dtype=int)
+    repeats[last_start_index:] = num
+    dup = np.repeat(all_params_so_far, repeats, axis=0)
+    return dup
+
+def gen_last_percentage(currow, total_row):
+    a = currow/total_row
+    return 0.5 * np.exp(-2*a)
 
 
 def main():
@@ -33,7 +45,6 @@ def main():
 
     traj_params_dir_name = get_full_params_dir(this_run_dir)
     intermediate_data_dir = get_intermediate_data_dir(this_run_dir)
-    save_dir = get_save_dir( this_run_dir)
 
 
     if not os.path.exists(intermediate_data_dir):
@@ -54,16 +65,35 @@ def main():
     start_file = get_full_param_traj_file_path(traj_params_dir_name, "start")
     start_params = pd.read_csv(start_file, header=None).values[0]
 
+    count_file = get_full_param_traj_file_path(traj_params_dir_name, "total_num_dumped")
+    total_num = pd.read_csv(count_file, header=None).values[0]
+
     V = final_params - start_params
 
     all_param_iterator = get_allinone_concat_df(dir_name=traj_params_dir_name, use_IPCA=True, chunk_size=cma_args.pc1_chunk_size)
     angles_along_the_way = []
 
-    ipca = IncrementalPCA(n_components=1)  # for sparse PCA to speed up
-    for chunk in all_param_iterator:
+    num = 2 #TODO hardcode!
 
-        logger.log(f"currently at {all_param_iterator._currow}")
-        ipca.partial_fit(chunk.values)
+    all_matrix_buffer = []
+    for chunk in all_param_iterator:
+        chunk = chunk.values
+        all_matrix_buffer.extend(chunk)
+
+        last_percentage = gen_last_percentage(all_param_iterator._currow, total_num)
+        duped_in_so_far = dup_so_far_buffer(all_matrix_buffer, last_percentage, num)
+
+        logger.log(f"currently at {all_param_iterator._currow}, last_pecentage: {last_percentage}")
+        # ipca = PCA(n_components=1)  # for sparse PCA to speed up
+        # ipca.fit(duped_in_so_far)
+        ipca = IncrementalPCA(n_components=1)  # for sparse PCA to speed up
+        for i in range(0, len(duped_in_so_far), cma_args.chunk_size):
+            logger.log(f"partial fitting: i : {i} len(duped_in_so_far): {len(duped_in_so_far)}")
+            if i + cma_args.chunk_size > len(duped_in_so_far):
+                ipca.partial_fit(duped_in_so_far[i:])
+            else:
+                ipca.partial_fit(duped_in_so_far[i: i + cma_args.chunk_size])
+
         angle = cal_angle(V, ipca.components_[0])
         angles_along_the_way.append(angle)
 
@@ -72,7 +102,7 @@ def main():
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
 
-    angles_plot_name = f"angles algone the way dim space of mean pca plane, " \
+    angles_plot_name = f"duped exponential 2, num dup: {num}" \
                        f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
     plot_2d(plot_dir, angles_plot_name, np.arange(len(angles_along_the_way)), angles_along_the_way, "num of chunks", "angle with diff in degrees", False)
 
