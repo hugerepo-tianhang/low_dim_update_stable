@@ -331,9 +331,9 @@ so_far_pcn_vs_final_minus_current () {
 #sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
 
 #
-#sleep 1; run 0 'DartHopper-v1' 512 2048 1000000& sleep 1; ps
-#sleep 1; run 0 'DartHopper-v1' 2 2048& sleep 1; ps
-#sleep 1; run 0 'DartHopper-v1' 32 2048 1000000& sleep 1; ps
+sleep 1; run 0 'DartReacher-v1' 32 2048 5000& sleep 1; ps
+sleep 1; run 0 'DartHalfCheetah-v1' 32 2048 5000& sleep 1; ps
+sleep 1; run 0 'DartSnake7Link-v1' 32 2048 5000& sleep 1; ps
 #sleep 1; run 0 'DartHopper-v1' 64 2048 1000000& sleep 1; ps
 ##sleep 1; run 0 'Hopper-v2' 32 2048& sleep 1; ps
 ##
