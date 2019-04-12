@@ -132,13 +132,17 @@ ppos_once () {
 #                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
 #                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
 #                                    --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps
-    python -m stable_baselines.ppo_subspace.ppo_sub \
+
+    python -m stable_baselines.cmaes.ppo_sub \
                                     --num-timesteps=$time_steps --run_num=$run --env=$env\
                                     --cores_to_use=$cores_to_use \
+                                    --xnum=$xnum --ynum=$ynum\
+                                    --padding_fraction=$padding_fraction \
                                     --n_components=$n_components --ppos_num_timesteps=$ppos_num_timesteps\
-                                    --n_comp_to_use=$n_comp_to_use \
+                                    --n_comp_to_use=$n_comp_to_use\
                                      --normalize=$normalize --nminibatches=$nminibatches\
-                                    --n_steps=$n_steps
+                                     --n_steps=$n_steps --use_IPCA=$use_IPCA --chunk_size=$chunk_size\
+                                     --origin=$origin
 }
 next_n_once () {
     local run=$1
