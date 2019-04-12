@@ -445,6 +445,7 @@ dup_last_part_to_approx_pc1 () {
 #sleep 1; run 2 'DartWalker2d-v1' 32 2048 675000 'adam'& sleep 1; ps
 
 sleep 1; run 0 'DartReacher-v1' 32 2048 675000& sleep 1; ps
+
 sleep 1; run 1 'DartReacher-v1' 32 2048 675000& sleep 1; ps
 sleep 1; run 0 'DartHalfCheetah-v1' 32 2048 675000& sleep 1; ps
 sleep 1; run 1 'DartHalfCheetah-v1' 32 2048 675000& sleep 1; ps
