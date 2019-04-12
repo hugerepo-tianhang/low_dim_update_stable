@@ -251,6 +251,9 @@ def get_projected_vector_in_old_basis(vector, all_pcs, num_axis_to_use):
 
     return projected_data_in_old_basis
 
+def low_dim_to_old_basis(projected_data, new_axises, origin_param):
+    projected_data_in_old_basis = projected_data.dot(new_axises) + origin_param
+    return projected_data_in_old_basis
 
 def get_projected_data_in_old_basis(origin_param, all_pcs, data, num_axis_to_use):
     components = all_pcs[:num_axis_to_use]
@@ -258,8 +261,7 @@ def get_projected_data_in_old_basis(origin_param, all_pcs, data, num_axis_to_use
     projected_data = (data - origin_param).dot(components.T)
 
     # goes back to original data space with mean restored.
-    projected_data_in_old_basis = projected_data.dot(components) + origin_param
-
+    projected_data_in_old_basis = low_dim_to_old_basis(projected_data, components, origin_param)
     return projected_data_in_old_basis
 
 def calculate_projection_errors(mean_param, all_pcs, data, num_axis_to_use):

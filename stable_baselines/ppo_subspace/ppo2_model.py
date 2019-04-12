@@ -349,7 +349,7 @@ class PPO2(ActorCriticRLModel):
 
                             if self.run_info is not None:
                                 flat_params = self.get_flat()
-                                self.dump(flat_params, "everything")
+                                self.dump(flat_params, 0)
                                 if give_optimization_path:
                                     optimization_path.append(flat_params)
 

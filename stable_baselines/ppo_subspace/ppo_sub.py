@@ -2,6 +2,7 @@
 
 import numpy as np
 from stable_baselines.low_dim_analysis.eval_util import *
+from numpy import linalg as LA
 
 from stable_baselines import logger
 
@@ -24,8 +25,10 @@ from stable_baselines.low_dim_analysis.eval_util import get_full_param_traj_file
 import time
 import os
 from stable_baselines.low_dim_analysis.common_parser import get_common_parser
+from stable_baselines.low_dim_analysis.common import do_pca, plot_2d, dump_rows_write_csv, generate_run_dir
 
-
+from stable_baselines.low_dim_analysis.common import plot_contour_trajectory, gen_subspace_coords, do_eval_returns, \
+    get_allinone_concat_df, do_proj_on_first_n, low_dim_to_old_basis
 
 
 def safe_mean(arr):
@@ -39,41 +42,6 @@ def safe_mean(arr):
     return np.nan if len(arr) == 0 else np.mean(arr)
 
 
-
-def parse_unknown_args(args):
-    """
-    Parse arguments not consumed by arg parser into a dicitonary
-    """
-    retval = {}
-    preceded_by_key = False
-    for arg in args:
-        if arg.startswith('--'):
-            if '=' in arg:
-                key = arg.split('=')[0][2:]
-                value = arg.split('=')[1]
-                retval[key] = value
-            else:
-                key = arg[2:]
-                preceded_by_key = True
-        elif preceded_by_key:
-            retval[key] = arg
-            preceded_by_key = False
-
-    return retval
-def parse_cmdline_kwargs(args):
-    '''
-    convert a list of '='-spaced command-line arguments to a dictionary, evaluating python objects when possible
-    '''
-
-    def parse(v):
-
-        assert isinstance(v, str)
-        try:
-            return eval(v)
-        except (NameError, SyntaxError):
-            return v
-
-    return {k: parse(v) for k, v in parse_unknown_args(args).items()}
 
 def plot_ppos_returns(plot_dir_alg, name, eprews, show):
 
@@ -164,11 +132,11 @@ def do_ppos(ppos_args, result, intermediate_data_dir, origin_param):
                  policy_kwargs={"num_comp":len(result["first_n_pcs"])}, pcs=result["first_n_pcs"], origin_theta=origin_param)
     model.tell_run_info(run_info)
 
-    eprews, optimization_path = model.learn(total_timesteps=ppos_args.ppos_num_timesteps)
+    eprews, optimization_path = model.learn(total_timesteps=ppos_args.ppos_num_timesteps, give_optimization_path=True)
 
 
     toc = time.time()
-    logger.log(f"####################################CMA took {toc-tic} seconds")
+    logger.log(f"####################################PPOS took {toc-tic} seconds")
 
 
     moving_ave_rewards = get_moving_aves(eprews, 100)
@@ -176,14 +144,19 @@ def do_ppos(ppos_args, result, intermediate_data_dir, origin_param):
     return eprews, moving_ave_rewards, optimization_path
 
 
+def main():
 
-def main(origin='final_param'):
 
-
+    import sys
+    logger.log(sys.argv)
     ppos_arg_parser = get_common_parser()
 
-    ppos_args, ppos_unknown_args = ppos_arg_parser.parse_known_args()
 
+    ppos_args, ppos_unknown_args = ppos_arg_parser.parse_known_args()
+    full_space_alg = ppos_args.alg
+
+    # origin = "final_param"
+    origin = ppos_args.origin
 
     this_run_dir = get_dir_path_for_this_run(ppos_args)
 
@@ -195,61 +168,83 @@ def main(origin='final_param'):
     if not os.path.exists(intermediate_data_dir):
         os.makedirs(intermediate_data_dir)
 
-
+    ppos_run_num, ppos_intermediate_data_dir = generate_run_dir(get_ppos_returns_dirname, intermediate_dir=intermediate_data_dir, n_comp=ppos_args.n_comp_to_use)
     '''
     ==========================================================================================
     get the pc vectors
     ==========================================================================================
     '''
-    from stable_baselines.low_dim_analysis.common import do_pca
-    result = do_pca(ppos_args.n_components, ppos_args.n_comp_to_use, traj_params_dir_name, intermediate_data_dir, proj=True, origin=origin)
-
+    proj_or_not = (ppos_args.n_comp_to_use == 2)
+    result = do_pca(ppos_args.n_components, ppos_args.n_comp_to_use, traj_params_dir_name, intermediate_data_dir,
+                    proj=proj_or_not,
+                    origin=origin, use_IPCA=ppos_args.use_IPCA, chunk_size=ppos_args.chunk_size)
     '''
     ==========================================================================================
     eval all xy coords
     ==========================================================================================
     '''
-    from stable_baselines.low_dim_analysis.common import plot_3d_trajectory, plot_contour_trajectory, gen_subspace_coords,do_eval_returns
-    proj_coord = result["proj_coords"]
-    proj_xcoord = proj_coord[0]
-    proj_ycoord = proj_coord[1]
 
-    starting_coord = (np.random.uniform(np.min(proj_xcoord), np.max(proj_xcoord)),
-                    np.random.uniform(np.min(proj_ycoord), np.max(proj_ycoord)))
-    logger.log(f"CMA STASRTING CORRD: {starting_coord}")
+
 
     if origin=="final_param":
         origin_param = result["final_concat_params"]
     else:
         origin_param = result["mean_param"]
 
+    final_param = result["final_concat_params"]
+    last_proj_coord = do_proj_on_first_n(final_param, result["first_n_pcs"], origin_param)
+
+
+    if origin=="final_param":
+        back_final_param = low_dim_to_old_basis(last_proj_coord, result["first_n_pcs"], origin_param)
+        assert np.testing.assert_almost_equal(back_final_param, final_param)
+
+    starting_coord = last_proj_coord
+    logger.log(f"PPOS STASRTING CORRD: {starting_coord}")
+
+
+
+    # starting_coord = (1/2*np.max(xcoordinates_to_eval), 1/2*np.max(ycoordinates_to_eval)) # use mean
+    assert result["first_n_pcs"].shape[0] == ppos_args.n_comp_to_use
+
     eprews, moving_ave_rewards, optimization_path = do_ppos(ppos_args, result, intermediate_data_dir, origin_param)
 
 
-    ppos_run_num = get_ppos_run_num(intermediate_data_dir, n_comp=ppos_args.n_comp_to_use)
-    ppos_intermediate_data_dir = get_ppos_returns_dirname(intermediate_data_dir, ppos_args.n_comp_to_use, ppos_run_num)
-    if not os.path.exists(ppos_intermediate_data_dir):
-        os.makedirs(ppos_intermediate_data_dir)
-
-    np.savetxt(f"{ppos_intermediate_data_dir}/eprews.txt", eprews, delimiter=',')
+    ppos_args.alg = full_space_alg
     plot_dir = get_plot_dir(ppos_args)
     ppos_plot_dir = get_ppos_plot_dir(plot_dir, ppos_args.n_comp_to_use, ppos_run_num)
     if not os.path.exists(ppos_plot_dir):
         os.makedirs(ppos_plot_dir)
 
-    ret_plot_name = f"100 moving ave ppos episode rewards on {ppos_args.n_comp_to_use} dim space of real pca plane"
+    ret_plot_name = f"cma return on {ppos_args.n_comp_to_use} dim space of real pca plane, " \
+                    f"explained {np.sum(result['explained_variance_ratio'][:ppos_args.n_comp_to_use])}"
     plot_ppos_returns(ppos_plot_dir, ret_plot_name, moving_ave_rewards, show=False)
 
+    if ppos_args.n_comp_to_use == 2:
+        proj_coords = result["proj_coords"]
+        assert proj_coords.shape[1] == 2
+
+        xcoordinates_to_eval, ycoordinates_to_eval = gen_subspace_coords(ppos_args, np.vstack((proj_coords, optimization_path)).T)
+
+        eval_returns = do_eval_returns(ppos_args, intermediate_data_dir, result["first_n_pcs"], origin_param,
+                        xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center=origin)
+
+        plot_contour_trajectory(ppos_plot_dir, "end_point_origin_eval_return_contour_plot", xcoordinates_to_eval,
+                                ycoordinates_to_eval, eval_returns, proj_coords[:, 0], proj_coords[:, 1],
+                                result["explained_variance_ratio"][:2],
+                                num_levels=25, show=False, sub_alg_path=optimization_path)
 
 
-    xcoordinates_to_eval, ycoordinates_to_eval = gen_subspace_coords(ppos_args, np.hstack((proj_coord, optimization_path)))
 
-    eval_returns = do_eval_returns(ppos_args, intermediate_data_dir, result["first_n_pcs"], origin_param,
-                    xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center=origin)
+    opt_mean_path_in_old_basis = [low_dim_to_old_basis(projected_opt_params, result["first_n_pcs"], origin_param) for projected_opt_params in optimization_path]
+    distance_to_final = [LA.norm(opt_mean - final_param, ord=2) for opt_mean in opt_mean_path_in_old_basis]
+    distance_to_final_plot_name = f"distance_to_final over generations "
+    plot_2d(ppos_plot_dir, distance_to_final_plot_name, np.arange(len(distance_to_final)), distance_to_final, "num generation", "distance_to_final", False)
 
-    plot_contour_trajectory(ppos_plot_dir, "end_point_origin_eval_return_contour_plot with ppos path", xcoordinates_to_eval, ycoordinates_to_eval, eval_returns, proj_xcoord, proj_ycoord,
-                            result["explained_variance_ratio"][:2],
-                            num_levels=15, show=False, cma_path=optimization_path)
+    # plot_3d_trajectory(cma_plot_dir, "end_point_origin_eval_return_3d_plot", xcoordinates_to_eval, ycoordinates_to_eval,
+    #                         eval_returns, proj_xcoord, proj_ycoord,
+    #                         result["explained_variance_ratio"][:2],
+    #                         num_levels=15, show=False)
 
 
 if __name__ == '__main__':

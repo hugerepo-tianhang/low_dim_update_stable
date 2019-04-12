@@ -13,6 +13,7 @@ def get_common_parser():
     parser.add_argument('--use_IPCA', type='bool', default=True)
     parser.add_argument('--chunk_size', default=100, type=int, help='total timesteps agent runs')
     parser.add_argument('--optimizer', help='environment ID', type=str, default='adam')
+    parser.add_argument('--seed', help='RNG seed', type=int, default=0)
 
     # PCA parameters
     parser.add_argument('--alg', default='ppo2', help='algorithm to train on')
