@@ -467,12 +467,12 @@ sleep 1; pcn_vs_final_minus_start 1 'DartSnake7Link-v1' 32 2048 675000 100; slee
 #sleep 1; cma_once 0 'DartHopper-v1' 512 2048 1000000 True 50000; sleep 1; ps
 #sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" $n_components; sleep 1; ps
 #sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" 15; sleep 1; ps
-sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 10000 "mean_param" 10 100; sleep 1; ps
-sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 10000 "mean_param" 50 100; sleep 1; ps
-sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 10000 "mean_param" 100 100; sleep 1; ps
-sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 10000 "mean_param" 2 10; sleep 1; ps
-sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 10000 "mean_param" 2 100; sleep 1; ps
-sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 10000 "mean_param" 2 5; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 10 100; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 50 100; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 100 100; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 2 10; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 2 100; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 2 5; sleep 1; ps
 
 ##sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
 #sleep 1; weighted_pcn_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 100; sleep 1;
