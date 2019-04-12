@@ -420,6 +420,30 @@ dup_last_part_to_approx_pc1 () {
                                     --chunk_size=$chunk_size --optimizer=$optimizer
 }
 
+
+pc1_vs_V () {
+    local run=$1
+    local env=$2
+    local nminibatches=$3
+    local n_steps=$4
+    local time_steps=$5
+
+    local num_comp_to_load=$6
+
+
+    echo "Welcome to pc1_vs_V: run number  $env $run"
+
+#    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
+#                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
+#                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
+#                                    --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps
+    python -m stable_baselines.low_dim_analysis.pc1_vs_V \
+                                    --num-timesteps=$time_steps --run_num=$run --env=$env --normalize=$normalize \
+                                    --nminibatches=$nminibatches --n_steps=$n_steps\
+                                    --num_comp_to_load=$num_comp_to_load
+}
+
+
 #sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
 #
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
@@ -456,10 +480,10 @@ dup_last_part_to_approx_pc1 () {
 wait
 
 
-sleep 1; ppos_once 0 'DartWalker2d-v1' 675000 True 10000 "final_param" 2; sleep 1; ps
-sleep 1; ppos_once 0 'DartWalker2d-v1' 675000 True 10000 "mean_param" 2; sleep 1; ps
-sleep 1; ppos_once 1 'DartWalker2d-v1' 675000 True 10000 "final_param" 2; sleep 1; ps
-sleep 1; ppos_once 1 'DartWalker2d-v1' 675000 True 10000 "mean_param" 2; sleep 1; ps
+#sleep 1; ppos_once 0 'DartWalker2d-v1' 675000 True 10000 "final_param" 2; sleep 1; ps
+#sleep 1; ppos_once 0 'DartWalker2d-v1' 675000 True 10000 "mean_param" 2; sleep 1; ps
+#sleep 1; ppos_once 1 'DartWalker2d-v1' 675000 True 10000 "final_param" 2; sleep 1; ps
+#sleep 1; ppos_once 1 'DartWalker2d-v1' 675000 True 10000 "mean_param" 2; sleep 1; ps
 
 
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
@@ -469,8 +493,9 @@ sleep 1; ppos_once 1 'DartWalker2d-v1' 675000 True 10000 "mean_param" 2; sleep 1
 #sleep 1; pcn_vs_final_minus_start 1 'DartReacher-v1' 32 2048 675000 100; sleep 1; ps
 #sleep 1; pcn_vs_final_minus_start 0 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
 #sleep 1; pcn_vs_final_minus_start 1 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
-#sleep 1; pcn_vs_final_minus_start 0 'DartSnake7Link-v1' 32 2048 675000 100; sleep 1; ps
-#sleep 1; pcn_vs_final_minus_start 1 'DartSnake7Link-v1' 32 2048 675000 100; sleep 1; ps
+sleep 1; pc1_vs_V 0 'DartHopper-v1' 32 2048 1000000 150; sleep 1; ps
+sleep 1; pc1_vs_V 0 'DartWalker2d-v1' 512 2048 675000 500; sleep 1; ps
+
 #
 ##sleep 1; cma_once 0 'DartHopper-v1' 512 2048 1000000 True 50000; sleep 1; ps
 ##sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" $n_components; sleep 1; ps

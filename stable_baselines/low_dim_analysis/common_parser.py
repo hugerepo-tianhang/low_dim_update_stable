@@ -18,7 +18,7 @@ def get_common_parser():
     # PCA parameters
     parser.add_argument('--alg', default='ppo2', help='algorithm to train on')
     parser.add_argument('--env', default='DartWalker2d-v1', help='algorithm to train on')
-    parser.add_argument('--num-timesteps', default=5000, type=int, help='total timesteps agent runs')
+    parser.add_argument('--num-timesteps', default=675000, type=int, help='total timesteps agent runs')
     parser.add_argument('--run_num', default=0, type=int, help='which run number')
 
     parser.add_argument('--nminibatches', default=32, type=int, help='which run number')
@@ -51,5 +51,6 @@ def get_common_parser():
     parser.add_argument('--deque_len', default=200, type=int, help='total timesteps agent runs')
     parser.add_argument('--skipped_chunks', default=10, type=int, help='total timesteps agent runs')
 
+    parser.add_argument('--num_comp_to_load', default=150, type=int, help='total timesteps agent runs')
 
     return parser
