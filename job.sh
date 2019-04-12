@@ -128,12 +128,7 @@ ppos_once () {
     local n_comp_to_use=$7
     echo "Welcome to ppos: run number  $env $run"
 
-#    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
-#                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
-#                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
-#                                    --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps
-
-    python -m stable_baselines.cmaes.ppo_sub \
+    python -m stable_baselines.ppo_subspace.ppo_sub \
                                     --num-timesteps=$time_steps --run_num=$run --env=$env\
                                     --cores_to_use=$cores_to_use \
                                     --xnum=$xnum --ynum=$ynum\
