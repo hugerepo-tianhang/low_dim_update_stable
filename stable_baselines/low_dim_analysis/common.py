@@ -71,7 +71,7 @@ def do_proj_on_first_n(all_param_matrix, first_n_pcs, origin_param):
 
 
     proj_coords = (all_param_matrix - origin_param).dot(components.T)
-    return proj_coords.T
+    return proj_coords
 
 def do_proj_on_first_n_IPCA(concat_df, final_concat_params, first_n_pcs, origin_param):
     # IPCA
@@ -83,7 +83,7 @@ def do_proj_on_first_n_IPCA(concat_df, final_concat_params, first_n_pcs, origin_
     for chunk in concat_df:
         chunk_matrix_diff = chunk.sub(final_concat_params, axis='columns')
 
-        result = np.hstack((result, do_proj_on_first_n(chunk_matrix_diff.values, first_n_pcs, origin_param)))
+        result = np.vstack((result, do_proj_on_first_n(chunk_matrix_diff.values, first_n_pcs, origin_param)))
 
     return result
 

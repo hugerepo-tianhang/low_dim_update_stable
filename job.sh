@@ -5,11 +5,14 @@ cores_to_use=-1
 xnum=50
 ynum=50
 
+nminibatches=32
+n_steps=2048
+
 padding_fraction=0.4
 n_components=500
 
 n_comp_to_use=2
-cma_num_timesteps=1000000
+cma_num_timesteps=1500000
 ppos_num_timesteps=1500000
 eval_num_timesteps=1024
 even_check_point_num=5
@@ -87,13 +90,13 @@ run () {
 cma_once () {
     local run=$1
     local env=$2
-    local nminibatches=$3
-    local n_steps=$4
-    local time_steps=$5
-    local use_IPCA=$6
-    local chunk_size=$7
-    local origin=$8
-    local n_comp_to_use=$9
+
+    local time_steps=$3
+    local use_IPCA=$4
+    local chunk_size=$5
+    local origin=$6
+    local n_comp_to_use=$7
+    local cma_var=$8
 
     echo "Welcome to cma: run number  $env $run"
 
@@ -452,14 +455,19 @@ dup_last_part_to_approx_pc1 () {
 #sleep 1; cma_once 0 'DartHopper-v1' 512 2048 1000000 True 50000; sleep 1; ps
 #sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" $n_components; sleep 1; ps
 #sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" 15; sleep 1; ps
-##sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" $n_components; sleep 1; ps
-#
+sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 20000 "mean_param" 10 100; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 20000 "mean_param" 50 100; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 20000 "mean_param" 100 100; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 20000 "mean_param" 2 10; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 20000 "mean_param" 2 100; sleep 1; ps
+sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 20000 "mean_param" 2 5; sleep 1; ps
+
 ##sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
 #sleep 1; weighted_pcn_vs_final 0 'DartWalker2d-v1' 32 2048 675000 1000 100; sleep 1;
 
-sleep 1; so_far_pcn_vs_final_minus_current 0 'DartWalker2d-v1' 32 2048 675000 1000; sleep 1;
-sleep 1; so_far_pcn_vs_final_minus_current 1 'DartWalker2d-v1' 32 2048 675000 1000; sleep 1;
-sleep 1; so_far_pcn_vs_final_minus_current 2 'DartWalker2d-v1' 32 2048 675000 1000; sleep 1;
+#sleep 1; so_far_pcn_vs_final_minus_current 0 'DartWalker2d-v1' 32 2048 675000 1000; sleep 1;
+#sleep 1; so_far_pcn_vs_final_minus_current 1 'DartWalker2d-v1' 32 2048 675000 1000; sleep 1;
+#sleep 1; so_far_pcn_vs_final_minus_current 2 'DartWalker2d-v1' 32 2048 675000 1000; sleep 1;
 #sleep 1; so_far_pcn_vs_final_minus_current 0 'DartWalker2d-v1' 32 2048 675000 5000 50; sleep 1;
 #
 #sleep 1; so_far_pcn_vs_final_minus_current 0 'DartWalker2d-v1' 32 2048 675000 1000 10; sleep 1;
@@ -481,11 +489,11 @@ sleep 1; so_far_pcn_vs_final_minus_current 2 'DartWalker2d-v1' 32 2048 675000 10
 #
 #
 
-sleep 1; dup_last_part_to_approx_pc1 0 'DartWalker2d-v1' 32 2048 1000000 3000 20000 'sgd'; sleep 1; ps
-#sleep 1; dup_last_part_to_approx_pc1 1 'DartWalker2d-v1' 32 2048 1000000 100 10000 'sgd'; sleep 1; ps
-sleep 1; dup_last_part_to_approx_pc1 0 'DartWalker2d-v1' 32 2048 675000 3000 20000 'adam'; sleep 1; ps
-sleep 1; dup_last_part_to_approx_pc1 1 'DartWalker2d-v1' 32 2048 675000 3000 20000 'adam'; sleep 1; ps
-#sleep 1; dup_last_part_to_approx_pc1 2 'DartWalker2d-v1' 32 2048 675000 100 10000 'adam'; sleep 1; ps
+#sleep 1; dup_last_part_to_approx_pc1 0 'DartWalker2d-v1' 32 2048 1000000 3000 20000 'sgd'; sleep 1; ps
+##sleep 1; dup_last_part_to_approx_pc1 1 'DartWalker2d-v1' 32 2048 1000000 100 10000 'sgd'; sleep 1; ps
+#sleep 1; dup_last_part_to_approx_pc1 0 'DartWalker2d-v1' 32 2048 675000 3000 20000 'adam'; sleep 1; ps
+#sleep 1; dup_last_part_to_approx_pc1 1 'DartWalker2d-v1' 32 2048 675000 3000 20000 'adam'; sleep 1; ps
+##sleep 1; dup_last_part_to_approx_pc1 2 'DartWalker2d-v1' 32 2048 675000 100 10000 'adam'; sleep 1; ps
 
 #sleep 1; grad_vs_V 0 'DartWalker2d-v1' 32 2048 675000 100 'sgd'; sleep 1; ps
 
