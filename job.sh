@@ -452,7 +452,7 @@ sleep 1; run 0 'DartSnake7Link-v1' 32 2048 675000& sleep 1; ps
 sleep 1; run 1 'DartSnake7Link-v1' 32 2048 675000& sleep 1; ps
 
 
-#wait
+wait
 
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
 #sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 50000 "mean_param" 300; sleep 1; ps
