@@ -239,7 +239,7 @@ how_many_steps_can_you_go () {
 }
 
 
-pcn_vs_final_minus_start () {
+first_n_pc1_vs_final_minus_start () {
     local run=$1
     local env=$2
     local nminibatches=$3
@@ -249,13 +249,13 @@ pcn_vs_final_minus_start () {
     local pc1_chunk_size=$6
 
 
-    echo "Welcome to pcn_vs_final_minus_start: run number  $env $run"
+    echo "Welcome to first_n_pc1_vs_final_minus_start: run number  $env $run"
 
 #    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
 #                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
 #                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
 #                                    --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps
-    python -m stable_baselines.low_dim_analysis.pcn_vs_final_minus_start \
+    python -m stable_baselines.low_dim_analysis.first_n_pc1_vs_final_minus_start \
                                     --num-timesteps=$time_steps --run_num=$run --env=$env --normalize=$normalize \
                                     --nminibatches=$nminibatches --n_steps=$n_steps\
                                     --pc1_chunk_size=$pc1_chunk_size
@@ -489,10 +489,10 @@ wait
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
 #sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 50000 "mean_param" 300; sleep 1; ps
 #sleep 1; final_projection_on_mean_performance 0 'DartHopper-v1' 32 2048 1000000 True 50000 $n_components; sleep 1; ps
-sleep 1; pcn_vs_final_minus_start 0 'DartReacher-v1' 32 2048 5000 100; sleep 1; ps
-#sleep 1; pcn_vs_final_minus_start 1 'DartReacher-v1' 32 2048 675000 100; sleep 1; ps
-#sleep 1; pcn_vs_final_minus_start 0 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
-#sleep 1; pcn_vs_final_minus_start 1 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
+sleep 1; first_n_pc1_vs_final_minus_start 0 'DartReacher-v1' 32 2048 675000 100; sleep 1; ps
+sleep 1; first_n_pc1_vs_final_minus_start 1 'DartReacher-v1' 32 2048 675000 100; sleep 1; ps
+sleep 1; first_n_pc1_vs_final_minus_start 0 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
+sleep 1; first_n_pc1_vs_final_minus_start 1 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
 #sleep 1; pc1_vs_V 0 'DartHopper-v1' 32 2048 1000000 150; sleep 1; ps
 #sleep 1; pc1_vs_V 0 'DartWalker2d-v1' 512 2048 675000 500; sleep 1; ps
 
