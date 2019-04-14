@@ -82,11 +82,10 @@ def main():
         curr_angle = cal_angle(param - start_params, ipca.components_[0])
         curr_angle = postize_angle(curr_angle)
 
-        aa = curr_angle - angle
-        logger.log(aa)
+        curr_angle_final = cal_angle(param - start_params, pcs_components[0])
 
-        inside_final_cone.append(curr_angle - smallest_error_angle)
-        curr_angles.append(aa)
+        inside_final_cone.append(curr_angle_final - smallest_error_angle)
+        curr_angles.append(curr_angle - angle)
 
 
     plot_dir = get_plot_dir(cma_args)
