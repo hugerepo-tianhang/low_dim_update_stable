@@ -45,8 +45,8 @@ def get_plot_dir(args):
     return f'{get_project_dir()}/plots/{args.alg}/{get_run_name(args)}'
 
 
-def get_cma_plot_dir(plot_dir, n_comp_to_use, cma_run_num):
-    return f'{plot_dir}/cma/cma_n_comp_{n_comp_to_use}_run_num_{cma_run_num}'
+def get_cma_plot_dir(plot_dir, n_comp_to_use, cma_run_num, origin):
+    return f'{plot_dir}/cma/cma_n_comp_{n_comp_to_use}_run_num_{cma_run_num}_origin_{origin}'
 
 
 def get_ppos_plot_dir(plot_dir, n_comp_to_use, cma_run_num):

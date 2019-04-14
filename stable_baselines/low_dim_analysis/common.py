@@ -11,6 +11,13 @@ import time
 from joblib import Parallel, delayed
 import math
 from functools import partial
+
+def postize_angle(angle):
+    if angle > 90:
+        angle = 180 - angle
+    return angle
+
+
 def get_run_num(file_func, **kargs):
     f = partial(file_func, **kargs)
     run_num = 0
@@ -73,27 +80,25 @@ def do_proj_on_first_n(all_param_matrix, first_n_pcs, origin_param):
     proj_coords = (all_param_matrix - origin_param).dot(components.T)
     return proj_coords
 
-def do_proj_on_first_n_IPCA(concat_df, final_concat_params, first_n_pcs, origin_param):
+def do_proj_on_first_n_IPCA(concat_df, first_n_pcs, origin_param):
     # IPCA
     assert isinstance(concat_df, pd.io.parsers.TextFileReader)
     first_chunk = concat_df.__next__()
-    first_chunk_matrix_diff = first_chunk.sub(final_concat_params, axis='columns')
-    result = do_proj_on_first_n(first_chunk_matrix_diff.values, first_n_pcs, origin_param)
+    result = do_proj_on_first_n(first_chunk.values, first_n_pcs, origin_param)
 
     for chunk in concat_df:
-        chunk_matrix_diff = chunk.sub(final_concat_params, axis='columns')
-
-        result = np.vstack((result, do_proj_on_first_n(chunk_matrix_diff.values, first_n_pcs, origin_param)))
+        result = np.vstack((result, do_proj_on_first_n(chunk.values, first_n_pcs, origin_param)))
 
     return result
 
 
-def do_eval_returns(plot_args, intermediate_data_dir, first_n_pcs, origin_param, xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center="final_param"):
+def do_eval_returns(plot_args, intermediate_data_dir, first_n_pcs, origin_param,
+                    xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center="final_param", reuse=True):
 
     eval_string = f"xnum_{np.min(xcoordinates_to_eval)}:{np.max(xcoordinates_to_eval)}:{plot_args.xnum}_" \
                     f"ynum_{np.min(ycoordinates_to_eval)}:{np.max(ycoordinates_to_eval)}:{plot_args.ynum}"
 
-    if not os.path.exists(get_eval_returns_filename(intermediate_dir=intermediate_data_dir,
+    if not reuse and not os.path.exists(get_eval_returns_filename(intermediate_dir=intermediate_data_dir,
                                                     eval_string=eval_string, n_comp=2, pca_center=pca_center)):
 
         from stable_baselines.ppo2.run_mujoco import eval_return
@@ -116,12 +121,14 @@ def do_eval_returns(plot_args, intermediate_data_dir, first_n_pcs, origin_param,
     return eval_returns
 
 
-def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_dir, proj, origin="final_param", use_IPCA=False, chunk_size=None):
+def do_pca(n_components, n_comp_to_use, traj_params_dir_name,
+           intermediate_data_dir, proj, origin="final_param", use_IPCA=False, chunk_size=None, reuse=True):
     logger.log("grab final params")
     final_file = get_full_param_traj_file_path(traj_params_dir_name, "final")
     final_concat_params = pd.read_csv(final_file, header=None).values[0]
     proj_coords = None
-    if not os.path.exists(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components))\
+    if not reuse \
+        and not os.path.exists(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components))\
         or not os.path.exists(get_mean_param_filename(intermediate_dir=intermediate_data_dir)) \
         or (proj and not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir,
                                                                          n_comp=n_components, pca_center=origin))):
@@ -191,7 +198,7 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name, intermediate_data_
             if use_IPCA:
                 concat_df = get_allinone_concat_df(dir_name=traj_params_dir_name,
                                                    use_IPCA=use_IPCA, chunk_size=chunk_size)
-                proj_coords = do_proj_on_first_n_IPCA(concat_df, final_concat_params, first_n_pcs, origin_param)
+                proj_coords = do_proj_on_first_n_IPCA(concat_df, first_n_pcs, origin_param)
 
             else:
                 proj_coords = do_proj_on_first_n(concat_matrix, first_n_pcs, origin_param)
@@ -380,6 +387,7 @@ def plot_contour_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, p
     # if cma_path is not None:
     #     plt.plot(cma_path[0], cma_path[1], 'bo')
     if sub_alg_path is not None:
+        assert sub_alg_path.shape[1] == 2
         plt.plot(sub_alg_path[0], sub_alg_path[1], marker='8')
 
 

@@ -67,10 +67,6 @@ def main():
         angle_with_pc1 = cal_angle(target_direction, ipca.components_[0])
 
 
-        #TODO ignore 90 or 180 for now
-        if angle_with_pc1 > 90:
-            angle_with_pc1 = 180 - angle_with_pc1
-
         angles_with_pc1_along_the_way.append(angle_with_pc1)
 
 
