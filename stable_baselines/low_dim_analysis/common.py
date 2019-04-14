@@ -11,6 +11,13 @@ import time
 from joblib import Parallel, delayed
 import math
 from functools import partial
+from datetime import datetime
+
+
+def get_current_timestamp():
+    return datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
+
+
 
 def postize_angle(angle):
     if angle > 90:
@@ -510,7 +517,7 @@ def get_allinone_concat_df(dir_name, num_index_to_take=None, use_IPCA=False, chu
 
 
 if __name__ == "__main__":
-    pass
+    print(get_current_timestamp())
     # from numpy.testing import assert_array_almost_equal
     #
     # X_train = np.random.randn(100, 50)

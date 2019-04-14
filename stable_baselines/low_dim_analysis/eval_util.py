@@ -1,6 +1,8 @@
 # def get_param_traj_file_path(dir_name, net_name, index):
 #     return f'{dir_name}/{net_name}_{index}.txt'
 import os
+from low_dim_update_stable.stable_baselines.low_dim_analysis.common import get_current_timestamp
+
 
 def get_project_dir():
     project_dir = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..', '..'))
@@ -46,12 +48,14 @@ def get_plot_dir(args):
 
 
 def get_cma_plot_dir(plot_dir, n_comp_to_use, cma_run_num, origin):
-    return f'{plot_dir}/cma/cma_n_comp_{n_comp_to_use}_run_num_{cma_run_num}_origin_{origin}'
+    return f'{plot_dir}/cma/{get_current_timestamp()}cma_n_comp_{n_comp_to_use}_run_num_{cma_run_num}_origin_{origin}'
 
 
 def get_ppos_plot_dir(plot_dir, n_comp_to_use, cma_run_num):
-    return f'{plot_dir}/ppos/ppos_n_comp_{n_comp_to_use}_run_num_{cma_run_num}'
+    return f'{plot_dir}/ppos/{get_current_timestamp()}ppos_n_comp_{n_comp_to_use}_run_num_{cma_run_num}'
 
+def get_first_n_pc1_vs_V_plot_dir(plot_dir, granularity):
+    return f'{plot_dir}/first_n_pc1_vs_V/{get_current_timestamp()}first_n_pc1_vs_V_granularity_{granularity}'
 
 
 def get_pcs_filename(intermediate_dir, n_comp):

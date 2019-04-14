@@ -79,14 +79,18 @@ def main():
     plot_dir = get_plot_dir(cma_args)
     if not os.path.exists(plot_dir):
         os.makedirs(plot_dir)
+    first_n_pc1_vs_V_plot_dir = get_first_n_pc1_vs_V_plot_dir(plot_dir, cma_args.pc1_chunk_size)
+    if not os.path.exists(first_n_pc1_vs_V_plot_dir):
+        os.makedirs(first_n_pc1_vs_V_plot_dir)
 
-    angles_plot_name = f"angles algone the way dim space of mean pca plane, " \
-                       f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
-    plot_2d(plot_dir, angles_plot_name, np.arange(len(angles_along_the_way)), angles_along_the_way, "num of chunks", "angle with diff in degrees", False)
 
-    grad_vs_pull_plot_name = f"grad vs V - delta_theta" \
-                       f"cma_args.pc1_chunk_size: {cma_args.pc1_chunk_size} "
-    plot_2d(plot_dir, grad_vs_pull_plot_name, np.arange(len(grad_vs_pull)), grad_vs_pull, "num of chunks", "angle in degrees", False)
+
+
+    angles_plot_name = f"angles algone the way dim space of mean pca plane "
+    plot_2d(first_n_pc1_vs_V_plot_dir, angles_plot_name, np.arange(len(angles_along_the_way)), angles_along_the_way, "num of chunks", "angle with diff in degrees", False)
+
+    grad_vs_pull_plot_name = f"grad vs V - delta_theta"
+    plot_2d(first_n_pc1_vs_V_plot_dir, grad_vs_pull_plot_name, np.arange(len(grad_vs_pull)), grad_vs_pull, "num of chunks", "angle in degrees", False)
 
 
 if __name__ == '__main__':
