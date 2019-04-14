@@ -181,7 +181,7 @@ def main():
     from stable_baselines.low_dim_analysis.common import plot_contour_trajectory, gen_subspace_coords,do_eval_returns, \
         get_allinone_concat_df, do_proj_on_first_n
 
-
+    from stable_baselines.ppo2.run_mujoco import eval_return
 
     last_proj_coord = do_proj_on_first_n(final_param, first_2_pcs, origin_param)
     starting_coord = last_proj_coord
@@ -273,7 +273,7 @@ def main():
     toc = time.time()
     logger.log(f"####################################1st version took {toc-tic} seconds")
 
-    plot_contour_trajectory(cma_plot_dir, f"{origin}_origin_eval_return_contour_plot", xcoordinates_to_eval,
+    plot_contour_trajectory(cma_plot_dir, f"cma redo___{origin}_origin_eval_return_contour_plot", xcoordinates_to_eval,
                             ycoordinates_to_eval, eval_returns, proj_coords[:, 0], proj_coords[:, 1],
                             final_pca.explained_variance_ratio_,
                             num_levels=25, show=False, sub_alg_path=optimization_path_mean.T)
@@ -282,7 +282,7 @@ def main():
 
     opt_mean_path_in_old_basis = [mean_projected_param.dot(first_2_pcs) + mean_param for mean_projected_param in optimization_path_mean]
     distance_to_final = [LA.norm(opt_mean - final_param, ord=2) for opt_mean in opt_mean_path_in_old_basis]
-    distance_to_final_plot_name = f"distance_to_final over generations "
+    distance_to_final_plot_name = f"cma redo distance_to_final over generations "
     plot_2d(cma_plot_dir, distance_to_final_plot_name, np.arange(len(distance_to_final)), distance_to_final, "num generation", "distance_to_final", False)
 
     # plot_3d_trajectory(cma_plot_dir, "end_point_origin_eval_return_3d_plot", xcoordinates_to_eval, ycoordinates_to_eval,
