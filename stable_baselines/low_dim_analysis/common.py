@@ -14,9 +14,6 @@ from functools import partial
 from datetime import datetime
 
 
-def get_current_timestamp():
-    return datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
-
 
 
 def postize_angle(angle):

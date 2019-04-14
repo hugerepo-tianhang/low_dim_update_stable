@@ -1,7 +1,10 @@
 # def get_param_traj_file_path(dir_name, net_name, index):
 #     return f'{dir_name}/{net_name}_{index}.txt'
 import os
-from stable_baselines.low_dim_analysis.common import get_current_timestamp
+from datetime import datetime
+def get_current_timestamp():
+    return datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
+
 
 
 def get_project_dir():
