@@ -531,27 +531,16 @@ def plot_3d_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, proj_x
     if show: plt.show()
 
 
-def get_allinone_concat_df(dir_name, use_IPCA=False, chunk_size=None, index = 0):
+def get_allinone_concat_df(dir_name, use_IPCA=False, chunk_size=None, index = 0, skip_rows=None):
 
     theta_file = get_full_param_traj_file_path(dir_name, index)
     if use_IPCA:
         assert chunk_size is not None
         assert chunk_size != 0
-        concat_df = pd.read_csv(theta_file, header=None, chunksize=chunk_size)
+        concat_df = pd.read_csv(theta_file, header=None, chunksize=chunk_size, skip_rows=skip_rows)
     else:
-        concat_df = pd.read_csv(theta_file, header=None)
+        concat_df = pd.read_csv(theta_file, header=None, skip_rows=skip_rows)
 
-    # index += 1
-
-    # while os.path.exists(get_full_param_traj_file_path(dir_name, index)) and (num_index_to_take is None or index < num_index_to_take):
-    #     theta_file = get_full_param_traj_file_path(dir_name, index)
-    #
-    #     part_concat_df = pd.read_csv(theta_file, header=None)
-    #
-    #     part_concat_df = part_concat_df.sub(final_concat_params, axis='columns')
-    #
-    #     result_matrix_diff = result_matrix_diff.append(part_concat_df, ignore_index=True)
-    #     index += 1
 
     return concat_df
 

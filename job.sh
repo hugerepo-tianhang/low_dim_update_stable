@@ -78,6 +78,7 @@ run () {
     local time_steps=$5
 
     local optimizer=$6
+    local normalize=$7
 
     echo "Welcome to RUN: run number  $env $run"
     python -m stable_baselines.ppo2.run_mujoco --env=$env --num-timesteps=$time_steps\
@@ -605,7 +606,9 @@ WPCA_first_n_VS_last_plane () {
 #sleep 1; run 0 'DartWalker2d-v1' 32 2048 1000000 'sgd'& sleep 1; ps
 #sleep 1; run 1 'DartWalker2d-v1' 32 2048 1000000 'sgd'& sleep 1; ps
 #sleep 1; run 1 'DartWalker2d-v1' 32 2048 675000 'adam'& sleep 1; ps
-#sleep 1; run 2 'DartWalker2d-v1' 32 2048 675000 'adam'& sleep 1; ps
+sleep 1; run 0 'DartWalker2d-v1' 32 2048 1000000 'adam' False& sleep 1; ps
+sleep 1; run 1 'DartWalker2d-v1' 32 2048 1000000 'adam' False& sleep 1; ps
+sleep 1; run 2 'DartWalker2d-v1' 32 2048 1000000 'adam' False& sleep 1; ps
 
 #sleep 1; run 0 'DartReacher-v1' 32 2048 675000& sleep 1; ps
 #sleep 1; run 1 'DartReacher-v1' 32 2048 675000& sleep 1; ps
@@ -627,12 +630,12 @@ wait
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
 #sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 50000 "mean_param" 300; sleep 1; ps
 #sleep 1; final_projection_on_mean_performance 0 'DartHopper-v1' 32 2048 1000000 True 50000 $n_components; sleep 1; ps
-sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 675000 5000 20000 2 500; sleep 1; ps
-sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 675000 5000 20000 100 500; sleep 1; ps
-sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 675000 5000 20000 500 500; sleep 1; ps
-sleep 1; skip_m_chunks_first_n_plane_vs_final_plane_angle 0 'DartWalker2d-v1' 675000 1000 20000 5 500 1; sleep 1; ps
-sleep 1; skip_m_chunks_first_n_plane_vs_final_plane_angle 0 'DartWalker2d-v1' 675000 1000 20000 5 500 10; sleep 1; ps
-sleep 1; skip_m_chunks_first_n_plane_vs_final_plane_angle 0 'DartWalker2d-v1' 675000 1000 20000 5 500 50; sleep 1; ps
+#sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 675000 5000 20000 2 500; sleep 1; ps
+#sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 675000 5000 20000 100 500; sleep 1; ps
+#sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 675000 5000 20000 500 500; sleep 1; ps
+#sleep 1; skip_m_chunks_first_n_plane_vs_final_plane_angle 0 'DartWalker2d-v1' 675000 1000 20000 5 500 1; sleep 1; ps
+#sleep 1; skip_m_chunks_first_n_plane_vs_final_plane_angle 0 'DartWalker2d-v1' 675000 1000 20000 5 500 10; sleep 1; ps
+#sleep 1; skip_m_chunks_first_n_plane_vs_final_plane_angle 0 'DartWalker2d-v1' 675000 1000 20000 5 500 50; sleep 1; ps
 
 #sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 5000 5000 20000 500 10; sleep 1; ps
 #sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 5000 5000 20000 500 500; sleep 1; ps
@@ -651,9 +654,10 @@ sleep 1; skip_m_chunks_first_n_plane_vs_final_plane_angle 0 'DartWalker2d-v1' 67
 #sleep 1; cma_redo 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 10; sleep 1; ps
 #sleep 1; cma_redo 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 10; sleep 1; ps
 sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 50 10 600000; sleep 1; ps
-
-
-sleep 1; WPCA_first_n_VS_last_plane 0 'DartWalker2d-v1' 675000 1000 20000 5 500 3; sleep 1; ps
+sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 50 50 600000; sleep 1; ps
+#
+#
+#sleep 1; WPCA_first_n_VS_last_plane 0 'DartWalker2d-v1' 675000 1000 20000 5 500 3; sleep 1; ps
 
 #sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 50 10 600000; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 100 100; sleep 1; ps

@@ -3,7 +3,7 @@ import cma
 
 import numpy as np
 from stable_baselines.low_dim_analysis.eval_util import *
-from stable_baselines.low_dim_analysis.common import do_pca, plot_2d, dump_rows_write_csv, generate_run_dir, dump_row_write_csv
+from stable_baselines.low_dim_analysis.common import *
 
 from stable_baselines import logger
 
@@ -119,7 +119,7 @@ def do_cma(cma_args, first_n_pcs, orgin_param, save_dir, starting_coord, var):
     return mean_rets, min_rets, max_rets, np.array(optimization_path), np.array(optimization_path_mean), best_ever_theta
 
 
-def do_ppo(args, start_theta, parent_this_run_dir):
+def do_ppo(args, start_theta, parent_this_run_dir, full_space_save_dir):
 
     """
     Runs the test
@@ -127,10 +127,12 @@ def do_ppo(args, start_theta, parent_this_run_dir):
 
     logger.log(f"#######CMA and then PPO TRAIN: {args}")
 
-    this_run_dir = get_ppo_part(parent_this_run_dir)
-    log_dir = get_log_dir(this_run_dir)
-    save_dir = get_save_dir(this_run_dir)
+    this_conti_ppo_run_dir = get_ppo_part(parent_this_run_dir)
+    log_dir = get_log_dir(this_conti_ppo_run_dir)
+    conti_ppo_save_dir = get_save_dir(this_conti_ppo_run_dir)
     logger.configure(log_dir)
+
+
 
     def make_env():
         env_out = gym.make(args.env)
@@ -143,23 +145,24 @@ def do_ppo(args, start_theta, parent_this_run_dir):
     if args.normalize:
         env = VecNormalize(env)
 
+
     set_global_seeds(args.seed)
     policy = MlpPolicy
 
     # extra run info I added for my purposes
 
 
-    full_param_traj_dir_path = get_full_params_dir(this_run_dir)
+    full_param_traj_dir_path = get_full_params_dir(this_conti_ppo_run_dir)
 
     if os.path.exists(full_param_traj_dir_path):
         import shutil
         shutil.rmtree(full_param_traj_dir_path)
     os.makedirs(full_param_traj_dir_path)
 
-    if os.path.exists(save_dir):
+    if os.path.exists(conti_ppo_save_dir):
         import shutil
-        shutil.rmtree(save_dir)
-    os.makedirs(save_dir)
+        shutil.rmtree(conti_ppo_save_dir)
+    os.makedirs(conti_ppo_save_dir)
 
     run_info = {"run_num": args.run_num,
                 "env_id": args.env,
@@ -169,14 +172,20 @@ def do_ppo(args, start_theta, parent_this_run_dir):
                  noptepochs=10,
                  ent_coef=0.0, learning_rate=3e-4, cliprange=0.2, optimizer=args.optimizer)
     model.tell_run_info(run_info)
+
+    model = PPO2.load(f"{full_space_save_dir}/ppo2")
+
+    if args.normalize:
+        env.load_running_average(full_space_save_dir)
+
     model.set_from_flat(start_theta)
 
     episode_returns = model.learn(total_timesteps=args.ppo_num_timesteps)
 
-    model.save(f"{save_dir}/ppo2")
+    model.save(f"{conti_ppo_save_dir}/ppo2")
 
-    env.save_running_average(save_dir)
-    return episode_returns
+    env.save_running_average(conti_ppo_save_dir)
+    return episode_returns, full_param_traj_dir_path
 
 def main():
 
@@ -246,9 +255,13 @@ def main():
     mean_rets, min_rets, max_rets, opt_path, opt_path_mean, best_theta = do_cma(cma_args, result["first_n_pcs"],
                                                                     origin_param, save_dir, starting_coord, cma_args.cma_var)
     dump_rows_write_csv(cma_intermediate_data_dir, opt_path_mean, "opt_mean_path")
-    dump_row_write_csv(cma_intermediate_data_dir, best_theta, "best theta from cma")
+    best_theta_file_name = "best theta from cma"
 
-    episode_returns = do_ppo(args=cma_args, start_theta=best_theta, parent_this_run_dir=cma_intermediate_data_dir)
+    dump_row_write_csv(cma_intermediate_data_dir, best_theta, best_theta_file_name)
+
+
+
+    episode_returns, conti_ppo_full_param_traj_dir_path = do_ppo(args=cma_args, start_theta=best_theta, parent_this_run_dir=cma_intermediate_data_dir, full_space_save_dir=save_dir)
     dump_row_write_csv(cma_intermediate_data_dir, episode_returns, "ppo part returns")
 
 
@@ -266,7 +279,7 @@ def main():
     plot_cma_returns(cma_and_then_ppo_plot_dir, ret_plot_name, mean_rets, min_rets, max_rets, show=False)
 
 
-    final_ppo_ep_name = f"final episodes returns"
+    final_ppo_ep_name = f"final episodes returns after CMA"
     plot_2d(cma_and_then_ppo_plot_dir, final_ppo_ep_name, np.arange(len(episode_returns)),
             episode_returns, "num episode", "episode returns", False)
 
@@ -286,9 +299,10 @@ def main():
     #                             num_levels=25, show=False, sub_alg_path=opt_path_mean)
 
 
-
+    skip_rows = lambda x: x%2 == 0
+    conti_ppo_params = get_allinone_concat_df(conti_ppo_full_param_traj_dir_path, index=0, skip_rows=skip_rows).values
     opt_mean_path_in_old_basis = [mean_projected_param.dot(result["first_n_pcs"]) + result["mean_param"] for mean_projected_param in opt_path_mean]
-    distance_to_final = [LA.norm(opt_mean - result["final_concat_params"], ord=2) for opt_mean in opt_mean_path_in_old_basis]
+    distance_to_final = [LA.norm(opt_mean - result["final_concat_params"], ord=2) for opt_mean in opt_mean_path_in_old_basis + conti_ppo_params]
     distance_to_final_plot_name = f"distance_to_final over generations "
     plot_2d(cma_and_then_ppo_plot_dir, distance_to_final_plot_name, np.arange(len(distance_to_final)), distance_to_final, "num generation", "distance_to_final", False)
 
