@@ -47,18 +47,24 @@ def get_full_param_traj_file_path(dir_name, index):
 
 
 def get_plot_dir(args):
-    return f'{get_project_dir()}/plots/{args.alg}/{get_run_name(args)}'
+    return f'{get_project_dir()}/plots/{args.alg}/{get_current_timestamp()}_{get_run_name(args)}'
 
 
-def get_cma_plot_dir(plot_dir, n_comp_to_use, cma_run_num, origin):
-    return f'{plot_dir}/cma/{get_current_timestamp()}cma_n_comp_{n_comp_to_use}_run_num_{cma_run_num}_origin_{origin}'
+def get_cma_plot_dir(plot_dir, n_comp_to_use, run_num, origin):
+    return f'{plot_dir}/cma/cma_n_comp_{n_comp_to_use}_origin_{origin}_run_num_{run_num}'
+
+def get_cma_and_then_ppo_plot_dir(plot_dir, n_comp_to_use, run_num, cma_num_steps, ppo_num_steps, origin):
+    return f'{plot_dir}/cma_and_then_ppo/cma_and_then_ppo_n_comp_{n_comp_to_use}' \
+           f'_ppo_num_steps_{ppo_num_steps}_cma_num_steps_{cma_num_steps}_origin_{origin}_run_num_{run_num}'
 
 
 def get_ppos_plot_dir(plot_dir, n_comp_to_use, cma_run_num):
-    return f'{plot_dir}/ppos/{get_current_timestamp()}ppos_n_comp_{n_comp_to_use}_run_num_{cma_run_num}'
+    return f'{plot_dir}/ppos/ppos_n_comp_{n_comp_to_use}_run_num_{cma_run_num}'
 
 def get_first_n_pc1_vs_V_plot_dir(plot_dir, granularity):
-    return f'{plot_dir}/first_n_pc1_vs_V/{get_current_timestamp()}first_n_pc1_vs_V_granularity_{granularity}'
+    return f'{plot_dir}/first_n_pc1_vs_V/first_n_pc1_vs_V_granularity_{granularity}'
+def get_plane_angles_vs_final_plane_along_the_way_plot_dir(plot_dir, n_comp_to_use):
+    return f'{plot_dir}/plane_angles_vs_final_plane/plane_angles_vs_final_plane_n_comp_to_use_{n_comp_to_use}'
 
 
 def get_pcs_filename(intermediate_dir, n_comp):
@@ -88,7 +94,12 @@ def get_ppos_returns_dirname(intermediate_dir, n_comp, run_num):
 
     return f"{intermediate_dir}/ppos/ppos_n_comp_{n_comp}_run_num_{run_num}"
 
+def get_cma_and_then_ppo_run_dir(intermediate_dir, n_comp, run_num, cma_steps, ppo_steps):
 
+    return f"{intermediate_dir}/cma_and_then_ppo/ctp_n_comp_{n_comp}_cma_steps_{cma_steps}_ppo_steps{ppo_steps}_run_num_{run_num}"
+
+def get_ppo_part(this_run_dir):
+    return f"{this_run_dir}/ppo_part"
 
 if __name__ == '__main__':
     print(get_log_dir("a", 1, "s", False, 0))

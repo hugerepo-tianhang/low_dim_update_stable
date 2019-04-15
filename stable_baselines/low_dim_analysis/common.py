@@ -34,8 +34,10 @@ def generate_run_dir(get_cma_returns_dirname, **kargs):
 
     cma_run_num = get_run_num(get_cma_returns_dirname, **kargs)
     cma_intermediate_data_dir = get_cma_returns_dirname(run_num=cma_run_num, **kargs)
-    if not os.path.exists(cma_intermediate_data_dir):
-        os.makedirs(cma_intermediate_data_dir)
+    if os.path.exists(cma_intermediate_data_dir):
+        import shutil
+        shutil.rmtree(cma_intermediate_data_dir)
+    os.makedirs(cma_intermediate_data_dir)
 
     return cma_run_num, cma_intermediate_data_dir
 def gen_subspace_coords(plot_args, proj_coord):
@@ -74,6 +76,7 @@ def gen_subspace_coords(plot_args, proj_coord):
 #     proj_coords = np.array([proj_xcoord, proj_ycoord])
 #
 #     return proj_coords
+
 
 def do_proj_on_first_n(all_param_matrix, first_n_pcs, origin_param):
     components = first_n_pcs
@@ -131,8 +134,8 @@ def do_pca(n_components, n_comp_to_use, traj_params_dir_name,
     final_file = get_full_param_traj_file_path(traj_params_dir_name, "final")
     final_concat_params = pd.read_csv(final_file, header=None).values[0]
     proj_coords = None
-    if not reuse \
-        and not os.path.exists(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components))\
+    if not reuse or \
+            not os.path.exists(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components))\
         or not os.path.exists(get_mean_param_filename(intermediate_dir=intermediate_data_dir)) \
         or (proj and not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir,
                                                                          n_comp=n_components, pca_center=origin))):
@@ -252,6 +255,37 @@ def cal_angle_plane(V, pcs):
     projected = get_projected_vector_in_old_basis(V, pcs, len(pcs))
     return cal_angle(projected, V)
 
+def plane_inner_product(pcs1, pcs2):
+    if len(pcs1.shape) == 1:
+        pcs1 = pcs1.reshape(1,-1)
+
+    if len(pcs2.shape) == 1:
+        pcs2 = pcs2.reshape(1,-1)
+
+    mat = []
+    for i in range(len(pcs1)):
+        row = []
+        for j in range(len(pcs2)):
+            row.append(np.dot(pcs1[i], pcs2[j]))
+        mat.append(row)
+
+    return np.linalg.det(mat)
+
+def plane_inner_product_2d(pcs1, pcs2):
+    return np.dot(pcs1[0], pcs2[0]) * np.dot(pcs1[1], pcs2[1]) - np.dot(pcs1[1], pcs2[0]) * np.dot(pcs1[0], pcs2[1])
+
+def cal_angle_between_2_2d_planes(pcs1, pcs2):
+    i = plane_inner_product_2d(pcs1, pcs2)
+    np.testing.assert_almost_equal(i, plane_inner_product(pcs1, pcs2))
+
+    cos = i/np.sqrt(plane_inner_product_2d(pcs1, pcs1)*plane_inner_product_2d(pcs2, pcs2))
+    return math.degrees(np.arccos(np.clip(cos, -1.0, 1.0)))
+
+def cal_angle_between_nd_planes(pcs1, pcs2):
+    cos = plane_inner_product(pcs1, pcs2)/np.sqrt(plane_inner_product(pcs1, pcs1)*plane_inner_product(pcs2, pcs2))
+    return math.degrees(np.arccos(np.clip(cos, -1.0, 1.0)))
+
+
 def get_projected_vector_in_old_basis(vector, all_pcs, num_axis_to_use):
     components = all_pcs[:num_axis_to_use]
 
@@ -314,6 +348,16 @@ def plot_2d_check_index(plot_dir_alg, data, ylabel, file_name, check_index=None,
                 bbox_inches='tight', format='pdf')
     if show: plt.show()
 
+
+def dump_row_write_csv(dir_name, data, file_name):
+    if not isinstance(data, Iterable):
+        data = [data]
+
+    var_output_file = f"{dir_name}/{file_name}.csv"
+
+    with open(var_output_file, 'w') as fp:
+        wr = csv.writer(fp)
+        wr.writerow(data)
 
 def dump_row_append_csv(dir_name, data, file_name):
     if not isinstance(data, Iterable):
@@ -487,7 +531,7 @@ def plot_3d_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, proj_x
     if show: plt.show()
 
 
-def get_allinone_concat_df(dir_name, num_index_to_take=None, use_IPCA=False, chunk_size=None, index = 0):
+def get_allinone_concat_df(dir_name, use_IPCA=False, chunk_size=None, index = 0):
 
     theta_file = get_full_param_traj_file_path(dir_name, index)
     if use_IPCA:

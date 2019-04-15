@@ -18,7 +18,7 @@ def get_common_parser():
     # PCA parameters
     parser.add_argument('--alg', default='ppo2', help='algorithm to train on')
     parser.add_argument('--env', default='DartWalker2d-v1', help='algorithm to train on')
-    parser.add_argument('--num-timesteps', default=675000, type=int, help='total timesteps agent runs')
+    parser.add_argument('--num-timesteps', default=5000, type=int, help='total timesteps agent runs')
     parser.add_argument('--run_num', default=0, type=int, help='which run number')
 
     parser.add_argument('--nminibatches', default=32, type=int, help='which run number')
@@ -30,7 +30,7 @@ def get_common_parser():
     parser.add_argument('--xnum', default=50, type=int)
     parser.add_argument('--ynum', default=50, type=int)
     parser.add_argument('--n_comp_to_use', default=2, type=int, help='n_components of PCA')
-    parser.add_argument('--n_components', default=2, type=int, help='n_components of PCA')
+    parser.add_argument('--n_components', default=500, type=int, help='n_components of PCA')
 
     parser.add_argument('--even_check_point_num', default=5, type=int, help='even_check_point_num')
     parser.add_argument('--explain_ratio_threshold', default=0.99, type=float)
@@ -39,7 +39,7 @@ def get_common_parser():
     parser.add_argument('--other_pca_index', default="8:9", help='cores to use to parallel')
 
     #cma params
-    parser.add_argument('--cma_num_timesteps', default=1000000, type=int, help='total timesteps agent runs')
+    parser.add_argument('--cma_num_timesteps', default=100000, type=int, help='total timesteps agent runs')
     parser.add_argument('--cma_var', default=1, type=float, help='total timesteps agent runs')
     parser.add_argument("--origin", type=str,  default="mean_param")
 
@@ -47,10 +47,20 @@ def get_common_parser():
     parser.add_argument('--ppos_num_timesteps', default=10000, type=int, help='total timesteps agent runs')
 
     #pc1 chunk size
-    parser.add_argument('--pc1_chunk_size', default=1000, type=int, help='total timesteps agent runs')
+    parser.add_argument('--pc1_chunk_size', default=100, type=int, help='total timesteps agent runs')
     parser.add_argument('--deque_len', default=200, type=int, help='total timesteps agent runs')
-    parser.add_argument('--skipped_chunks', default=10, type=int, help='total timesteps agent runs')
+    parser.add_argument('--skipped_chunks', default=1, type=int, help='total timesteps agent runs')
 
     parser.add_argument('--num_comp_to_load', default=150, type=int, help='total timesteps agent runs')
+
+    #for cma adn the ppo
+    parser.add_argument('--ppo_num_timesteps', default=5000, type=int, help='total timesteps agent runs')
+
+
+    #WPCA VS last plane
+    parser.add_argument('--func_index_to_use', default=0, type=int, help='total timesteps agent runs')
+
+
+
 
     return parser

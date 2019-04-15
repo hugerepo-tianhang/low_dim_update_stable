@@ -145,6 +145,36 @@ cma_once () {
 }
 
 
+cma_and_then_ppo2 () {
+    local run=$1
+    local env=$2
+
+    local time_steps=$3
+    local use_IPCA=$4
+    local chunk_size=$5
+    local origin=$6
+    local n_comp_to_use=$7
+    local cma_var=$8
+    local ppo_num_timesteps=$9
+
+    echo "Welcome to cma_and_then_ppo2: run number  $env $run"
+
+#    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
+#                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
+#                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
+#                                    --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps
+    python -m stable_baselines.cmaes.cma_and_then_ppo2 \
+                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
+                                    --cores_to_use=$cores_to_use \
+                                    --xnum=$xnum --ynum=$ynum\
+                                    --padding_fraction=$padding_fraction \
+                                    --n_components=$n_components --cma_num_timesteps=$cma_num_timesteps\
+                                    --n_comp_to_use=$n_comp_to_use --eval_num_timesteps=$eval_num_timesteps\
+                                     --normalize=$normalize --nminibatches=$nminibatches\
+                                     --n_steps=$n_steps --use_IPCA=$use_IPCA --chunk_size=$chunk_size\
+                                     --origin=$origin --ppo_num_timesteps=$ppo_num_timesteps
+}
+
 ppos_once () {
     local run=$1
     local env=$2
@@ -472,6 +502,86 @@ pc1_vs_V () {
 }
 
 
+
+first_n_2d_plane_angle_vs_final_2d_plane () {
+    local run=$1
+    local env=$2
+    local time_steps=$3
+
+    local pc1_chunk_size=$4
+    local chunk_size=$5
+    local n_comp_to_use=$6
+    local n_components=$7
+
+    echo "Welcome to first_n_2d_plane_angle_vs_final_2d_plane: run number  $env $run"
+
+#    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
+#                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
+#                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
+#                                    --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps
+    python -m stable_baselines.low_dim_analysis.first_n_2d_plane_angle_vs_final_2d_plane \
+                                    --num-timesteps=$time_steps --run_num=$run --env=$env --normalize=$normalize \
+                                    --nminibatches=$nminibatches --n_steps=$n_steps\
+                                    --pc1_chunk_size=$pc1_chunk_size\
+                                    --chunk_size=$chunk_size --optimizer=$optimizer\
+                                    --n_comp_to_use=$n_comp_to_use --n_components=$n_components
+}
+
+
+skip_m_chunks_first_n_plane_vs_final_plane_angle () {
+    local run=$1
+    local env=$2
+    local time_steps=$3
+
+    local pc1_chunk_size=$4
+    local chunk_size=$5
+    local n_comp_to_use=$6
+    local n_components=$7
+    local skipped_chunks=$8
+
+    echo "Welcome to skip_m_chunks_first_n_plane_vs_final_plane_angle: run number  $env $run"
+
+#    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
+#                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
+#                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
+#                                    --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps
+    python -m stable_baselines.low_dim_analysis.skip_m_chunks_first_n_plane_vs_final_plane_angle \
+                                    --num-timesteps=$time_steps --run_num=$run --env=$env --normalize=$normalize \
+                                    --nminibatches=$nminibatches --n_steps=$n_steps\
+                                    --pc1_chunk_size=$pc1_chunk_size\
+                                    --chunk_size=$chunk_size --optimizer=$optimizer\
+                                    --n_comp_to_use=$n_comp_to_use --n_components=$n_components\
+                                    --skipped_chunks=$skipped_chunks
+}
+
+
+WPCA_first_n_VS_last_plane () {
+    local run=$1
+    local env=$2
+    local time_steps=$3
+
+    local pc1_chunk_size=$4
+    local chunk_size=$5
+    local n_comp_to_use=$6
+    local n_components=$7
+    local func_index_to_use=$8
+
+    echo "Welcome to WPCA_first_n_VS_last_plane: run number  $env $run"
+
+#    python -m stable_baselines.low_dim_analysis.plot_return_landscape \
+#                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
+#                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
+#                                    --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps
+    python -m stable_baselines.low_dim_analysis.WPCA_first_n_VS_last_plane \
+                                    --num-timesteps=$time_steps --run_num=$run --env=$env --normalize=$normalize \
+                                    --nminibatches=$nminibatches --n_steps=$n_steps\
+                                    --pc1_chunk_size=$pc1_chunk_size\
+                                    --chunk_size=$chunk_size --optimizer=$optimizer\
+                                    --n_comp_to_use=$n_comp_to_use --n_components=$n_components\
+                                    --func_index_to_use=$func_index_to_use
+}
+
+
 #sleep 1; ppos_once 0 'Walker2d-v2' 8 2048; sleep 1; ps
 #
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
@@ -517,7 +627,16 @@ wait
 #sleep 1; ppos_once 0 'Hopper-v2' 8 2048; sleep 1; ps
 #sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 50000 "mean_param" 300; sleep 1; ps
 #sleep 1; final_projection_on_mean_performance 0 'DartHopper-v1' 32 2048 1000000 True 50000 $n_components; sleep 1; ps
-sleep 1; first_n_pc1_vs_final_minus_start 0 'DartReacher-v1' 32 2048 5000 100; sleep 1; ps
+sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 5000 5000 20000 2 500; sleep 1; ps
+sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 5000 5000 20000 100 500; sleep 1; ps
+sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 5000 5000 20000 500 500; sleep 1; ps
+sleep 1; skip_m_chunks_first_n_plane_vs_final_plane_angle 0 'DartWalker2d-v1' 5000 1000 20000 5 500 1; sleep 1; ps
+sleep 1; skip_m_chunks_first_n_plane_vs_final_plane_angle 0 'DartWalker2d-v1' 5000 1000 20000 5 500 10; sleep 1; ps
+sleep 1; skip_m_chunks_first_n_plane_vs_final_plane_angle 0 'DartWalker2d-v1' 5000 1000 20000 5 500 50; sleep 1; ps
+
+#sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 5000 5000 20000 500 10; sleep 1; ps
+#sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 5000 5000 20000 500 500; sleep 1; ps
+
 #sleep 1; first_n_pc1_vs_final_minus_start 1 'DartReacher-v1' 32 2048 675000 100; sleep 1; ps
 #sleep 1; first_n_pc1_vs_final_minus_start 0 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
 #sleep 1; first_n_pc1_vs_final_minus_start 1 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
@@ -529,9 +648,14 @@ sleep 1; first_n_pc1_vs_final_minus_start 0 'DartReacher-v1' 32 2048 5000 100; s
 #sleep 1; cma_once 0 'DartHopper-v1' 512 2048 1000000 True 50000; sleep 1; ps
 ##sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" $n_components; sleep 1; ps
 ##sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" 15; sleep 1; ps
-sleep 1; cma_redo 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 10; sleep 1; ps
 #sleep 1; cma_redo 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 10; sleep 1; ps
-#sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 50 100; sleep 1; ps
+#sleep 1; cma_redo 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 10; sleep 1; ps
+sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 50 10 600000; sleep 1; ps
+
+
+sleep 1; WPCA_first_n_VS_last_plane 0 'DartWalker2d-v1' 5000 1000 20000 5 500 3; sleep 1; ps
+
+#sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 50 10 600000; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 100 100; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 2 10; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 2 100; sleep 1; ps

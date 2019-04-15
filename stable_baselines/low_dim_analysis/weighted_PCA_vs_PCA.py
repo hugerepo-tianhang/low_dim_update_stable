@@ -18,16 +18,9 @@ import os
 from stable_baselines.common.cmd_util import mujoco_arg_parser
 from stable_baselines.low_dim_analysis.common_parser import get_common_parser
 from stable_baselines.low_dim_analysis.common import cal_angle_plane
+from wpca import WPCA
 
-def dup_so_far_buffer(all_params_so_far, last_percentage, num):
-    total = len(all_params_so_far)
-    last_start_index = total - int(total * last_percentage)
-    repeats = np.zeros(total, dtype=int)
-    repeats[last_start_index:] = num
-    dup = np.repeat(all_params_so_far, repeats, axis=0)
-    return dup
-
-def gen_last_percentage(currow, total_row):
+def gen_weights(currow, total_row):
     a = currow/total_row
     return 0.5 * np.exp(-2*a)
 
@@ -70,12 +63,14 @@ def main():
 
     V = final_params - start_params
 
-    all_param_iterator = get_allinone_concat_df(dir_name=traj_params_dir_name, use_IPCA=True, chunk_size=cma_args.pc1_chunk_size)
+    all_thetas_downsampled = get_allinone_concat_df(dir_name=traj_params_dir_name).values[::2]
+
+
     unduped_angles_along_the_way = []
     duped_angles_along_the_way = []
     diff_along = []
     num = 2 #TODO hardcode!
-    undup_ipca = IncrementalPCA(n_components=1)  # for sparse PCA to speed up
+    undup_ipca = PCA(n_components=1)  # for sparse PCA to speed up
 
     all_matrix_buffer = []
     for chunk in all_param_iterator:
@@ -96,13 +91,13 @@ def main():
 
         all_matrix_buffer.extend(chunk)
 
-        last_percentage = gen_last_percentage(all_param_iterator._currow, total_num)
+        weights = gen_weights(all_param_iterator._currow, total_num)
         duped_in_so_far = dup_so_far_buffer(all_matrix_buffer, last_percentage, num)
 
         logger.log(f"currently at {all_param_iterator._currow}, last_pecentage: {last_percentage}")
         # ipca = PCA(n_components=1)  # for sparse PCA to speed up
         # ipca.fit(duped_in_so_far)
-        ipca = IncrementalPCA(n_components=1)  # for sparse PCA to speed up
+        ipca = WPCA(n_components=cma_args.n_comp_to_use)  # for sparse PCA to speed up
         for i in range(0, len(duped_in_so_far), cma_args.chunk_size):
             logger.log(f"partial fitting: i : {i} len(duped_in_so_far): {len(duped_in_so_far)}")
             if i + cma_args.chunk_size > len(duped_in_so_far):

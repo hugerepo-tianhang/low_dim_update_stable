@@ -6,7 +6,7 @@ from stable_baselines import logger
 import pandas as pd
 from sklearn.decomposition import PCA
 
-from stable_baselines.low_dim_analysis.common import project_2D_pca_mean_origin, plot_contour_trajectory, plot_3d_trajectory, get_allinone_concat_matrix_diff
+from stable_baselines.low_dim_analysis.common import project_2D_pca_mean_origin, plot_contour_trajectory, plot_3d_trajectory, get_allinone_concat_df
 from joblib import Parallel, delayed
 
 
@@ -102,8 +102,8 @@ if __name__ == '__main__':
         or not os.path.exists(get_mean_param_filename(intermediate_dir=intermediate_data_dir)):
 
         tic = time.time()
-        concat_matrix_diff = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
-                                                             final_concat_params=final_concat_params)
+        concat_matrix_diff = get_allinone_concat_df(dir_name=traj_params_dir_name,
+                                                    final_concat_params=final_concat_params)
         toc = time.time()
         print('\nElapsed time getting the full concat diff took {:.2f} s\n'
               .format(toc - tic))

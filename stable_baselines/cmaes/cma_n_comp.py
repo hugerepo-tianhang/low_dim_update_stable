@@ -139,8 +139,8 @@ def main():
     '''
 
 
-    from stable_baselines.low_dim_analysis.common import plot_contour_trajectory, gen_subspace_coords,do_eval_returns, \
-        get_allinone_concat_df, do_proj_on_first_n
+    from stable_baselines.low_dim_analysis.common import plot_contour_trajectory, gen_subspace_coords,do_eval_returns\
+        , do_proj_on_first_n
 
     if origin=="final_param":
         origin_param = result["final_concat_params"]

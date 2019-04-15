@@ -313,7 +313,7 @@ class PPO2(ActorCriticRLModel):
         #     current_skip_num = decide_next_skip(prob_of_down, up, down)
 
 
-
+        ep_full_infos = []
         # Transform to callable if needed
         self.learning_rate = get_schedule_fn(self.learning_rate)
         self.cliprange = get_schedule_fn(self.cliprange)
@@ -345,6 +345,8 @@ class PPO2(ActorCriticRLModel):
                 # true_reward is the reward without discount
                 obs, returns, masks, actions, values, neglogpacs, states, ep_infos, true_reward = runner.run()
                 ep_info_buf.extend(ep_infos)
+                ep_full_infos.extend(ep_infos)
+
                 mb_loss_vals = []
                 if states is None:  # nonrecurrent version
                     update_fac = self.n_batch // self.nminibatches // self.noptepochs + 1
@@ -434,7 +436,7 @@ class PPO2(ActorCriticRLModel):
                 flat_params = self.get_flat()
                 self.dump(flat_params, "final")
                 self.dump([total_num_dumped], "total_num_dumped")
-            return self
+            return  [ep_info['r'] for ep_info in ep_full_infos]
 
     def save(self, save_path):
         data = {

@@ -30,8 +30,8 @@ import pandas as pd
 from sklearn.decomposition import PCA
 from numpy import linalg as LA
 from matplotlib import pyplot as plt
-from stable_baselines.low_dim_analysis.common import calculate_projection_error, \
-    calculate_num_axis_to_explain, plot_2d_check_index, get_allinone_concat_matrix_diff
+from stable_baselines.low_dim_analysis.common import calculate_projection_errors, \
+    calculate_num_axis_to_explain, plot_2d_check_index, get_allinone_concat_df
 
 
 
@@ -104,8 +104,8 @@ if __name__ == '__main__':
 
 
     tic = time.time()
-    concat_matrix_diff = get_allinone_concat_matrix_diff(dir_name=traj_params_dir_name,
-                                                         final_concat_params=final_concat_params)
+    concat_matrix_diff = get_allinone_concat_df(dir_name=traj_params_dir_name,
+                                                final_concat_params=final_concat_params)
     toc = time.time()
     print('\nElapsed time getting the full concat diff took {:.2f} s\n'
           .format(toc - tic))
@@ -129,7 +129,7 @@ if __name__ == '__main__':
 
         # num_to_use, total_explained = calculate_num_axis_to_explain(pca, args.explain_ratio_threshold)
 
-        proj_errors = calculate_projection_error(pca, concat_matrix_diff[check_index:], num_axis_to_use=args.n_comp_to_use)
+        proj_errors = calculate_projection_errors(pca, concat_matrix_diff[check_index:], num_axis_to_use=args.n_comp_to_use)
 
         dump_my(plot_next_n_dir, proj_errors, f"all next proj_errors, check index: {check_index}")
 
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     logger.log(f"project all params")
 
     num_to_use, total_explained = calculate_num_axis_to_explain(final_pca, args.explain_ratio_threshold)
-    proj_errors = calculate_projection_error(final_pca, concat_matrix_diff, num_axis_to_use=args.n_comp_to_use)
+    proj_errors = calculate_projection_errors(final_pca, concat_matrix_diff, num_axis_to_use=args.n_comp_to_use)
     dump_my(plot_next_n_dir, proj_errors, "full proj_errors")
     plot_2d_check_index(plot_next_n_dir, proj_errors,
                         f'proj errors',
