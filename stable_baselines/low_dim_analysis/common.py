@@ -537,9 +537,9 @@ def get_allinone_concat_df(dir_name, use_IPCA=False, chunk_size=None, index = 0,
     if use_IPCA:
         assert chunk_size is not None
         assert chunk_size != 0
-        concat_df = pd.read_csv(theta_file, header=None, chunksize=chunk_size, skip_rows=skip_rows)
+        concat_df = pd.read_csv(theta_file, header=None, chunksize=chunk_size, skiprows=skip_rows)
     else:
-        concat_df = pd.read_csv(theta_file, header=None, skip_rows=skip_rows)
+        concat_df = pd.read_csv(theta_file, header=None, skiprows=skip_rows)
 
 
     return concat_df

@@ -168,12 +168,13 @@ def do_ppo(args, start_theta, parent_this_run_dir, full_space_save_dir):
                 "env_id": args.env,
                 "full_param_traj_dir_path": full_param_traj_dir_path}
 
-    model = PPO2(policy=policy, env=env, n_steps=args.n_steps, nminibatches=args.nminibatches, lam=0.95, gamma=0.99,
-                 noptepochs=10,
-                 ent_coef=0.0, learning_rate=3e-4, cliprange=0.2, optimizer=args.optimizer)
-    model.tell_run_info(run_info)
+    # model = PPO2(policy=policy, env=env, n_steps=args.n_steps, nminibatches=args.nminibatches, lam=0.95, gamma=0.99,
+    #              noptepochs=10,
+    #              ent_coef=0.0, learning_rate=3e-4, cliprange=0.2, optimizer=args.optimizer)
 
     model = PPO2.load(f"{full_space_save_dir}/ppo2")
+    model.set_env(env)
+    model.tell_run_info(run_info)
 
     if args.normalize:
         env.load_running_average(full_space_save_dir)
@@ -302,7 +303,7 @@ def main():
     skip_rows = lambda x: x%2 == 0
     conti_ppo_params = get_allinone_concat_df(conti_ppo_full_param_traj_dir_path, index=0, skip_rows=skip_rows).values
     opt_mean_path_in_old_basis = [mean_projected_param.dot(result["first_n_pcs"]) + result["mean_param"] for mean_projected_param in opt_path_mean]
-    distance_to_final = [LA.norm(opt_mean - result["final_concat_params"], ord=2) for opt_mean in opt_mean_path_in_old_basis + conti_ppo_params]
+    distance_to_final = [LA.norm(opt_mean - result["final_concat_params"], ord=2) for opt_mean in np.vstack((opt_mean_path_in_old_basis, conti_ppo_params))]
     distance_to_final_plot_name = f"distance_to_final over generations "
     plot_2d(cma_and_then_ppo_plot_dir, distance_to_final_plot_name, np.arange(len(distance_to_final)), distance_to_final, "num generation", "distance_to_final", False)
 

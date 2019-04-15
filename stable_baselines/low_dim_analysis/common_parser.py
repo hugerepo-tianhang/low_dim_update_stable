@@ -39,7 +39,7 @@ def get_common_parser():
     parser.add_argument('--other_pca_index', default="8:9", help='cores to use to parallel')
 
     #cma params
-    parser.add_argument('--cma_num_timesteps', default=100000, type=int, help='total timesteps agent runs')
+    parser.add_argument('--cma_num_timesteps', default=1000, type=int, help='total timesteps agent runs')
     parser.add_argument('--cma_var', default=1, type=float, help='total timesteps agent runs')
     parser.add_argument("--origin", type=str,  default="mean_param")
 
