@@ -658,14 +658,11 @@ wait
 #sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "start_param" 1 10 600000; sleep 1; ps
 #sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "start_param" 1 10 600000; sleep 1; ps
 
-#sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "start_param" 2 10 600000; sleep 1; ps
-#sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "start_param" 2 1 600000; sleep 1; ps
-#sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "start_param" 10 10 600000; sleep 1; ps
-#sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 1 10 600000; sleep 1; ps
-##
-#
-
-#sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 2 10 600000; sleep 1; ps
+sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 20000 "start_param" 2 10 600000; sleep 1; ps
+sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 20000 "start_param" 1 10 600000; sleep 1; ps
+#sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 20000 "start_param" 10 10 600000; sleep 1; ps
+sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 20000 "mean_param" 1 10 600000; sleep 1; ps
+sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 20000 "mean_param" 2 10 600000; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 100 100; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 2 10; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 2 100; sleep 1; ps
