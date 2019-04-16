@@ -55,6 +55,7 @@ def main():
     all_param_iterator = get_allinone_concat_df(dir_name=traj_params_dir_name, use_IPCA=True, chunk_size=cma_args.pc1_chunk_size)
     plane_angles_vs_final_plane_along_the_way = []
     ipca = IncrementalPCA(n_components=cma_args.n_comp_to_use)  # for sparse PCA to speed up
+    # non_skip_ipca = IncrementalPCA(n_components=cma_args.n_comp_to_use)  # for sparse PCA to speed up
     for chunk in all_param_iterator:
         if all_param_iterator._currow <= cma_args.pc1_chunk_size * cma_args.skipped_chunks:
             logger.log(f"skipping: currow: {all_param_iterator._currow} skip threshold {cma_args.pc1_chunk_size * cma_args.skipped_chunks}")

@@ -12,8 +12,7 @@ from joblib import Parallel, delayed
 import math
 from functools import partial
 from datetime import datetime
-
-
+import csv
 
 
 def postize_angle(angle):
@@ -347,6 +346,17 @@ def plot_2d_check_index(plot_dir_alg, data, ylabel, file_name, check_index=None,
         fig.savefig(f"{plot_dir_alg}/{file_name}.pdf", dpi=300,
                 bbox_inches='tight', format='pdf')
     if show: plt.show()
+
+def read_row_csv(dir_name, file_name):
+
+    var_output_file = f"{dir_name}/{file_name}.csv"
+
+
+    with open(var_output_file) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        rows = []
+        for row in csv_reader:
+            rows.append(row)
 
 
 def dump_row_write_csv(dir_name, data, file_name):

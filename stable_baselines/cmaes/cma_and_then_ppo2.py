@@ -132,26 +132,6 @@ def do_ppo(args, start_theta, parent_this_run_dir, full_space_save_dir):
     conti_ppo_save_dir = get_save_dir(this_conti_ppo_run_dir)
     logger.configure(log_dir)
 
-
-
-    def make_env():
-        env_out = gym.make(args.env)
-        env_out.env.disableViewer = True
-        env_out.env.visualize = False
-        env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
-        return env_out
-
-    env = DummyVecEnv([make_env])
-    if args.normalize:
-        env = VecNormalize(env)
-
-
-    set_global_seeds(args.seed)
-    policy = MlpPolicy
-
-    # extra run info I added for my purposes
-
-
     full_param_traj_dir_path = get_full_params_dir(this_conti_ppo_run_dir)
 
     if os.path.exists(full_param_traj_dir_path):
@@ -164,6 +144,26 @@ def do_ppo(args, start_theta, parent_this_run_dir, full_space_save_dir):
         shutil.rmtree(conti_ppo_save_dir)
     os.makedirs(conti_ppo_save_dir)
 
+
+
+    def make_env():
+        env_out = gym.make(args.env)
+        env_out.env.disableViewer = True
+        env_out.env.visualize = False
+        env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
+        return env_out
+    env = DummyVecEnv([make_env])
+    if args.normalize:
+        env = VecNormalize(env)
+
+    model = PPO2.load(f"{full_space_save_dir}/ppo2")
+    model.set_from_flat(start_theta)
+
+    if args.normalize:
+        env.load_running_average(full_space_save_dir)
+    model.set_env(env)
+
+
     run_info = {"run_num": args.run_num,
                 "env_id": args.env,
                 "full_param_traj_dir_path": full_param_traj_dir_path}
@@ -172,15 +172,7 @@ def do_ppo(args, start_theta, parent_this_run_dir, full_space_save_dir):
     #              noptepochs=10,
     #              ent_coef=0.0, learning_rate=3e-4, cliprange=0.2, optimizer=args.optimizer)
 
-    model = PPO2.load(f"{full_space_save_dir}/ppo2")
-    model.set_env(env)
     model.tell_run_info(run_info)
-
-    if args.normalize:
-        env.load_running_average(full_space_save_dir)
-
-    model.set_from_flat(start_theta)
-
     episode_returns = model.learn(total_timesteps=args.ppo_num_timesteps)
 
     model.save(f"{conti_ppo_save_dir}/ppo2")
@@ -213,9 +205,17 @@ def main():
     cma_run_num, cma_intermediate_data_dir = generate_run_dir(get_cma_and_then_ppo_run_dir,
                                                               intermediate_dir=intermediate_data_dir,
                                                               n_comp=cma_args.n_comp_to_use,
-                                                              cma_steps=cma_args.cma_num_timesteps,
-                                                              ppo_steps=cma_args.ppo_num_timesteps)
+                                                              cma_steps=cma_args.cma_num_timesteps
+                                                              )
+    # cma_intermediate_data_dir = get_cma_and_then_ppo_run_dir(intermediate_dir = intermediate_data_dir,
+    #                                 n_comp = cma_args.n_comp_to_use,
+    #                                 cma_steps = cma_args.cma_num_timesteps, run_num=0)
+    best_theta_file_name = "best theta from cma"
 
+
+
+    # if not os.path.exists(f"{cma_intermediate_data_dir}/{best_theta_file_name}.csv") or \
+    #     not os.path.exists(f"{cma_intermediate_data_dir}/opt_mean_path.csv"):
     '''
     ==========================================================================================
     get the pc vectors
@@ -255,10 +255,12 @@ def main():
     assert result["first_n_pcs"].shape[0] == cma_args.n_comp_to_use
     mean_rets, min_rets, max_rets, opt_path, opt_path_mean, best_theta = do_cma(cma_args, result["first_n_pcs"],
                                                                     origin_param, save_dir, starting_coord, cma_args.cma_var)
-    dump_rows_write_csv(cma_intermediate_data_dir, opt_path_mean, "opt_mean_path")
-    best_theta_file_name = "best theta from cma"
+    # np.savetxt(f"{cma_intermediate_data_dir}/opt_mean_path.csv", opt_path_mean, delimiter=',')
+    np.savetxt(f"{cma_intermediate_data_dir}/{best_theta_file_name}.csv", best_theta, delimiter=',')
 
-    dump_row_write_csv(cma_intermediate_data_dir, best_theta, best_theta_file_name)
+    # else:
+    #     best_theta = np.loadtxt(f"{cma_intermediate_data_dir}/{best_theta_file_name}.csv", delimiter=',')
+    #     opt_path_mean = np.loadtxt(f"{cma_intermediate_data_dir}/opt_mean_path.csv", delimiter=',')
 
 
 

@@ -94,9 +94,9 @@ def get_ppos_returns_dirname(intermediate_dir, n_comp, run_num):
 
     return f"{intermediate_dir}/ppos/ppos_n_comp_{n_comp}_run_num_{run_num}"
 
-def get_cma_and_then_ppo_run_dir(intermediate_dir, n_comp, run_num, cma_steps, ppo_steps):
+def get_cma_and_then_ppo_run_dir(intermediate_dir, n_comp, run_num, cma_steps):
 
-    return f"{intermediate_dir}/cma_and_then_ppo/ctp_n_comp_{n_comp}_cma_steps_{cma_steps}_ppo_steps{ppo_steps}_run_num_{run_num}"
+    return f"{intermediate_dir}/cma_and_then_ppo/ctp_n_comp_{n_comp}_cma_steps_{cma_steps}_run_num_{run_num}"
 
 def get_ppo_part(this_run_dir):
     return f"{this_run_dir}/ppo_part"

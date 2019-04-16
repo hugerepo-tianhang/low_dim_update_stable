@@ -11,7 +11,7 @@ def get_common_parser():
     parser.register('type', 'bool', str2bool)
     parser.add_argument("--normalize", type='bool', default=True)
     parser.add_argument('--use_IPCA', type='bool', default=True)
-    parser.add_argument('--chunk_size', default=10000, type=int, help='total timesteps agent runs')
+    parser.add_argument('--chunk_size', default=5000, type=int, help='total timesteps agent runs')
     parser.add_argument('--optimizer', help='environment ID', type=str, default='adam')
     parser.add_argument('--seed', help='RNG seed', type=int, default=0)
 
@@ -29,7 +29,7 @@ def get_common_parser():
     parser.add_argument('--padding_fraction', default=0.4, type=float)
     parser.add_argument('--xnum', default=50, type=int)
     parser.add_argument('--ynum', default=50, type=int)
-    parser.add_argument('--n_comp_to_use', default=2, type=int, help='n_components of PCA')
+    parser.add_argument('--n_comp_to_use', default=10, type=int, help='n_components of PCA')
     parser.add_argument('--n_components', default=500, type=int, help='n_components of PCA')
 
     parser.add_argument('--even_check_point_num', default=5, type=int, help='even_check_point_num')
@@ -39,7 +39,7 @@ def get_common_parser():
     parser.add_argument('--other_pca_index', default="8:9", help='cores to use to parallel')
 
     #cma params
-    parser.add_argument('--cma_num_timesteps', default=1000, type=int, help='total timesteps agent runs')
+    parser.add_argument('--cma_num_timesteps', default=100000, type=int, help='total timesteps agent runs')
     parser.add_argument('--cma_var', default=1, type=float, help='total timesteps agent runs')
     parser.add_argument("--origin", type=str,  default="mean_param")
 
