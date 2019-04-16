@@ -78,7 +78,6 @@ run () {
     local time_steps=$5
 
     local optimizer=$6
-    local normalize=$7
 
     echo "Welcome to RUN: run number  $env $run"
     python -m stable_baselines.ppo2.run_mujoco --env=$env --num-timesteps=$time_steps\
