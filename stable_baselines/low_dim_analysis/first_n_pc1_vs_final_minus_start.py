@@ -9,7 +9,7 @@ from stable_baselines.low_dim_analysis.eval_util import *
 from stable_baselines import logger
 
 import pandas as pd
-from sklearn.decomposition import IncrementalPCA
+from sklearn.decomposition import IncrementalPCA, PCA
 
 from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
@@ -59,15 +59,20 @@ def main():
     all_param_iterator = get_allinone_concat_df(dir_name=traj_params_dir_name, use_IPCA=True, chunk_size=cma_args.pc1_chunk_size)
     angles_along_the_way = []
     grad_vs_pull = []
+    pc1s = []
     ipca = IncrementalPCA(n_components=1)  # for sparse PCA to speed up
+
+    i = 1
     for chunk in all_param_iterator:
 
         logger.log(f"currently at {all_param_iterator._currow}")
         ipca.partial_fit(chunk.values)
-
-        angle = cal_angle(V, ipca.components_[0])
+        pc1 = ipca.components_[0]
+        if i % 2 == 0:
+            pc1 = -pc1
+        angle = cal_angle(V,pc1)
         angles_along_the_way.append(angle)
-
+        pc1s.append(pc1)
 
         current_grad = all_grads_iterator.__next__().values[-1]
         current_param = chunk.values[-1]
@@ -75,6 +80,8 @@ def main():
         pull_dir = V - delta
         pull_dir_vs_grad = cal_angle(pull_dir, current_grad)
         grad_vs_pull.append(pull_dir_vs_grad)
+        i += 1
+
 
     plot_dir = get_plot_dir(cma_args)
     if not os.path.exists(plot_dir):
@@ -91,6 +98,21 @@ def main():
 
     grad_vs_pull_plot_name = f"grad vs V - delta_theta"
     plot_2d(first_n_pc1_vs_V_plot_dir, grad_vs_pull_plot_name, np.arange(len(grad_vs_pull)), grad_vs_pull, "num of chunks", "angle in degrees", False)
+
+    pcpca = PCA(n_components=min(len(pc1s), 100))
+    pcpca.fit(pc1s)
+    logger.log(pcpca.explained_variance_ratio_)
+    logger.log(cal_angle_plane(V, pcpca.components_[:2]))
+    np.savetxt(f"{first_n_pc1_vs_V_plot_dir}/pcs_pcs.txt", pcpca.explained_variance_ratio_, delimiter=',')
+    np.savetxt(f"{first_n_pc1_vs_V_plot_dir}/pcs_V_vs_pcapca_first_2_comp_plane.txt", np.array([cal_angle_plane(V, pcpca.components_[:2])]), delimiter=',')
+
+    i = 0
+    for angle in angles_along_the_way:
+        if angle > 90:
+            i += 1
+
+    np.savetxt(f"{first_n_pc1_vs_V_plot_dir}/num of angles bigger than 90.txt",
+                       np.array([i]), delimiter=',')
 
 
 if __name__ == '__main__':

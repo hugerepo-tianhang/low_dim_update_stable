@@ -221,8 +221,13 @@ def main():
     get the pc vectors
     ==========================================================================================
     '''
-    proj_or_not = (cma_args.n_comp_to_use == 2)
-    result = do_pca(cma_args.n_components, cma_args.n_comp_to_use, traj_params_dir_name, intermediate_data_dir,
+    proj_or_not = (cma_args.n_comp_to_use <= 2)
+    if cma_args.n_comp_to_use == 1:
+        n_comp_to_project_on = 2
+    else:
+        n_comp_to_project_on = cma_args.n_comp_to_use
+
+    result = do_pca(cma_args.n_components, n_comp_to_project_on, traj_params_dir_name, intermediate_data_dir,
                     proj=proj_or_not,
                     origin=origin, use_IPCA=cma_args.use_IPCA, chunk_size=cma_args.chunk_size, reuse=True)
     logger.debug("after pca")
@@ -235,16 +240,24 @@ def main():
 
     from stable_baselines.low_dim_analysis.common import plot_contour_trajectory, gen_subspace_coords,do_eval_returns, \
         do_proj_on_first_n
-
-    if origin=="final_param":
-        origin_param = result["final_concat_params"]
-    else:
-        origin_param = result["mean_param"]
-
     logger.log("grab start params")
     start_file = get_full_param_traj_file_path(traj_params_dir_name, "start")
     start_params = pd.read_csv(start_file, header=None).values[0]
-    starting_coord = do_proj_on_first_n(start_params, result["first_n_pcs"], origin_param)
+
+
+    if origin=="final_param":
+        origin_param = result["final_concat_params"]
+    elif origin=="start_param":
+        origin_param = start_params
+
+    else:
+        origin_param = result["mean_param"]
+
+
+
+    pcs = result["pcs_components"]
+    first_n_pcs = pcs[:cma_args.n_comp_to_use]
+    starting_coord = do_proj_on_first_n(start_params, first_n_pcs, origin_param)
     # starting_coord = np.random.rand(1, cma_args.n_comp_to_use)
 
 
@@ -252,11 +265,16 @@ def main():
 
 
     # starting_coord = (1/2*np.max(xcoordinates_to_eval), 1/2*np.max(ycoordinates_to_eval)) # use mean
-    assert result["first_n_pcs"].shape[0] == cma_args.n_comp_to_use
-    mean_rets, min_rets, max_rets, opt_path, opt_path_mean, best_theta = do_cma(cma_args, result["first_n_pcs"],
+    assert first_n_pcs.shape[0] == cma_args.n_comp_to_use
+    mean_rets, min_rets, max_rets, opt_path, opt_path_mean, best_theta = do_cma(cma_args, first_n_pcs,
                                                                     origin_param, save_dir, starting_coord, cma_args.cma_var)
+
     # np.savetxt(f"{cma_intermediate_data_dir}/opt_mean_path.csv", opt_path_mean, delimiter=',')
     np.savetxt(f"{cma_intermediate_data_dir}/{best_theta_file_name}.csv", best_theta, delimiter=',')
+
+
+
+
 
     # else:
     #     best_theta = np.loadtxt(f"{cma_intermediate_data_dir}/{best_theta_file_name}.csv", delimiter=',')
@@ -277,6 +295,23 @@ def main():
     if not os.path.exists(cma_and_then_ppo_plot_dir):
         os.makedirs(cma_and_then_ppo_plot_dir)
 
+
+
+    if cma_args.n_comp_to_use <= 2:
+        proj_coords = result["proj_coords"]
+        assert proj_coords.shape[1] == 2
+        opt_path_mean_2d = np.hstack((opt_path_mean, np.zeros((1, len(opt_path_mean))).T))
+        xcoordinates_to_eval, ycoordinates_to_eval = gen_subspace_coords(cma_args, np.vstack((proj_coords, opt_path_mean_2d)).T)
+
+        eval_returns = do_eval_returns(cma_args, intermediate_data_dir, pcs[2], origin_param,
+                        xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center=origin, reuse=False)
+
+        plot_contour_trajectory(cma_and_then_ppo_plot_dir, f"{origin}_origin_eval_return_contour_plot", xcoordinates_to_eval,
+                                ycoordinates_to_eval, eval_returns, proj_coords[:, 0], proj_coords[:, 1],
+                                result["explained_variance_ratio"][:2],
+                                num_levels=25, show=False, sub_alg_path=opt_path_mean_2d)
+
+
     ret_plot_name = f"cma return on {cma_args.n_comp_to_use} dim space of real pca plane, " \
                     f"explained {np.sum(result['explained_variance_ratio'][:cma_args.n_comp_to_use])}"
     plot_cma_returns(cma_and_then_ppo_plot_dir, ret_plot_name, mean_rets, min_rets, max_rets, show=False)
@@ -285,6 +320,8 @@ def main():
     final_ppo_ep_name = f"final episodes returns after CMA"
     plot_2d(cma_and_then_ppo_plot_dir, final_ppo_ep_name, np.arange(len(episode_returns)),
             episode_returns, "num episode", "episode returns", False)
+
+
 
     #
     # if cma_args.n_comp_to_use == 2:
@@ -304,7 +341,7 @@ def main():
 
     skip_rows = lambda x: x%2 == 0
     conti_ppo_params = get_allinone_concat_df(conti_ppo_full_param_traj_dir_path, index=0, skip_rows=skip_rows).values
-    opt_mean_path_in_old_basis = [mean_projected_param.dot(result["first_n_pcs"]) + result["mean_param"] for mean_projected_param in opt_path_mean]
+    opt_mean_path_in_old_basis = [mean_projected_param.dot(first_n_pcs) + result["mean_param"] for mean_projected_param in opt_path_mean]
     distance_to_final = [LA.norm(opt_mean - result["final_concat_params"], ord=2) for opt_mean in np.vstack((opt_mean_path_in_old_basis, conti_ppo_params))]
     distance_to_final_plot_name = f"distance_to_final over generations "
     plot_2d(cma_and_then_ppo_plot_dir, distance_to_final_plot_name, np.arange(len(distance_to_final)), distance_to_final, "num generation", "distance_to_final", False)

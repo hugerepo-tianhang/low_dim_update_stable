@@ -640,9 +640,9 @@ wait
 #sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 5000 5000 20000 500 10; sleep 1; ps
 #sleep 1; first_n_2d_plane_angle_vs_final_2d_plane 0 'DartWalker2d-v1' 5000 5000 20000 500 500; sleep 1; ps
 
-#sleep 1; first_n_pc1_vs_final_minus_start 1 'DartReacher-v1' 32 2048 675000 100; sleep 1; ps
-#sleep 1; first_n_pc1_vs_final_minus_start 0 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
-#sleep 1; first_n_pc1_vs_final_minus_start 1 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
+sleep 1; first_n_pc1_vs_final_minus_start 1 'DartWalker2d-v1' 32 2048 675000 100; sleep 1; ps
+sleep 1; first_n_pc1_vs_final_minus_start 0 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
+sleep 1; first_n_pc1_vs_final_minus_start 1 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
 #sleep 1; pc1_vs_V 0 'DartHopper-v1' 32 2048 1000000 150; sleep 1; ps
 #sleep 1; pc1_vs_V 0 'DartWalker2d-v1' 512 2048 675000 500; sleep 1; ps
 
@@ -653,9 +653,13 @@ wait
 ##sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" 15; sleep 1; ps
 #sleep 1; cma_redo 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 10; sleep 1; ps
 #sleep 1; cma_redo 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 10; sleep 1; ps
-sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 50 10 600000; sleep 1; ps
-sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 2 10 600000; sleep 1; ps
-sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 2 50 600000; sleep 1; ps
+sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "start_param" 1 10 600000; sleep 1; ps
+sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "start_param" 1 1 600000; sleep 1; ps
+
+sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "start_param" 2 10 600000; sleep 1; ps
+sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "start_param" 2 1 600000; sleep 1; ps
+sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "start_param" 10 10 600000; sleep 1; ps
+#sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 1 10 600000; sleep 1; ps
 ##
 #
 #sleep 1; WPCA_first_n_VS_last_plane 0 'DartWalker2d-v1' 675000 1000 20000 1 500 0; sleep 1; ps

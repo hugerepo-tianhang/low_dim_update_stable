@@ -1,5 +1,7 @@
 '''
-1.
+1.pick two random bad components cma contour plot. ppo
+
+
 1. is it true that if you follow pc1 you always get better. Just plot Y = start + pc1 * N * alpha. That means that there
 exist a general direction. this direction means make some feature more important and some feature less important will
 always make the agent perform better.
