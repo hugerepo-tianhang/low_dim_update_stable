@@ -662,7 +662,6 @@ wait
 #sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 1 10 600000; sleep 1; ps
 ##
 #
-sleep 1; WPCA_first_n_VS_last_plane 0 'DartWalker2d-v1' 675000 100 20000 1 500 0; sleep 1; ps
 
 #sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 50 10 600000; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 100 100; sleep 1; ps
@@ -699,7 +698,9 @@ sleep 1; WPCA_first_n_VS_last_plane 0 'DartWalker2d-v1' 675000 100 20000 1 500 0
 
 #sleep 1; dup_last_part_to_approx_pc1 0 'DartWalker2d-v1' 32 2048 1000000 3000 20000 'sgd'; sleep 1; ps
 ##sleep 1; dup_last_part_to_approx_pc1 1 'DartWalker2d-v1' 32 2048 1000000 100 10000 'sgd'; sleep 1; ps
-#sleep 1; dup_last_part_to_approx_pc1 0 'DartWalker2d-v1' 32 2048 675000 3000 20000 'adam'; sleep 1; ps
+sleep 1; dup_last_part_to_approx_pc1 0 'DartWalker2d-v1' 32 2048 675000 1000 20000 'adam'; sleep 1; ps
+sleep 1; WPCA_first_n_VS_last_plane 0 'DartWalker2d-v1' 675000 200 20000 1 500 0; sleep 1; ps
+
 #sleep 1; dup_last_part_to_approx_pc1 1 'DartWalker2d-v1' 32 2048 675000 3000 20000 'adam'; sleep 1; ps
 ##sleep 1; dup_last_part_to_approx_pc1 2 'DartWalker2d-v1' 32 2048 675000 100 10000 'adam'; sleep 1; ps
 
