@@ -4,8 +4,8 @@
 
 1. is it true that if you follow pc1 you always get better. Just plot Y = start + pc1 * N * alpha. That means that there
 exist a general direction. this direction means make some feature more important and some feature less important will
-always make the agent perform better.
-2. what is the explained raiios of pcs along the way. is the pc1 evolving in 2d or what?
+always make the agent perform better. no
+2. what is the explained raiios of pcs along the way. is the pc1 evolving in 2d or what? yes
 3. later part pc1 vs final - start, is everything later already identify pc1?
 4. weight later part heavier make it drag angle down further.
 
