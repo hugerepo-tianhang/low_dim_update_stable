@@ -111,7 +111,7 @@ def mujoco_arg_parser():
     parser = arg_parser()
     parser.register('type', 'bool', str2bool)
     parser.add_argument("--normalize", type='bool', default=True)
-    parser.add_argument('--env', help='environment ID', type=str, default='DartReacher')
+    parser.add_argument('--env', help='environment ID', type=str, default='DartWalker2d-v1')
     parser.add_argument('--seed', help='RNG seed', type=int, default=0)
     parser.add_argument('--run_num', default=0, type=int, help='which run number')
     parser.add_argument('--nminibatches', default=32, type=int, help='which run number')

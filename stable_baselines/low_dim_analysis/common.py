@@ -130,7 +130,7 @@ def do_eval_returns(plot_args, intermediate_data_dir, first_n_pcs, origin_param,
 def do_pca(n_components, n_comp_to_project_on, traj_params_dir_name,
            intermediate_data_dir, proj, origin="final_param", use_IPCA=False, chunk_size=None, reuse=True):
     logger.log("grab final params")
-    final_file = get_full_param_traj_file_path(traj_params_dir_name, "final")
+    final_file = get_full_param_traj_file_path(traj_params_dir_name, "pi_final")
     final_concat_params = pd.read_csv(final_file, header=None).values[0]
 
 
@@ -147,7 +147,7 @@ def do_pca(n_components, n_comp_to_project_on, traj_params_dir_name,
 
             tic = time.time()
             concat_df = get_allinone_concat_df(dir_name=traj_params_dir_name,
-                                               use_IPCA=use_IPCA, chunk_size=chunk_size)
+                                               use_IPCA=use_IPCA, chunk_size=chunk_size, index="pi_all_params")
             toc = time.time()
             print('\nElapsed time getting the chunk concat diff took {:.2f} s\n'
                   .format(toc - tic))
@@ -167,7 +167,7 @@ def do_pca(n_components, n_comp_to_project_on, traj_params_dir_name,
 
         else:
             tic = time.time()
-            concat_df = get_allinone_concat_df(dir_name=traj_params_dir_name)
+            concat_df = get_allinone_concat_df(dir_name=traj_params_dir_name, index="pi_all_params")
             concat_matrix = concat_df.values
 
             toc = time.time()
@@ -203,7 +203,7 @@ def do_pca(n_components, n_comp_to_project_on, traj_params_dir_name,
 
         elif origin == "start_param":
             logger.log("grab start params")
-            start_file = get_full_param_traj_file_path(traj_params_dir_name, "start")
+            start_file = get_full_param_traj_file_path(traj_params_dir_name, "pi_start")
             start_params = pd.read_csv(start_file, header=None).values[0]
             origin_param = start_params
         else:
@@ -553,7 +553,7 @@ def plot_3d_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, proj_x
     if show: plt.show()
 
 
-def get_allinone_concat_df(dir_name, use_IPCA=False, chunk_size=None, index = 0, skip_rows=None):
+def get_allinone_concat_df(dir_name, use_IPCA=False, chunk_size=None, index="pi_all_params", skip_rows=None):
 
     theta_file = get_full_param_traj_file_path(dir_name, index)
     if use_IPCA:

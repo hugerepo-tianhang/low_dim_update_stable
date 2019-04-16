@@ -64,7 +64,7 @@ def do_cma(cma_args, first_n_pcs, orgin_param, save_dir, starting_coord, var):
     es = cma.CMAEvolutionStrategy(starting_coord, var)
     total_num_of_evals = 0
     total_num_timesteps = 0
-    best_ever_theta = None
+    best_ever_pi_theta = None
     best_ever_return = -float("inf")
 
     mean_rets = []
@@ -76,17 +76,17 @@ def do_cma(cma_args, first_n_pcs, orgin_param, save_dir, starting_coord, var):
     while total_num_timesteps < cma_args.cma_num_timesteps and not es.stop():
         solutions = es.ask()
         optimization_path.extend(solutions)
-        thetas = [np.matmul(coord, first_n_pcs) + orgin_param for coord in solutions]
+        pi_thetas = [np.matmul(coord, first_n_pcs) + orgin_param for coord in solutions]
         logger.log(f"current time steps num: {total_num_timesteps} total time steps: {cma_args.cma_num_timesteps}")
         eval_returns = Parallel(n_jobs=cma_args.cores_to_use) \
-            (delayed(eval_return)(cma_args, save_dir, theta, cma_args.eval_num_timesteps, i) for
-             (i, theta) in enumerate(thetas))
+            (delayed(eval_return)(cma_args, save_dir, pi_theta, cma_args.eval_num_timesteps, i) for
+             (i, pi_theta) in enumerate(pi_thetas))
 
 
 
         if np.max(eval_returns) > best_ever_return:
             logger.debug(f"current best return: {np.max(eval_returns)}, last best return {best_ever_return}")
-            best_ever_theta = thetas[np.argmax(eval_returns)]
+            best_ever_pi_theta = pi_thetas[np.argmax(eval_returns)]
 
         mean_rets.append(np.mean(eval_returns))
         min_rets.append(np.min(eval_returns))
@@ -116,10 +116,10 @@ def do_cma(cma_args, first_n_pcs, orgin_param, save_dir, starting_coord, var):
     n_comp_used = first_n_pcs.shape[0]
     optimization_path_mean = np.vstack((starting_coord, es_logger.xmean[:,5:5+n_comp_used]))
 
-    return mean_rets, min_rets, max_rets, np.array(optimization_path), np.array(optimization_path_mean), best_ever_theta
+    return mean_rets, min_rets, max_rets, np.array(optimization_path), np.array(optimization_path_mean), best_ever_pi_theta
 
 
-def do_ppo(args, start_theta, parent_this_run_dir, full_space_save_dir):
+def do_ppo(args, start_pi_theta, parent_this_run_dir, full_space_save_dir):
 
     """
     Runs the test
@@ -156,8 +156,8 @@ def do_ppo(args, start_theta, parent_this_run_dir, full_space_save_dir):
     if args.normalize:
         env = VecNormalize(env)
 
-    model = PPO2.load(f"{full_space_save_dir}/ppo2")
-    model.set_from_flat(start_theta)
+    model = PPO2.load(f"{full_space_save_dir}/ppo2") # load after V
+    model.set_pi_from_flat(start_pi_theta) # don't set Vf's searched from CMA, those weren't really tested.
 
     if args.normalize:
         env.load_running_average(full_space_save_dir)
@@ -195,7 +195,7 @@ def main():
     this_run_dir = get_dir_path_for_this_run(cma_args)
 
     traj_params_dir_name = get_full_params_dir(this_run_dir)
-    intermediate_data_dir = get_intermediate_data_dir(this_run_dir)
+    intermediate_data_dir = get_intermediate_data_dir(this_run_dir, params_scope="pi")
     save_dir = get_save_dir( this_run_dir)
 
 
@@ -241,7 +241,7 @@ def main():
     from stable_baselines.low_dim_analysis.common import plot_contour_trajectory, gen_subspace_coords,do_eval_returns, \
         do_proj_on_first_n
     logger.log("grab start params")
-    start_file = get_full_param_traj_file_path(traj_params_dir_name, "start")
+    start_file = get_full_param_traj_file_path(traj_params_dir_name, "pi_start")
     start_params = pd.read_csv(start_file, header=None).values[0]
 
 
@@ -265,11 +265,11 @@ def main():
 
     # starting_coord = (1/2*np.max(xcoordinates_to_eval), 1/2*np.max(ycoordinates_to_eval)) # use mean
     assert first_n_pcs.shape[0] == cma_args.n_comp_to_use
-    mean_rets, min_rets, max_rets, opt_path, opt_path_mean, best_theta = do_cma(cma_args, first_n_pcs,
+    mean_rets, min_rets, max_rets, opt_path, opt_path_mean, best_pi_theta = do_cma(cma_args, first_n_pcs,
                                                                     origin_param, save_dir, starting_coord, cma_args.cma_var)
 
     # np.savetxt(f"{cma_intermediate_data_dir}/opt_mean_path.csv", opt_path_mean, delimiter=',')
-    np.savetxt(f"{cma_intermediate_data_dir}/{best_theta_file_name}.csv", best_theta, delimiter=',')
+    np.savetxt(f"{cma_intermediate_data_dir}/{best_theta_file_name}.csv", best_pi_theta, delimiter=',')
 
 
 
@@ -281,8 +281,9 @@ def main():
 
 
 
-    episode_returns, conti_ppo_full_param_traj_dir_path = do_ppo(args=cma_args, start_theta=best_theta, parent_this_run_dir=cma_intermediate_data_dir, full_space_save_dir=save_dir)
-    dump_row_write_csv(cma_intermediate_data_dir, episode_returns, "ppo part returns")
+    episode_returns, conti_ppo_full_param_traj_dir_path = do_ppo(args=cma_args, start_pi_theta=best_pi_theta, parent_this_run_dir=cma_intermediate_data_dir, full_space_save_dir=save_dir)
+    # dump_row_write_csv(cma_intermediate_data_dir, episode_returns, "ppo part returns")
+    np.savetxt(f"{cma_intermediate_data_dir}/ppo part returns.csv", episode_returns, delimiter=",")
 
 
 
@@ -294,13 +295,20 @@ def main():
     if not os.path.exists(cma_and_then_ppo_plot_dir):
         os.makedirs(cma_and_then_ppo_plot_dir)
 
-
+    conti_ppo_params = get_allinone_concat_df(conti_ppo_full_param_traj_dir_path, index="pi_all_params").values
 
     if cma_args.n_comp_to_use <= 2:
         proj_coords = result["proj_coords"]
         assert proj_coords.shape[1] == 2
-        opt_path_mean_2d = np.hstack((opt_path_mean, np.zeros((1, len(opt_path_mean))).T))
+        if cma_args.n_comp_to_use == 1:
+            opt_path_mean_2d = np.hstack((opt_path_mean, np.zeros((1, len(opt_path_mean))).T))
+        else:
+            opt_path_mean_2d = opt_path_mean
         xcoordinates_to_eval, ycoordinates_to_eval = gen_subspace_coords(cma_args, np.vstack((proj_coords, opt_path_mean_2d)).T)
+
+
+        projected_after_ppo_params = do_proj_on_first_n(conti_ppo_params, pcs[2], origin_param)
+        full_path = np.vstack((opt_path_mean_2d, projected_after_ppo_params))
 
         eval_returns = do_eval_returns(cma_args, intermediate_data_dir, pcs[2], origin_param,
                         xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center=origin, reuse=False)
@@ -308,7 +316,7 @@ def main():
         plot_contour_trajectory(cma_and_then_ppo_plot_dir, f"{origin}_origin_eval_return_contour_plot", xcoordinates_to_eval,
                                 ycoordinates_to_eval, eval_returns, proj_coords[:, 0], proj_coords[:, 1],
                                 result["explained_variance_ratio"][:2],
-                                num_levels=25, show=False, sub_alg_path=opt_path_mean_2d)
+                                num_levels=25, show=False, sub_alg_path=full_path)
 
 
     ret_plot_name = f"cma return on {cma_args.n_comp_to_use} dim space of real pca plane, " \
@@ -338,8 +346,6 @@ def main():
     #                             num_levels=25, show=False, sub_alg_path=opt_path_mean)
 
 
-    skip_rows = lambda x: x%2 == 0
-    conti_ppo_params = get_allinone_concat_df(conti_ppo_full_param_traj_dir_path, index=0, skip_rows=skip_rows).values
     opt_mean_path_in_old_basis = [mean_projected_param.dot(first_n_pcs) + result["mean_param"] for mean_projected_param in opt_path_mean]
     distance_to_final = [LA.norm(opt_mean - result["final_concat_params"], ord=2) for opt_mean in np.vstack((opt_mean_path_in_old_basis, conti_ppo_params))]
     distance_to_final_plot_name = f"distance_to_final over generations "

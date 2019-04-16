@@ -30,9 +30,9 @@ def get_full_params_dir(this_run_dir):
 
     return f"{this_run_dir}/full_params"
 
-def get_intermediate_data_dir(this_run_dir):
+def get_intermediate_data_dir(this_run_dir, params_scope="pi"):
 
-    return f"{this_run_dir}/intermediate_data"
+    return f"{this_run_dir}/{params_scope}_intermediate_data"
 
 
 def get_eval_losses_file_path(dir_name, total_timesteps):

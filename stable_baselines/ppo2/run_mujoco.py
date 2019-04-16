@@ -95,7 +95,7 @@ def train(args):
 
 
 
-def eval_return(args, save_dir, theta,  eval_timesteps, i):
+def eval_return(args, save_dir, pi_theta, eval_timesteps, i):
     # logger.log(f"#######EVAL: {args}")
 
     def make_env():
@@ -108,9 +108,9 @@ def eval_return(args, save_dir, theta,  eval_timesteps, i):
     if args.normalize:
         env = VecNormalize(env)
 
-    model = PPO2.load(f"{save_dir}/ppo2")
-    if theta is not None:
-        model.set_from_flat(theta)
+    model = PPO2.load(f"{save_dir}/ppo2") # this also loads V function
+    if pi_theta is not None:
+        model.set_pi_from_flat(pi_theta)
 
     if args.normalize:
         env.load_running_average(save_dir)
@@ -132,7 +132,7 @@ def eval_return(args, save_dir, theta,  eval_timesteps, i):
         # env.render()
         done = done.any()
         if done:
-            if theta is None:
+            if pi_theta is None:
                 episode_rew = safe_mean([ep_info['r'] for ep_info in ep_infos])
                 print(f'episode_rew={episode_rew}')
             obs = env.reset()

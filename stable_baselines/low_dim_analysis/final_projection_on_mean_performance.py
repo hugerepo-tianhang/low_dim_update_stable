@@ -46,7 +46,7 @@ def main(n_comp_start=2, do_eval=True):
     this_run_dir = get_dir_path_for_this_run(cma_args)
 
     traj_params_dir_name = get_full_params_dir(this_run_dir)
-    intermediate_data_dir = get_intermediate_data_dir(this_run_dir)
+    intermediate_data_dir = get_intermediate_data_dir(this_run_dir, params_scope="pi")
     save_dir = get_save_dir( this_run_dir)
 
 
@@ -83,32 +83,25 @@ def main(n_comp_start=2, do_eval=True):
         os.makedirs(plot_dir)
 
     if do_eval:
-        if not os.path.exists(get_projected_finals_eval_returns_filename(intermediate_dir=intermediate_data_dir,
-                                                                         n_comp_start=n_comp_start,
-                                                                         np_comp_end=all_pcs.shape[0],
-                                                                         pca_center=origin)):
 
-            from stable_baselines.ppo2.run_mujoco import eval_return
-            thetas_to_eval = projected
 
-            tic = time.time()
+        from stable_baselines.ppo2.run_mujoco import eval_return
+        thetas_to_eval = projected
 
-            eval_returns = Parallel(n_jobs=cma_args.cores_to_use, max_nbytes='100M') \
-                (delayed(eval_return)(cma_args, save_dir, theta, cma_args.eval_num_timesteps, i) for (i, theta) in
-                 enumerate(thetas_to_eval))
-            toc = time.time()
-            logger.log(f"####################################1st version took {toc-tic} seconds")
+        tic = time.time()
 
-            np.savetxt(get_projected_finals_eval_returns_filename(intermediate_dir=intermediate_data_dir,
-                                                                         n_comp_start=n_comp_start,
-                                                                         np_comp_end=all_pcs.shape[0],
-                                                                         pca_center=origin),
-                       eval_returns, delimiter=',')
-        else:
-            eval_returns = np.loadtxt(get_projected_finals_eval_returns_filename(intermediate_dir=intermediate_data_dir,
-                                                                         n_comp_start=n_comp_start,
-                                                                         np_comp_end=all_pcs.shape[0],
-                                                                         pca_center=origin), delimiter=',')
+        eval_returns = Parallel(n_jobs=cma_args.cores_to_use, max_nbytes='100M') \
+            (delayed(eval_return)(cma_args, save_dir, theta, cma_args.eval_num_timesteps, i) for (i, theta) in
+             enumerate(thetas_to_eval))
+        toc = time.time()
+        logger.log(f"####################################1st version took {toc-tic} seconds")
+
+        np.savetxt(get_projected_finals_eval_returns_filename(intermediate_dir=intermediate_data_dir,
+                                                                     n_comp_start=n_comp_start,
+                                                                     np_comp_end=all_pcs.shape[0],
+                                                                     pca_center=origin),
+                   eval_returns, delimiter=',')
+
         ret_plot_name = f"final project performances on start: {n_comp_start} end:{all_pcs.shape[0]} dim space of mean pca plane, "
         plot_final_project_returns_returns(plot_dir, ret_plot_name, eval_returns, n_comp_start, all_pcs.shape[0], show=False)
 

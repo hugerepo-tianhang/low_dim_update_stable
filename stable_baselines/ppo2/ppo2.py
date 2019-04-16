@@ -166,9 +166,14 @@ class PPO2(ActorCriticRLModel):
 
                     with tf.variable_scope('model'):
                         self.params = tf.trainable_variables()
+                        self.pi_params = [ p for p in self.params if "model/pi" in p.name ]
+                        self.vf_params = [ p for p in self.params if "model/pi" not in p.name]
+                        assert len(self.pi_params) + len(self.vf_params) == len(self.params)
+                        self.get_vf_flat = tf_util.GetFlat(self.vf_params, sess=self.sess)
+                        self.get_pi_flat = tf_util.GetFlat(self.pi_params, sess=self.sess)
 
-                        self.get_flat = tf_util.GetFlat(self.params, sess=self.sess)
-                        self.set_from_flat = tf_util.SetFromFlat(self.params, sess=self.sess)
+                        self.set_vf_from_flat = tf_util.SetFromFlat(self.vf_params, sess=self.sess)
+                        self.set_pi_from_flat = tf_util.SetFromFlat(self.pi_params, sess=self.sess)
 
                         if self.full_tensorboard_log:
                             for var in self.params:
@@ -224,6 +229,8 @@ class PPO2(ActorCriticRLModel):
 
     def tell_run_info(self, run_info):
         self.run_info = run_info
+
+
 
     def dump(self, var_list, index):
         var_output_file = get_full_param_traj_file_path(dir_name=self.run_info["full_param_traj_dir_path"], index=index)
@@ -324,8 +331,11 @@ class PPO2(ActorCriticRLModel):
                 as writer:
 
             if self.run_info is not None:
-                flat_params = self.get_flat()
-                self.dump(flat_params, "start")
+                vf_flat_params = self.get_vf_flat()
+                pi_flat_params = self.get_pi_flat()
+                self.dump(vf_flat_params, "vf_start")
+                self.dump(pi_flat_params, "pi_start")
+
             self._setup_learn(seed)
 
             runner = Runner(env=self.env, model=self, n_steps=self.n_steps, gamma=self.gamma, lam=self.lam)
@@ -370,8 +380,13 @@ class PPO2(ActorCriticRLModel):
                                 #     current_non_skipped = 0
                                 # else:
                                 grads = train_result[-1]
-                                flat_params = self.get_flat()
-                                self.dump(flat_params, 0)
+
+                                vf_flat_params = self.get_vf_flat()
+                                pi_flat_params = self.get_pi_flat()
+                                self.dump(vf_flat_params, "vf_all_params")
+                                self.dump(pi_flat_params, "pi_all_params")
+
+                                # self.dump(flat_params, 0)
                                 self.dump(grads, "grads")
                                 # current_non_skipped += 1
                                 total_num_dumped += 1
@@ -433,8 +448,12 @@ class PPO2(ActorCriticRLModel):
                         break
 
             if self.run_info is not None:
-                flat_params = self.get_flat()
-                self.dump(flat_params, "final")
+                vf_flat_params = self.get_vf_flat()
+                pi_flat_params = self.get_pi_flat()
+                self.dump(vf_flat_params, "vf_final")
+                self.dump(pi_flat_params, "pi_final")
+
+
                 self.dump([total_num_dumped], "total_num_dumped")
             return  [ep_info['r'] for ep_info in ep_full_infos]
 
