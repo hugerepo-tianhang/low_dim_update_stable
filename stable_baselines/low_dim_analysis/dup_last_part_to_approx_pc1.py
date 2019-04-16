@@ -78,10 +78,10 @@ def main():
     undup_ipca = IncrementalPCA(n_components=1)  # for sparse PCA to speed up
 
     all_matrix_buffer = []
-    i = -1
+    aaa = -1
     for chunk in all_param_iterator:
-        i+=1
-        if i >= 10:
+        aaa+=1
+        if aaa >= 10:
             break
         chunk = chunk.values
         undup_ipca.partial_fit(chunk)
