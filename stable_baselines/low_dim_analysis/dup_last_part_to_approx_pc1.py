@@ -81,7 +81,7 @@ def main():
     aaa = -1
     for chunk in all_param_iterator:
         aaa+=1
-        if aaa >= 10:
+        if aaa >= 4:
             break
         chunk = chunk.values
         undup_ipca.partial_fit(chunk)
