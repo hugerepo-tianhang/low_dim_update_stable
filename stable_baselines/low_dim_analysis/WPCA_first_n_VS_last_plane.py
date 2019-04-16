@@ -104,7 +104,11 @@ def main():
 
 
     try:
+        i = -1
         for chunk in all_param_iterator:
+            i+=1
+            if i >= 2:
+                break
             chunk = chunk.values
             unweighted_ipca.partial_fit(chunk)
             unweighted_angle = cal_angle_between_nd_planes(final_plane,

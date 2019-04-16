@@ -249,7 +249,6 @@ def main():
         origin_param = result["final_concat_params"]
     elif origin=="start_param":
         origin_param = start_params
-
     else:
         origin_param = result["mean_param"]
 
