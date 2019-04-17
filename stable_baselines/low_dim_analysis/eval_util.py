@@ -57,6 +57,9 @@ def get_cma_and_then_ppo_plot_dir(plot_dir, n_comp_to_use, run_num, cma_num_step
     return f'{plot_dir}/cma_and_then_ppo/cma_and_then_ppo_n_comp_{n_comp_to_use}' \
            f'_ppo_num_steps_{ppo_num_steps}_cma_num_steps_{cma_num_steps}_origin_{origin}_run_num_{run_num}'
 
+def get_other_pcs_plane_plot_dir(plot_dir, other_pcs):
+    return f'{plot_dir}/other_pcs_{other_pcs}'
+
 
 def get_ppos_plot_dir(plot_dir, n_comp_to_use, cma_run_num):
     return f'{plot_dir}/ppos/ppos_n_comp_{n_comp_to_use}_run_num_{cma_run_num}'

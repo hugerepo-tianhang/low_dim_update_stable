@@ -39,7 +39,11 @@ def generate_run_dir(get_cma_returns_dirname, **kargs):
     os.makedirs(cma_intermediate_data_dir)
 
     return cma_run_num, cma_intermediate_data_dir
-def gen_subspace_coords(plot_args, proj_coord):
+
+
+def gen_subspace_coords(plot_args, proj_coord, center_length=None):
+
+
     proj_xcoord, proj_ycoord = proj_coord[0], proj_coord[1]
 
     xmin, xmax = np.min(proj_xcoord), np.max(proj_xcoord)
@@ -54,6 +58,11 @@ def gen_subspace_coords(plot_args, proj_coord):
     xmax += plot_args.padding_fraction * x_len
     ymin -= plot_args.padding_fraction * y_len
     ymax += plot_args.padding_fraction * y_len
+    if center_length is not None:
+        xmin = min(xmin, -center_length)
+        xmax = max(xmax, center_length)
+        ymin = min(ymin, -center_length)
+        ymax = max(ymax, center_length)
 
     xcoordinates_to_eval = np.linspace(xmin, xmax, plot_args.xnum)
     ycoordinates_to_eval = np.linspace(ymin, ymax, plot_args.ynum)
@@ -127,7 +136,7 @@ def do_eval_returns(plot_args, intermediate_data_dir, first_n_pcs, origin_param,
     return eval_returns
 
 
-def do_pca(n_components, n_comp_to_project_on, traj_params_dir_name,
+def do_pca(n_components, n_comp_slice_to_project_on, traj_params_dir_name,
            intermediate_data_dir, proj, origin="final_param", use_IPCA=False, chunk_size=None, reuse=True):
     logger.log("grab final params")
     final_file = get_full_param_traj_file_path(traj_params_dir_name, "pi_final")
@@ -188,7 +197,7 @@ def do_pca(n_components, n_comp_to_project_on, traj_params_dir_name,
 
         pcs_components = final_pca.components_
 
-        first_n_projected_on_pcs = pcs_components[:n_comp_to_project_on]
+        first_n_projected_on_pcs = pcs_components[n_comp_slice_to_project_on]
         mean_param = final_pca.mean_
         explained_variance_ratio = final_pca.explained_variance_ratio_
 
@@ -234,7 +243,7 @@ def do_pca(n_components, n_comp_to_project_on, traj_params_dir_name,
     else:
         pcs_components = np.loadtxt(
             get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components), delimiter=',')
-        first_n_projected_on_pcs = pcs_components[:n_comp_to_project_on]
+        first_n_projected_on_pcs = pcs_components[n_comp_slice_to_project_on]
         mean_param = np.loadtxt(get_mean_param_filename(intermediate_dir=intermediate_data_dir), delimiter=',')
         explained_variance_ratio = np.loadtxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components),
                    delimiter=',')
@@ -244,7 +253,7 @@ def do_pca(n_components, n_comp_to_project_on, traj_params_dir_name,
 
     result = {
         "pcs_components": pcs_components,
-        "first_n_pcs": first_n_projected_on_pcs,
+        "projected_pcs": first_n_projected_on_pcs,
         "mean_param":mean_param,
         "final_concat_params":final_concat_params,
         "explained_variance_ratio":explained_variance_ratio,
@@ -459,20 +468,21 @@ def plot_contour_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, p
     if sub_alg_path is not None:
         assert sub_alg_path.shape[1] == 2
         plt.plot(sub_alg_path[:,0], sub_alg_path[:,1], marker='8')
+        plt.annotate('sub alg end', xy=(sub_alg_path[-1, 0], sub_alg_path[-1, 1]),
+                     xytext=(sub_alg_path[-1, 0] + 0.2, sub_alg_path[-1, 1] + 0.2),
+                     arrowprops=dict(facecolor='blue', shrink=0.05),
+                     )
 
+        plt.annotate('sub alg start', xy=(sub_alg_path[0, 0], sub_alg_path[0, 1]),
+                     xytext=(sub_alg_path[0, 0] + 0.2, sub_alg_path[0, 1] + 0.2),
+                     arrowprops=dict(facecolor='blue', shrink=0.05),
+                     )
 
-    plt.annotate('end', xy=(proj_xcoord[-1], proj_ycoord[-1]), xytext=(proj_xcoord[-1] + 0.2, proj_ycoord[-1] +0.2),
+    plt.annotate('end', xy=(proj_xcoord[-1], proj_ycoord[-1]), xytext=(proj_xcoord[-1], proj_ycoord[-1]),
                 arrowprops=dict(facecolor='black', shrink=0.05),
                 )
 
-    plt.annotate('sub alg end', xy=(sub_alg_path[-1,0], sub_alg_path[-1, 1]), xytext=(sub_alg_path[-1,0] + 0.2, sub_alg_path[-1, 1] +0.2),
-                arrowprops=dict(facecolor='blue', shrink=0.05),
-                )
 
-    plt.annotate('sub alg start', xy=(sub_alg_path[0,0], sub_alg_path[0,1]),
-                 xytext=(sub_alg_path[0,0] + 0.2, sub_alg_path[0,1] + 0.2),
-                 arrowprops=dict(facecolor='blue', shrink=0.05),
-                 )
     # plot red points when learning rate decays
     # for e in [150, 225, 275]:
     #     plt.plot([pf['proj_xcoord'][e]], [pf['proj_ycoord'][e]], marker='.', color='r')

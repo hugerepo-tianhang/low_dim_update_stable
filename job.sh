@@ -4,6 +4,7 @@
 cores_to_use=-1
 xnum=50
 ynum=50
+time_steps=675000
 
 nminibatches=32
 n_steps=2048
@@ -18,6 +19,9 @@ eval_num_timesteps=1024
 even_check_point_num=5
 normalize=True
 optimizer=adam
+
+use_IPCA=True
+chunk_size=10000
 
 plot_final_param_plane () {
     local run=$1
@@ -53,21 +57,22 @@ plot_mean_param_plane () {
 #                                    --n_components=$n_components --n_comp_to_use=$n_comp_to_use
 
 }
-plot_final_plane_with_9_10 () {
+plot_other_plane_return_landscape () {
     local run=$1
     local env=$2
 
-    echo "Welcome to plot_mean_param_plane: run number  $env $run"
+    local other_pca_index=$3
 
-    python -m stable_baselines.low_dim_analysis.plot_other_pca_plane_return_landscape \
+
+    echo "Welcome to plot_other_plane_return_landscape: run number  $env $run"
+
+    python -m stable_baselines.low_dim_analysis.plot_other_plane_return_landscape \
                                     --num-timesteps=$time_steps --run_num=$run --env=$env\
                                     --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
+                                    --nminibatches=$nminibatches --n_steps=$n_steps\
                                     --padding_fraction=$padding_fraction --eval_num_timesteps=$eval_num_timesteps\
-                                    --n_comp_to_use=$n_comp_to_use --n_components=$n_components --normalize=$normalize
-#    python -m stable_baselines.low_dim_analysis.just_pca \
-#                                    --num-timesteps=$time_steps --run_num=$run --env=$env\
-#                                    --cores_to_use=$cores_to_use --xnum=$xnum --ynum=$ynum\
-#                                    --n_components=$n_components --n_comp_to_use=$n_comp_to_use
+                                    --n_components=$n_components --normalize=$normalize\
+                                    --other_pca_index=$other_pca_index
 
 }
 run () {
@@ -645,7 +650,7 @@ wait
 #sleep 1; first_n_pc1_vs_final_minus_start 0 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
 #sleep 1; first_n_pc1_vs_final_minus_start 1 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
 #sleep 1; pc1_vs_V 0 'DartHopper-v1' 32 2048 1000000 150; sleep 1; ps
-#sleep 1; pc1_vs_V 0 'DartWalker2d-v1' 512 2048 675000 500; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 0 'DartWalker2d-v1' 100:400; sleep 1; ps
 
 #
 
