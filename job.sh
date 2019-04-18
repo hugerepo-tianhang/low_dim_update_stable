@@ -655,6 +655,8 @@ sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 200:499; s
 sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 499:498; sleep 1; ps
 sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 100:300; sleep 1; ps
 sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 10:9; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 3:4; sleep 1; ps
 sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 250:251; sleep 1; ps
 sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 350:351; sleep 1; ps
 

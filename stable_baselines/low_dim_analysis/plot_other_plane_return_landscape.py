@@ -31,7 +31,20 @@ import csv
 import os
 from stable_baselines.low_dim_analysis.eval_util import get_full_param_traj_file_path, get_full_params_dir, get_dir_path_for_this_run, get_log_dir, get_save_dir
 
-
+# def project(pcs, pcs_slice, origin_name, origin_param, IPCA_chunk_size, traj_params_dir_name, intermediate_data_dir, n_components, reuse):
+#     if not reuse or not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir,
+#                                                                      n_comp=n_components, pca_center=origin_name)):
+#         pcs_to_project_on = pcs[pcs_slice]
+#         concat_df = get_allinone_concat_df(dir_name=traj_params_dir_name, chunk_size=IPCA_chunk_size)
+#         proj_coords = do_proj_on_first_n_IPCA(concat_df, pcs_to_project_on, origin_param)
+#
+#         np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components,
+#                                                 pca_center=origin_name),
+#                proj_coords, delimiter=',')
+#     else:
+#         proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components,
+#                                                 pca_center=origin_name), delimiter=',')
+#     return proj_coords
 
 def main():
 
@@ -69,6 +82,8 @@ def main():
                     proj=True,
                     origin=origin, use_IPCA=cma_args.use_IPCA, chunk_size=cma_args.chunk_size, reuse=True)
     logger.debug("after pca")
+
+
     '''
     ==========================================================================================
     eval all xy coords

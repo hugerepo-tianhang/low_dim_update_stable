@@ -113,7 +113,7 @@ def do_eval_returns(plot_args, intermediate_data_dir, first_n_pcs, origin_param,
     eval_string = f"xnum_{np.min(xcoordinates_to_eval)}:{np.max(xcoordinates_to_eval)}:{plot_args.xnum}_" \
                     f"ynum_{np.min(ycoordinates_to_eval)}:{np.max(ycoordinates_to_eval)}:{plot_args.ynum}"
 
-    if not reuse and not os.path.exists(get_eval_returns_filename(intermediate_dir=intermediate_data_dir,
+    if not reuse or not os.path.exists(get_eval_returns_filename(intermediate_dir=intermediate_data_dir,
                                                     eval_string=eval_string, n_comp=2, pca_center=pca_center)):
 
         from stable_baselines.ppo2.run_mujoco import eval_return
@@ -231,7 +231,7 @@ def do_pca(n_components, n_comp_slice_to_project_on, traj_params_dir_name,
                 proj_coords = do_proj_on_first_n(concat_matrix, first_n_projected_on_pcs, origin_param)
 
             np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components,
-                                                            pca_center=origin),
+                                                            pca_center=origin, which_components=n_comp_slice_to_project_on),
                            proj_coords, delimiter=',')
 
         print("gc the big thing")
@@ -248,7 +248,10 @@ def do_pca(n_components, n_comp_slice_to_project_on, traj_params_dir_name,
         explained_variance_ratio = np.loadtxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components),
                    delimiter=',')
         if proj:
-            proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components, pca_center=origin), delimiter=',')
+            proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir,
+                                                                      n_comp=n_components, pca_center=origin,
+                                                                      which_components=n_comp_slice_to_project_on),
+                                     delimiter=',')
 
 
     result = {
