@@ -31,20 +31,20 @@ import csv
 import os
 from stable_baselines.low_dim_analysis.eval_util import get_full_param_traj_file_path, get_full_params_dir, get_dir_path_for_this_run, get_log_dir, get_save_dir
 
-# def project(pcs, pcs_slice, origin_name, origin_param, IPCA_chunk_size, traj_params_dir_name, intermediate_data_dir, n_components, reuse):
-#     if not reuse or not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir,
-#                                                                      n_comp=n_components, pca_center=origin_name)):
-#         pcs_to_project_on = pcs[pcs_slice]
-#         concat_df = get_allinone_concat_df(dir_name=traj_params_dir_name, chunk_size=IPCA_chunk_size)
-#         proj_coords = do_proj_on_first_n_IPCA(concat_df, pcs_to_project_on, origin_param)
-#
-#         np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components,
-#                                                 pca_center=origin_name),
-#                proj_coords, delimiter=',')
-#     else:
-#         proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components,
-#                                                 pca_center=origin_name), delimiter=',')
-#     return proj_coords
+def project(pcs, pcs_slice, origin_name, origin_param, IPCA_chunk_size, traj_params_dir_name, intermediate_data_dir, n_components, reuse):
+    if not reuse or not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir,
+                                                                     n_comp=n_components, pca_center=origin_name)):
+        pcs_to_project_on = pcs[pcs_slice]
+        concat_df = get_allinone_concat_df(dir_name=traj_params_dir_name, chunk_size=IPCA_chunk_size)
+        proj_coords = do_proj_on_first_n_IPCA(concat_df, pcs_to_project_on, origin_param)
+
+        np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components,
+                                                pca_center=origin_name),
+               proj_coords, delimiter=',')
+    else:
+        proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components,
+                                                pca_center=origin_name), delimiter=',')
+    return proj_coords
 
 def main():
 
@@ -54,7 +54,7 @@ def main():
     common_arg_parser = get_common_parser()
     cma_args, cma_unknown_args = common_arg_parser.parse_known_args()
 
-    origin = "final_param"
+    origin_name = "final_param"
 
     this_run_dir = get_dir_path_for_this_run(cma_args)
     plot_dir_alg = get_plot_dir(cma_args)
@@ -69,6 +69,13 @@ def main():
     if not os.path.exists(plot_dir_alg):
         os.makedirs(plot_dir_alg)
 
+
+    start_file = get_full_param_traj_file_path(traj_params_dir_name, "pi_start")
+    start_params = pd.read_csv(start_file, header=None).values[0]
+
+
+
+
     '''
     ==========================================================================================
     get the pc vectors
@@ -78,11 +85,23 @@ def main():
     pca_indexes = [int(pca_index) for pca_index in pca_indexes.split(":")]
 
     n_comp_to_project_on = pca_indexes
-    result = do_pca(cma_args.n_components, n_comp_to_project_on, traj_params_dir_name, intermediate_data_dir,
-                    proj=True,
-                    origin=origin, use_IPCA=cma_args.use_IPCA, chunk_size=cma_args.chunk_size, reuse=True)
+    result = do_pca(n_components=cma_args.n_components, traj_params_dir_name=traj_params_dir_name,
+                    intermediate_data_dir=intermediate_data_dir, use_IPCA=cma_args.use_IPCA,
+                    chunk_size=cma_args.chunk_size, reuse=True)
     logger.debug("after pca")
 
+    if origin_name =="final_param":
+        origin_param = result["final_params"]
+    elif origin_name =="start_param":
+        origin_param = start_params
+    else:
+        origin_param = result["mean_param"]
+    pcs_to_project_on = result["pcs_components"][n_comp_to_project_on]
+
+    proj_coords = project(cma_args.n_components, pcs_slice=n_comp_to_project_on, origin_name=origin_name,
+                          origin_param=origin_param, IPCA_chunk_size=cma_args.chunk_size,
+                          traj_params_dir_name=traj_params_dir_name, intermediate_data_dir=intermediate_data_dir,
+            n_components=cma_args.n_components, reuse=True)
 
     '''
     ==========================================================================================
@@ -95,14 +114,13 @@ def main():
         os.makedirs(other_pcs_plot_dir)
 
 
-    proj_coords = result["proj_coords"]
     assert proj_coords.shape[1] == 2
 
     xcoordinates_to_eval, ycoordinates_to_eval = gen_subspace_coords(cma_args, proj_coords, center_length=5)
 
-    eval_returns = do_eval_returns(cma_args, intermediate_data_dir, result["projected_pcs"],
-                                   result["final_concat_params"],
-                    xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center=origin, reuse=False)
+    eval_returns = do_eval_returns(cma_args, intermediate_data_dir, pcs_to_project_on,
+                                   result["final_params"],
+                    xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center=origin_name, reuse=False)
 
     plot_contour_trajectory(other_pcs_plot_dir, f"{pca_indexes}_final_origin_eval_return_contour_plot", xcoordinates_to_eval,
                             ycoordinates_to_eval, eval_returns, proj_coords[:, 0], proj_coords[:, 1],

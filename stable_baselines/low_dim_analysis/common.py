@@ -136,21 +136,18 @@ def do_eval_returns(plot_args, intermediate_data_dir, first_n_pcs, origin_param,
     return eval_returns
 
 
-def do_pca(n_components, n_comp_slice_to_project_on, traj_params_dir_name,
-           intermediate_data_dir, proj, origin="final_param", use_IPCA=False, chunk_size=None, reuse=True):
+def do_pca(n_components, traj_params_dir_name,
+           intermediate_data_dir, use_IPCA=False, chunk_size=None, reuse=True):
     logger.log("grab final params")
     final_file = get_full_param_traj_file_path(traj_params_dir_name, "pi_final")
-    final_concat_params = pd.read_csv(final_file, header=None).values[0]
+    final_params = pd.read_csv(final_file, header=None).values[0]
 
 
 
     proj_coords = None
     if not reuse or \
             not os.path.exists(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components))\
-        or not os.path.exists(get_mean_param_filename(intermediate_dir=intermediate_data_dir)) \
-        or (proj and not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir,
-                                                                         n_comp=n_components, pca_center=origin,
-                                                                         which_components=n_comp_slice_to_project_on))):
+        or not os.path.exists(get_mean_param_filename(intermediate_dir=intermediate_data_dir)):
         if use_IPCA:
             assert chunk_size != 0
             final_pca = IncrementalPCA(n_components=n_components)  # for sparse PCA to speed up
@@ -198,7 +195,6 @@ def do_pca(n_components, n_comp_slice_to_project_on, traj_params_dir_name,
 
         pcs_components = final_pca.components_
 
-        first_n_projected_on_pcs = pcs_components[n_comp_slice_to_project_on]
         mean_param = final_pca.mean_
         explained_variance_ratio = final_pca.explained_variance_ratio_
 
@@ -208,60 +204,21 @@ def do_pca(n_components, n_comp_slice_to_project_on, traj_params_dir_name,
         np.savetxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components),
                    explained_variance_ratio, delimiter=',')
 
-        if origin == "final_param":
-            origin_param = final_concat_params
-
-        elif origin == "start_param":
-            logger.log("grab start params")
-            start_file = get_full_param_traj_file_path(traj_params_dir_name, "pi_start")
-            start_params = pd.read_csv(start_file, header=None).values[0]
-            origin_param = start_params
-        else:
-            origin_param = mean_param
-
-
-
-
-        if proj:
-            if use_IPCA:
-                concat_df = get_allinone_concat_df(dir_name=traj_params_dir_name,
-                                                   use_IPCA=use_IPCA, chunk_size=chunk_size)
-                proj_coords = do_proj_on_first_n_IPCA(concat_df, first_n_projected_on_pcs, origin_param)
-
-            else:
-                proj_coords = do_proj_on_first_n(concat_matrix, first_n_projected_on_pcs, origin_param)
-
-            np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components,
-                                                            pca_center=origin, which_components=n_comp_slice_to_project_on),
-                           proj_coords, delimiter=',')
-
-        print("gc the big thing")
-        del concat_df
-        # if not use_IPCA:
-        #     del concat_matrix_diff
-        import gc
-        gc.collect()
     else:
         pcs_components = np.loadtxt(
             get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components), delimiter=',')
-        first_n_projected_on_pcs = pcs_components[n_comp_slice_to_project_on]
         mean_param = np.loadtxt(get_mean_param_filename(intermediate_dir=intermediate_data_dir), delimiter=',')
         explained_variance_ratio = np.loadtxt(get_explain_ratios_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components),
                    delimiter=',')
-        if proj:
-            proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir,
-                                                                      n_comp=n_components, pca_center=origin,
-                                                                      which_components=n_comp_slice_to_project_on),
-                                     delimiter=',')
+
+
 
 
     result = {
         "pcs_components": pcs_components,
-        "projected_pcs": first_n_projected_on_pcs,
         "mean_param":mean_param,
-        "final_concat_params":final_concat_params,
+        "final_params":final_params,
         "explained_variance_ratio":explained_variance_ratio,
-        "proj_coords":proj_coords
     }
     return result
 
