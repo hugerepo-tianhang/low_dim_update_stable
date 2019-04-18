@@ -650,10 +650,10 @@ wait
 #sleep 1; first_n_pc1_vs_final_minus_start 0 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
 #sleep 1; first_n_pc1_vs_final_minus_start 1 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
 #sleep 1; pc1_vs_V 0 'DartHopper-v1' 32 2048 1000000 150; sleep 1; ps
-sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 100:400; sleep 1; ps
-sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 200:499; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 100:101; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 200:201; sleep 1; ps
 sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 499:498; sleep 1; ps
-sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 100:300; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 301:300; sleep 1; ps
 sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 10:9; sleep 1; ps
 sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 1:2; sleep 1; ps
 sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 3:4; sleep 1; ps
