@@ -136,6 +136,22 @@ def do_eval_returns(plot_args, intermediate_data_dir, first_n_pcs, origin_param,
     return eval_returns
 
 
+def project(pcs, pcs_slice, origin_name, origin_param, IPCA_chunk_size, traj_params_dir_name, intermediate_data_dir, n_components, reuse):
+    if not reuse or not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir,
+                                                                     n_comp=n_components, pca_center=origin_name, which_components=pcs_slice)):
+        pcs_to_project_on = pcs[pcs_slice]
+        concat_df = get_allinone_concat_df(dir_name=traj_params_dir_name, use_IPCA=True, chunk_size=IPCA_chunk_size)
+        proj_coords = do_proj_on_first_n_IPCA(concat_df, pcs_to_project_on, origin_param)
+
+        np.savetxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components,
+                                                pca_center=origin_name, which_components=pcs_slice),
+               proj_coords, delimiter=',')
+    else:
+        proj_coords = np.loadtxt(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components,
+                                                pca_center=origin_name, which_components=pcs_slice), delimiter=',')
+    return proj_coords
+
+
 def do_pca(n_components, traj_params_dir_name,
            intermediate_data_dir, use_IPCA=False, chunk_size=None, reuse=True):
     logger.log("grab final params")

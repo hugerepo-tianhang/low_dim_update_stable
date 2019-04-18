@@ -189,7 +189,7 @@ def main():
     cma_args, cma_unknown_args = common_arg_parser.parse_known_args()
 
     # origin = "final_param"
-    origin = cma_args.origin
+    origin_name = cma_args.origin
 
 
     this_run_dir = get_dir_path_for_this_run(cma_args)
@@ -212,6 +212,8 @@ def main():
     #                                 cma_steps = cma_args.cma_num_timesteps, run_num=0)
     best_theta_file_name = "best theta from cma"
 
+    start_file = get_full_param_traj_file_path(traj_params_dir_name, "pi_start")
+    start_params = pd.read_csv(start_file, header=None).values[0]
 
 
     # if not os.path.exists(f"{cma_intermediate_data_dir}/{best_theta_file_name}.csv") or \
@@ -221,16 +223,15 @@ def main():
     get the pc vectors
     ==========================================================================================
     '''
-    proj_or_not = (cma_args.n_comp_to_use <= 2)
-    if cma_args.n_comp_to_use == 1:
-        n_comp_to_project_on = 2
-    else:
-        n_comp_to_project_on = cma_args.n_comp_to_use
 
-    result = do_pca(cma_args.n_components, n_comp_to_project_on, traj_params_dir_name, intermediate_data_dir,
-                    proj=proj_or_not,
-                    origin=origin, use_IPCA=cma_args.use_IPCA, chunk_size=cma_args.chunk_size, reuse=True)
+    result = do_pca(n_components=cma_args.n_components, traj_params_dir_name=traj_params_dir_name,
+                    intermediate_data_dir=intermediate_data_dir, use_IPCA=cma_args.use_IPCA,
+                    chunk_size=cma_args.chunk_size, reuse=True)
     logger.debug("after pca")
+
+
+
+
     '''
     ==========================================================================================
     eval all xy coords
@@ -245,9 +246,9 @@ def main():
     start_params = pd.read_csv(start_file, header=None).values[0]
 
 
-    if origin=="final_param":
+    if origin_name=="final_param":
         origin_param = result["final_concat_params"]
-    elif origin=="start_param":
+    elif origin_name=="start_param":
         origin_param = start_params
     else:
         origin_param = result["mean_param"]
@@ -272,15 +273,6 @@ def main():
     np.savetxt(f"{cma_intermediate_data_dir}/{best_theta_file_name}.csv", best_pi_theta, delimiter=',')
 
 
-
-
-
-    # else:
-    #     best_theta = np.loadtxt(f"{cma_intermediate_data_dir}/{best_theta_file_name}.csv", delimiter=',')
-    #     opt_path_mean = np.loadtxt(f"{cma_intermediate_data_dir}/opt_mean_path.csv", delimiter=',')
-
-
-
     episode_returns, conti_ppo_full_param_traj_dir_path = do_ppo(args=cma_args, start_pi_theta=best_pi_theta, parent_this_run_dir=cma_intermediate_data_dir, full_space_save_dir=save_dir)
     # dump_row_write_csv(cma_intermediate_data_dir, episode_returns, "ppo part returns")
     np.savetxt(f"{cma_intermediate_data_dir}/ppo part returns.csv", episode_returns, delimiter=",")
@@ -291,14 +283,20 @@ def main():
     cma_and_then_ppo_plot_dir = get_cma_and_then_ppo_plot_dir(plot_dir, cma_args.n_comp_to_use,
                                                  cma_run_num, cma_num_steps=cma_args.cma_num_timesteps,
                                                               ppo_num_steps=cma_args.ppo_num_timesteps,
-                                                              origin=origin)
+                                                              origin=origin_name)
     if not os.path.exists(cma_and_then_ppo_plot_dir):
         os.makedirs(cma_and_then_ppo_plot_dir)
 
-    conti_ppo_params = get_allinone_concat_df(conti_ppo_full_param_traj_dir_path, index="pi_all_params").values
+    conti_ppo_params = get_allinone_concat_df(conti_ppo_full_param_traj_dir_path).values
+
+
 
     if cma_args.n_comp_to_use <= 2:
-        proj_coords = result["proj_coords"]
+        comp_slice_to_project_on = slice(2)
+        proj_coords = project(result["pcs_components"], pcs_slice=comp_slice_to_project_on, origin_name=origin_name,
+                          origin_param=origin_param, IPCA_chunk_size=cma_args.chunk_size,
+                          traj_params_dir_name=traj_params_dir_name, intermediate_data_dir=intermediate_data_dir,
+                            n_components=cma_args.n_components, reuse=True)
         assert proj_coords.shape[1] == 2
         if cma_args.n_comp_to_use == 1:
             opt_path_mean_2d = np.hstack((opt_path_mean, np.zeros((1, len(opt_path_mean))).T))
@@ -307,13 +305,13 @@ def main():
         xcoordinates_to_eval, ycoordinates_to_eval = gen_subspace_coords(cma_args, np.vstack((proj_coords, opt_path_mean_2d)).T)
 
 
-        projected_after_ppo_params = do_proj_on_first_n(conti_ppo_params, pcs[2], origin_param)
+        projected_after_ppo_params = do_proj_on_first_n(conti_ppo_params, pcs[comp_slice_to_project_on], origin_param)
         full_path = np.vstack((opt_path_mean_2d, projected_after_ppo_params))
 
-        eval_returns = do_eval_returns(cma_args, intermediate_data_dir, pcs[2], origin_param,
-                        xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center=origin, reuse=False)
+        eval_returns = do_eval_returns(cma_args, intermediate_data_dir, pcs[comp_slice_to_project_on], origin_param,
+                        xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center=origin_name, reuse=False)
 
-        plot_contour_trajectory(cma_and_then_ppo_plot_dir, f"{origin}_origin_eval_return_contour_plot", xcoordinates_to_eval,
+        plot_contour_trajectory(cma_and_then_ppo_plot_dir, f"{origin_name}_origin_eval_return_contour_plot", xcoordinates_to_eval,
                                 ycoordinates_to_eval, eval_returns, proj_coords[:, 0], proj_coords[:, 1],
                                 result["explained_variance_ratio"][:2],
                                 num_levels=25, show=False, sub_alg_path=full_path)
@@ -330,33 +328,12 @@ def main():
 
 
 
-    #
-    # if cma_args.n_comp_to_use == 2:
-    #     proj_coords = result["proj_coords"]
-    #     assert proj_coords.shape[1] == 2
-    #
-    #     xcoordinates_to_eval, ycoordinates_to_eval = gen_subspace_coords(cma_args, np.vstack((proj_coords, opt_path_mean)).T)
-    #
-    #     eval_returns = do_eval_returns(cma_args, intermediate_data_dir, result["first_n_pcs"], origin_param,
-    #                     xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center=origin, reuse=False)
-    #
-    #     plot_contour_trajectory(cma_and_then_ppo_plot_dir, f"{origin}_origin_eval_return_contour_plot", xcoordinates_to_eval,
-    #                             ycoordinates_to_eval, eval_returns, proj_coords[:, 0], proj_coords[:, 1],
-    #                             result["explained_variance_ratio"][:2],
-    #                             num_levels=25, show=False, sub_alg_path=opt_path_mean)
-
-
     opt_mean_path_in_old_basis = [mean_projected_param.dot(first_n_pcs) + result["mean_param"] for mean_projected_param in opt_path_mean]
     distance_to_final = [LA.norm(opt_mean - result["final_concat_params"], ord=2) for opt_mean in np.vstack((opt_mean_path_in_old_basis, conti_ppo_params))]
     distance_to_final_plot_name = f"distance_to_final over generations "
     plot_2d(cma_and_then_ppo_plot_dir, distance_to_final_plot_name, np.arange(len(distance_to_final)), distance_to_final, "num generation", "distance_to_final", False)
 
 
-
-    # plot_3d_trajectory(cma_plot_dir, "end_point_origin_eval_return_3d_plot", xcoordinates_to_eval, ycoordinates_to_eval,
-    #                         eval_returns, proj_xcoord, proj_ycoord,
-    #                         result["explained_variance_ratio"][:2],
-    #                         num_levels=15, show=False)
 
 
 
