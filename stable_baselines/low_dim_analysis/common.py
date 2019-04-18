@@ -149,7 +149,8 @@ def do_pca(n_components, n_comp_slice_to_project_on, traj_params_dir_name,
             not os.path.exists(get_pcs_filename(intermediate_dir=intermediate_data_dir, n_comp=n_components))\
         or not os.path.exists(get_mean_param_filename(intermediate_dir=intermediate_data_dir)) \
         or (proj and not os.path.exists(get_projected_full_path_filename(intermediate_dir=intermediate_data_dir,
-                                                                         n_comp=n_components, pca_center=origin))):
+                                                                         n_comp=n_components, pca_center=origin,
+                                                                         which_components=n_comp_slice_to_project_on))):
         if use_IPCA:
             assert chunk_size != 0
             final_pca = IncrementalPCA(n_components=n_components)  # for sparse PCA to speed up
