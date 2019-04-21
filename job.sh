@@ -616,6 +616,16 @@ WPCA_first_n_VS_last_plane () {
 #sleep 1; run 1 'DartWalker2d-v1' 32 2048 1000000 'adam' False& sleep 1; ps
 #sleep 1; run 2 'DartWalker2d-v1' 32 2048 1000000 'adam' False& sleep 1; ps
 
+sleep 1; plot_other_plane_return_landscape 0 'DartWalker2d-v1' 675000 0:1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 0:1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 2 'DartWalker2d-v1' 675000 0:1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 0:1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 0 'DartWalker2d-v1' 675000 3:4:5; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 3:4:5; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 2 'DartWalker2d-v1' 675000 3:4:5; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 3:4:5; sleep 1; ps
+
+
 sleep 1; run 0 'DartReacher-v1' 32 2048 675000 'adam'& sleep 1; ps
 sleep 1; run 1 'DartReacher-v1' 32 2048 675000 'adam'& sleep 1; ps
 sleep 1; run 0 'DartHalfCheetah-v1' 32 2048 675000 'adam'& sleep 1; ps
@@ -650,14 +660,6 @@ wait
 #sleep 1; first_n_pc1_vs_final_minus_start 0 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
 #sleep 1; first_n_pc1_vs_final_minus_start 1 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
 #sleep 1; pc1_vs_V 0 'DartHopper-v1' 32 2048 1000000 150; sleep 1; ps
-sleep 1; plot_other_plane_return_landscape 0 'DartWalker2d-v1' 675000 0:1:2; sleep 1; ps
-sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 0:1:2; sleep 1; ps
-sleep 1; plot_other_plane_return_landscape 2 'DartWalker2d-v1' 675000 0:1:2; sleep 1; ps
-sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 0:1:2; sleep 1; ps
-sleep 1; plot_other_plane_return_landscape 0 'DartWalker2d-v1' 675000 3:4:5; sleep 1; ps
-sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 3:4:5; sleep 1; ps
-sleep 1; plot_other_plane_return_landscape 2 'DartWalker2d-v1' 675000 3:4:5; sleep 1; ps
-sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 3:4:5; sleep 1; ps
 
 
 sleep 1; plot_other_plane_return_landscape 0 'DartHalfCheetah-v1' 675000 0:1:2; sleep 1; ps
