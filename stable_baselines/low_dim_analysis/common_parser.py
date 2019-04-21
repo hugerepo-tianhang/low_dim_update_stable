@@ -36,7 +36,7 @@ def get_common_parser():
     parser.add_argument('--explain_ratio_threshold', default=0.99, type=float)
     parser.add_argument('--use_threads', action='store_true', default=False)
 
-    parser.add_argument('--other_pca_index', default="8:9", help='cores to use to parallel')
+    parser.add_argument('--other_pca_index', default="0:1:2", help='cores to use to parallel')
 
     #cma params
     parser.add_argument('--cma_num_timesteps', default=10000, type=int, help='total timesteps agent runs')

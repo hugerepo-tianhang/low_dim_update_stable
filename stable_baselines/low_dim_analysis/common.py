@@ -13,6 +13,38 @@ import math
 from functools import partial
 from datetime import datetime
 import csv
+import matplotlib as mpl
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def plot_3d_trajectory_path_only(dir_path, file_name, projected_path, explained_ratio, show=False):
+    assert projected_path.shape[1] == 3
+    assert len(explained_ratio) == 3
+    """3d + trajectory"""
+
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+
+    xs = projected_path.T[0]
+    ys = projected_path.T[1]
+    zs = projected_path.T[2]
+
+    ax.plot(xs, ys, zs)
+
+    ax.set_xlabel(f'explained:{explained_ratio[0]}')
+    ax.set_ylabel(f'explained:{explained_ratio[1]}')
+    ax.set_zlabel(f'explained:{explained_ratio[2]}')
+
+    print(f"~~~~~~~~~~~~~~~~~~~~~~saving to {dir_path}/{file_name}.pdf")
+    file_path = f"{dir_path}/{file_name}.pdf"
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+    fig.savefig(file_path, dpi=300,
+                bbox_inches='tight', format='pdf')
+    if show: plt.show()
+
 
 
 def postize_angle(angle):
@@ -422,6 +454,7 @@ def project_2D_final_param_origin(d, dx, dy, proj_method='lstsq'):
         [x,y] = d.dot(A)
 
     return x, y
+
 
 
 def plot_contour_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, proj_xcoord, proj_ycoord, explained_variance_ratio,

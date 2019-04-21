@@ -616,12 +616,12 @@ WPCA_first_n_VS_last_plane () {
 #sleep 1; run 1 'DartWalker2d-v1' 32 2048 1000000 'adam' False& sleep 1; ps
 #sleep 1; run 2 'DartWalker2d-v1' 32 2048 1000000 'adam' False& sleep 1; ps
 
-#sleep 1; run 0 'DartReacher-v1' 32 2048 675000& sleep 1; ps
-#sleep 1; run 1 'DartReacher-v1' 32 2048 675000& sleep 1; ps
-#sleep 1; run 0 'DartHalfCheetah-v1' 32 2048 675000& sleep 1; ps
-#sleep 1; run 1 'DartHalfCheetah-v1' 32 2048 675000& sleep 1; ps
-#sleep 1; run 0 'DartSnake7Link-v1' 32 2048 675000& sleep 1; ps
-#sleep 1; run 1 'DartSnake7Link-v1' 32 2048 675000& sleep 1; ps
+sleep 1; run 0 'DartReacher-v1' 32 2048 675000 'adam'& sleep 1; ps
+sleep 1; run 1 'DartReacher-v1' 32 2048 675000 'adam'& sleep 1; ps
+sleep 1; run 0 'DartHalfCheetah-v1' 32 2048 675000 'adam'& sleep 1; ps
+sleep 1; run 1 'DartHalfCheetah-v1' 32 2048 675000 'adam'& sleep 1; ps
+sleep 1; run 0 'DartSnake7Link-v1' 32 2048 675000 'adam'& sleep 1; ps
+sleep 1; run 1 'DartSnake7Link-v1' 32 2048 675000 'adam'& sleep 1; ps
 
 
 wait
@@ -650,17 +650,33 @@ wait
 #sleep 1; first_n_pc1_vs_final_minus_start 0 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
 #sleep 1; first_n_pc1_vs_final_minus_start 1 'DartHalfCheetah-v1' 32 2048 675000 100; sleep 1; ps
 #sleep 1; pc1_vs_V 0 'DartHopper-v1' 32 2048 1000000 150; sleep 1; ps
-#sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 100:101; sleep 1; ps
-#sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 200:201; sleep 1; ps
-#sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 499:498; sleep 1; ps
-#sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 301:300; sleep 1; ps
-#sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 10:9; sleep 1; ps
-#sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 1:2; sleep 1; ps
-#sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 3:4; sleep 1; ps
-#sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 250:251; sleep 1; ps
-#sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 350:351; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 0 'DartWalker2d-v1' 675000 0:1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 0:1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 2 'DartWalker2d-v1' 675000 0:1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 0:1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 0 'DartWalker2d-v1' 675000 3:4:5; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 3:4:5; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 2 'DartWalker2d-v1' 675000 3:4:5; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 3 'DartWalker2d-v1' 675000 3:4:5; sleep 1; ps
 
-#
+
+sleep 1; plot_other_plane_return_landscape 0 'DartHalfCheetah-v1' 675000 0:1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartHalfCheetah-v1' 675000 0:1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 0 'DartHalfCheetah-v1' 675000 3:4:5; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartHalfCheetah-v1' 675000 3:4:5; sleep 1; ps
+
+
+sleep 1; plot_other_plane_return_landscape 0 'DartReacher-v1' 675000 0:1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartReacher-v1' 675000 0:1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 0 'DartReacher-v1' 675000 3:4:5; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartReacher-v1' 675000 3:4:5; sleep 1; ps
+
+
+sleep 1; plot_other_plane_return_landscape 0 'DartSnake7Link-v1' 675000 0:1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartSnake7Link-v1' 675000 0:1:2; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 0 'DartSnake7Link-v1' 675000 3:4:5; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartSnake7Link-v1' 675000 3:4:5; sleep 1; ps
+
 
 #sleep 1; cma_once 0 'DartHopper-v1' 512 2048 1000000 True 50000; sleep 1; ps
 ##sleep 1; cma_once 0 'DartHopper-v1' 32 2048 1000000 True 10000 "mean_param" $n_components; sleep 1; ps

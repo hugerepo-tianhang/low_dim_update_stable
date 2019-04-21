@@ -22,15 +22,36 @@ import gym
 
 from stable_baselines.common.cmd_util import mujoco_arg_parser
 from stable_baselines import bench, logger
-from stable_baselines.common import set_global_seeds
-from stable_baselines.common.vec_env.vec_normalize import VecNormalize
-from stable_baselines.ppo2 import PPO2
-from stable_baselines.common.policies import MlpPolicy
-from stable_baselines.common.vec_env.dummy_vec_env import DummyVecEnv
-import csv
+
 import os
 from stable_baselines.low_dim_analysis.eval_util import get_full_param_traj_file_path, get_full_params_dir, get_dir_path_for_this_run, get_log_dir, get_save_dir
 
+
+def plot_3d_trajectory_path_only(dir_path, file_name, projected_path, explained_ratio, show=False):
+    assert projected_path.shape[1] == 3
+    assert len(explained_ratio) == 3
+    """3d + trajectory"""
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    xs = projected_path.T[0]
+    ys = projected_path.T[1]
+    zs = projected_path.T[2]
+
+    ax.plot(xs, ys, zs)
+
+    ax.set_xlabel(f'explained:{explained_ratio[0]}')
+    ax.set_ylabel(f'explained:{explained_ratio[1]}')
+    ax.set_zlabel(f'explained:{explained_ratio[2]}')
+
+    print(f"~~~~~~~~~~~~~~~~~~~~~~saving to {dir_path}/{file_name}.pdf")
+    file_path = f"{dir_path}/{file_name}.pdf"
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+    fig.savefig(file_path, dpi=300,
+                bbox_inches='tight', format='pdf')
+    if show: plt.show()
 
 
 
@@ -86,8 +107,6 @@ def main():
         origin_param = result["mean_param"]
 
 
-    pcs_to_project_on = result["pcs_components"][n_comp_to_project_on]
-
     proj_coords = project(result["pcs_components"], pcs_slice=n_comp_to_project_on, origin_name=origin_name,
                           origin_param=origin_param, IPCA_chunk_size=cma_args.chunk_size,
                           traj_params_dir_name=traj_params_dir_name, intermediate_data_dir=intermediate_data_dir,
@@ -103,22 +122,10 @@ def main():
     if not os.path.exists(other_pcs_plot_dir):
         os.makedirs(other_pcs_plot_dir)
 
+    plot_3d_trajectory_path_only(other_pcs_plot_dir, f"{pca_indexes}_final_origin_3d_path_plot", proj_coords,
+                                 explained_ratio=result["explained_variance_ratio"][pca_indexes])
 
-    if proj_coords.shape[1] == 2:
 
-        xcoordinates_to_eval, ycoordinates_to_eval = gen_subspace_coords(cma_args, proj_coords, center_length=5)
-
-        eval_returns = do_eval_returns(cma_args, intermediate_data_dir, pcs_to_project_on,
-                                       result["final_params"],
-                        xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center=origin_name, reuse=False)
-
-        plot_contour_trajectory(other_pcs_plot_dir, f"{pca_indexes}_final_origin_eval_return_contour_plot", xcoordinates_to_eval,
-                                ycoordinates_to_eval, eval_returns, proj_coords[:, 0], proj_coords[:, 1],
-                                result["explained_variance_ratio"][pca_indexes],
-                                num_levels=25, show=False)
-    elif proj_coords.shape[1] == 3:
-        plot_3d_trajectory_path_only(other_pcs_plot_dir, f"{pca_indexes}_final_origin_3d_path_plot", proj_coords,
-                                     explained_ratio=result["explained_variance_ratio"][pca_indexes])
 
 
 if __name__ == '__main__':
