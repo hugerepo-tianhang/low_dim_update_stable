@@ -12,7 +12,7 @@ padding_fraction=0.4
 n_components=500
 
 n_comp_to_use=2
-cma_num_timesteps=1500000
+cma_num_timesteps=500000
 ppos_num_timesteps=1000000
 eval_num_timesteps=1024
 even_check_point_num=5
