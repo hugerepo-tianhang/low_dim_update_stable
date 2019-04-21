@@ -314,12 +314,16 @@ def main():
 
     opt_mean_path_in_old_basis = [mean_projected_param.dot(pcs_to_use) + result["mean_param"] for mean_projected_param
                                   in opt_path_mean]
-    distance_to_final = [LA.norm(opt_mean - result["final_params"], ord=2) for opt_mean in
-                         np.vstack((opt_mean_path_in_old_basis, conti_ppo_params))]
-    distance_to_final_plot_name = f"distance_to_final over generations "
+
+    distance_to_final = [LA.norm(opt_mean - result["final_params"], ord=2) for opt_mean in opt_mean_path_in_old_basis]
+    distance_to_final_plot_name = f"distance_to_final over generations of CMA "
     plot_2d(cma_and_then_ppo_plot_dir, distance_to_final_plot_name, np.arange(len(distance_to_final)),
             distance_to_final, "num generation", "distance_to_final", False)
 
+    distance_to_final_ppo = [LA.norm(opt_mean - result["final_params"], ord=2) for opt_mean in conti_ppo_params]
+    distance_to_final_plot_name = f"distance_to_final over generations of PPO"
+    plot_2d(cma_and_then_ppo_plot_dir, distance_to_final_plot_name, np.arange(len(distance_to_final_ppo)),
+            distance_to_final_ppo, "num generation", "distance_to_final", False)
 
 if __name__ == '__main__':
     main()
