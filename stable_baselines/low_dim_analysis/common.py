@@ -17,6 +17,7 @@ import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 
 def plot_3d_trajectory_path_only(dir_path, file_name, projected_path, explained_ratio, show=False):
@@ -37,12 +38,19 @@ def plot_3d_trajectory_path_only(dir_path, file_name, projected_path, explained_
     ax.set_ylabel(f'explained:{explained_ratio[1]}')
     ax.set_zlabel(f'explained:{explained_ratio[2]}')
 
+    def rotate(angle):
+        ax.view_init(azim=angle)
+
+
     print(f"~~~~~~~~~~~~~~~~~~~~~~saving to {dir_path}/{file_name}.pdf")
-    file_path = f"{dir_path}/{file_name}.pdf"
+    file_path = f"{dir_path}/{file_name}.gif"
     if os.path.isfile(file_path):
         os.remove(file_path)
-    fig.savefig(file_path, dpi=300,
-                bbox_inches='tight', format='pdf')
+
+    rot_animation = FuncAnimation(fig, rotate, frames=np.arange(0, 362, 2), interval=100)
+
+    rot_animation.save(file_path, dpi=80, writer='imagemagick')
+
     if show: plt.show()
 
 
