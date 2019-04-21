@@ -115,7 +115,7 @@ def do_cma(cma_args, first_n_pcs, orgin_param, save_dir, starting_coord, var):
         optimization_path_mean), best_ever_pi_theta
 
 
-def do_ppo(args, start_pi_theta, parent_this_run_dir, full_space_save_dir):
+def do_ppo(args, start_pi_theta, parent_this_run_dir, full_space_save_dir, vf_final_params):
     """
     Runs the test
     """
@@ -152,6 +152,7 @@ def do_ppo(args, start_pi_theta, parent_this_run_dir, full_space_save_dir):
 
     model = PPO2.load(f"{full_space_save_dir}/ppo2")  # load after V
     model.set_pi_from_flat(start_pi_theta)  # don't set Vf's searched from CMA, those weren't really tested.
+    model.set_vf_from_flat(vf_final_params)  # don't set Vf's searched from CMA, those weren't really tested.
 
     if args.normalize:
         env.load_running_average(full_space_save_dir)
@@ -262,9 +263,13 @@ def main():
                     f"explained {np.sum(result['explained_variance_ratio'][pca_indexes])}"
     plot_cma_returns(cma_and_then_ppo_plot_dir, ret_plot_name, mean_rets, min_rets, max_rets, show=False)
 
+
+    vf_final_file = get_full_param_traj_file_path(traj_params_dir_name, "vf_final")
+    vf_final_params = pd.read_csv(vf_final_file, header=None).values[0]
+
     episode_returns, conti_ppo_full_param_traj_dir_path = do_ppo(args=cma_args, start_pi_theta=best_pi_theta,
                                                                  parent_this_run_dir=cma_intermediate_data_dir,
-                                                                 full_space_save_dir=save_dir)
+                                                                 full_space_save_dir=save_dir, vf_final_params=vf_final_params)
     # dump_row_write_csv(cma_intermediate_data_dir, episode_returns, "ppo part returns")
     np.savetxt(f"{cma_intermediate_data_dir}/ppo part returns.csv", episode_returns, delimiter=",")
 
