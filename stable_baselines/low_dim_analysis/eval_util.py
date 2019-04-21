@@ -53,8 +53,8 @@ def get_plot_dir(args):
 def get_cma_plot_dir(plot_dir, n_comp_to_use, run_num, origin):
     return f'{plot_dir}/cma/cma_n_comp_{n_comp_to_use}_origin_{origin}_run_num_{run_num}'
 
-def get_cma_and_then_ppo_plot_dir(plot_dir, n_comp_to_use, run_num, cma_num_steps, ppo_num_steps, origin):
-    return f'{plot_dir}/cma_and_then_ppo/cma_and_then_ppo_n_comp_{n_comp_to_use}' \
+def get_cma_and_then_ppo_plot_dir(plot_dir, pca_indexes, run_num, cma_num_steps, ppo_num_steps, origin):
+    return f'{plot_dir}/cma_and_then_ppo/cma_and_then_ppo_pca_indexes_{pca_indexes}' \
            f'_ppo_num_steps_{ppo_num_steps}_cma_num_steps_{cma_num_steps}_origin_{origin}_run_num_{run_num}'
 
 def get_other_pcs_plane_plot_dir(plot_dir, other_pcs):
@@ -97,9 +97,9 @@ def get_ppos_returns_dirname(intermediate_dir, n_comp, run_num):
 
     return f"{intermediate_dir}/ppos/ppos_n_comp_{n_comp}_run_num_{run_num}"
 
-def get_cma_and_then_ppo_run_dir(intermediate_dir, n_comp, run_num, cma_steps):
+def get_cma_and_then_ppo_run_dir(intermediate_dir, pca_indexes, run_num, cma_steps):
 
-    return f"{intermediate_dir}/cma_and_then_ppo/ctp_n_comp_{n_comp}_cma_steps_{cma_steps}_run_num_{run_num}"
+    return f"{intermediate_dir}/cma_and_then_ppo/ctp_pca_index_{pca_indexes}_cma_steps_{cma_steps}_run_num_{run_num}"
 
 def get_ppo_part(this_run_dir):
     return f"{this_run_dir}/ppo_part"

@@ -158,9 +158,10 @@ cma_and_then_ppo2 () {
     local use_IPCA=$4
     local chunk_size=$5
     local origin=$6
-    local n_comp_to_use=$7
+    local other_pca_index=$7
     local cma_var=$8
     local ppo_num_timesteps=$9
+
 
     echo "Welcome to cma_and_then_ppo2: run number  $env $run"
 
@@ -174,7 +175,7 @@ cma_and_then_ppo2 () {
                                     --xnum=$xnum --ynum=$ynum\
                                     --padding_fraction=$padding_fraction \
                                     --n_components=$n_components --cma_num_timesteps=$cma_num_timesteps\
-                                    --n_comp_to_use=$n_comp_to_use --eval_num_timesteps=$eval_num_timesteps\
+                                    --other_pca_index=$other_pca_index --eval_num_timesteps=$eval_num_timesteps\
                                      --normalize=$normalize --nminibatches=$nminibatches\
                                      --n_steps=$n_steps --use_IPCA=$use_IPCA --chunk_size=$chunk_size\
                                      --origin=$origin --ppo_num_timesteps=$ppo_num_timesteps
@@ -689,11 +690,11 @@ wait
 #sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 5000 "start_param" 1 10 600000; sleep 1; ps
 
 #sleep 1; cma_and_then_ppo2 0 'DartWalker2d-v1' 675000 True 20000 "start_param" 10 10 600000; sleep 1; ps
-sleep 1; cma_and_then_ppo2 3 'DartWalker2d-v1' 675000 True 5000 "mean_param" 1 10 600000; sleep 1; ps
-sleep 1; cma_and_then_ppo2 3 'DartWalker2d-v1' 675000 True 5000 "mean_param" 2 10 600000; sleep 1; ps
+sleep 1; cma_and_then_ppo2 3 'DartWalker2d-v1' 675000 True 5000 "mean_param" 3:4 10 200000; sleep 1; ps
+sleep 1; cma_and_then_ppo2 3 'DartWalker2d-v1' 675000 True 5000 "mean_param" 480:481 10 200000; sleep 1; ps
 
-sleep 1; cma_and_then_ppo2 3 'DartWalker2d-v1' 675000 True 5000 "start_param" 2 10 600000; sleep 1; ps
-sleep 1; cma_and_then_ppo2 3 'DartWalker2d-v1' 675000 True 5000 "start_param" 1 10 600000; sleep 1; ps
+sleep 1; cma_and_then_ppo2 3 'DartWalker2d-v1' 675000 True 5000 "start_param" 3:4 10 200000; sleep 1; ps
+sleep 1; cma_and_then_ppo2 3 'DartWalker2d-v1' 675000 True 5000 "start_param" 480:481 10 200000; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 100 100; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 2 10; sleep 1; ps
 #sleep 1; cma_once 0 'DartWalker2d-v1' 675000 True 5000 "mean_param" 2 100; sleep 1; ps

@@ -377,6 +377,8 @@ def plot_2d_check_index(plot_dir_alg, data, ylabel, file_name, check_index=None,
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(file_name)
+
+
     if check_index is not None:
         fig.savefig(f"{plot_dir_alg}/{file_name}_check_index_{check_index}.pdf", dpi=300,
                 bbox_inches='tight', format='pdf')
@@ -514,6 +516,12 @@ def plot_contour_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, p
     file_path = f"{plot_dir_alg}/{name}.pdf"
     if os.path.isfile(file_path):
         os.remove(file_path)
+
+
+
+    if not os.path.exists(plot_dir_alg):
+        os.makedirs(plot_dir_alg)
+
     fig.savefig(file_path, dpi=300,
                 bbox_inches='tight', format='pdf')
     if show: plt.show()
@@ -531,6 +539,9 @@ def plot_2d(plot_dir_alg, name, X, Y, xlabel, ylabel, show):
     file_path = f"{plot_dir_alg}/{name}.pdf"
     if os.path.isfile(file_path):
         os.remove(file_path)
+
+    if not os.path.exists(plot_dir_alg):
+        os.makedirs(plot_dir_alg)
     logger.log(f"####saving to {file_path}")
     fig.savefig(file_path, dpi=300,
                 bbox_inches='tight', format='pdf')
@@ -576,6 +587,9 @@ def plot_3d_trajectory(plot_dir_alg, name, xcoordinates, ycoordinates, Z, proj_x
     file_path = f"{plot_dir_alg}/{name}.pdf"
     if os.path.isfile(file_path):
         os.remove(file_path)
+
+    if not os.path.exists(plot_dir_alg):
+        os.makedirs(plot_dir_alg)
     fig.savefig(file_path, dpi=300,
                 bbox_inches='tight', format='pdf')
     if show: plt.show()
