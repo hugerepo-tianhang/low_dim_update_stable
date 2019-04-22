@@ -611,7 +611,7 @@ WPCA_first_n_VS_last_plane () {
 #sleep 1; run 0 'DartWalker2d-v1' 32 2048 1000000 'sgd'& sleep 1; ps
 #sleep 1; run 1 'DartWalker2d-v1' 32 2048 1000000 'sgd'& sleep 1; ps
 #sleep 1; run 1 'DartWalker2d-v1' 32 2048 675000 'adam'& sleep 1; ps
-sleep 1; run 4 'DartWalker2d-v1' 32 2048 675000 'adam'; sleep 1; ps
+#sleep 1; run 4 'DartWalker2d-v1' 32 2048 675000 'adam'; sleep 1; ps
 #sleep 1; run 3 'DartWalker2d-v1' 32 2048 675000 'adam'& sleep 1; ps
 #sleep 1; run 0 'DartWalker2d-v1' 32 2048 1000000 'adam' False& sleep 1; ps
 #sleep 1; run 1 'DartWalker2d-v1' 32 2048 1000000 'adam' False& sleep 1; ps
