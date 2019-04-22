@@ -83,11 +83,28 @@ run () {
     local time_steps=$5
 
     local optimizer=$6
+    local use_run_num_start=$7
 
     echo "Welcome to RUN: run number  $env $run"
     python -m stable_baselines.ppo2.run_mujoco --env=$env --num-timesteps=$time_steps\
             --run_num=$run --normalize=$normalize --nminibatches=$nminibatches\
-            --n_steps=$n_steps --optimizer=$optimizer
+            --n_steps=$n_steps --optimizer=$optimizer --use_run_num_start=$use_run_num_start
+
+}
+
+are_final_parameters_the_same () {
+    local env=$1
+    local nminibatches=$2
+    local n_steps=$3
+    local time_steps=$4
+
+    local optimizer=$5
+    local run_nums_to_check=$6
+
+    echo "Welcome to are_final_parameters_the_same: run number  $env $run"
+    python -m stable_baselines.low_dim_analysis.are_final_parameters_the_same --env=$env --num-timesteps=$time_steps\
+            --normalize=$normalize --nminibatches=$nminibatches\
+            --n_steps=$n_steps --optimizer=$optimizer --run_nums_to_check=$run_nums_to_check
 
 }
 
@@ -611,7 +628,10 @@ WPCA_first_n_VS_last_plane () {
 #sleep 1; run 0 'DartWalker2d-v1' 32 2048 1000000 'sgd'& sleep 1; ps
 #sleep 1; run 1 'DartWalker2d-v1' 32 2048 1000000 'sgd'& sleep 1; ps
 #sleep 1; run 1 'DartWalker2d-v1' 32 2048 675000 'adam'& sleep 1; ps
-#sleep 1; run 4 'DartWalker2d-v1' 32 2048 675000 'adam'; sleep 1; ps
+sleep 1; run 10 'DartWalker2d-v1' 32 2048 675000 'adam' -1& sleep 1; ps
+sleep 1; run 11 'DartWalker2d-v1' 32 2048 675000 'adam' 10& sleep 1; ps
+sleep 1; run 12 'DartWalker2d-v1' 32 2048 675000 'adam' 10& sleep 1; ps
+sleep 1; run 13 'DartWalker2d-v1' 32 2048 675000 'adam' 10& sleep 1; ps
 #sleep 1; run 3 'DartWalker2d-v1' 32 2048 675000 'adam'& sleep 1; ps
 #sleep 1; run 0 'DartWalker2d-v1' 32 2048 1000000 'adam' False& sleep 1; ps
 #sleep 1; run 1 'DartWalker2d-v1' 32 2048 1000000 'adam' False& sleep 1; ps
@@ -636,6 +656,8 @@ WPCA_first_n_VS_last_plane () {
 
 
 wait
+
+sleep 1; are_final_parameters_the_same 'DartWalker2d-v1' 32 2048 675000 'adam' 0:1:2:3:10:11:12:13& sleep 1; ps
 
 
 #sleep 1; ppos_once 0 'DartWalker2d-v1' 675000 True 10000 "final_param" 2; sleep 1; ps

@@ -60,6 +60,9 @@ def get_common_parser():
     #WPCA VS last plane
     parser.add_argument('--func_index_to_use', default=0, type=int, help='total timesteps agent runs')
 
+    #are final parameters
+    parser.add_argument('--run_nums_to_check', default="0:1:2", help='total timesteps agent runs')
+
 
 
 
