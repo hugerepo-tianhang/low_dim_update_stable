@@ -42,7 +42,7 @@ def main():
     common_arg_parser = get_common_parser()
     cma_args, cma_unknown_args = common_arg_parser.parse_known_args()
 
-    origin_name = "final_param"
+    origin_name = cma_args.origin
 
     this_run_dir = get_dir_path_for_this_run(cma_args)
     plot_dir_alg = get_plot_dir(cma_args)
@@ -109,7 +109,7 @@ def main():
         xcoordinates_to_eval, ycoordinates_to_eval = gen_subspace_coords(cma_args, proj_coords, center_length=5)
 
         eval_returns = do_eval_returns(cma_args, intermediate_data_dir, pcs_to_project_on,
-                                       result["final_params"],
+                                       origin_param,
                         xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center=origin_name, reuse=False)
 
         plot_contour_trajectory(other_pcs_plot_dir, f"{pca_indexes}_final_origin_eval_return_contour_plot", xcoordinates_to_eval,

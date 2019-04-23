@@ -147,7 +147,7 @@ def do_proj_on_first_n_IPCA(concat_df, first_n_pcs, origin_param):
     return result
 
 
-def do_eval_returns(plot_args, intermediate_data_dir, first_n_pcs, origin_param,
+def do_eval_returns(plot_args, intermediate_data_dir, two_pcs_eval, origin_param,
                     xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center="final_param", reuse=True):
 
     eval_string = f"xnum_{np.min(xcoordinates_to_eval)}:{np.max(xcoordinates_to_eval)}:{plot_args.xnum}_" \
@@ -157,7 +157,7 @@ def do_eval_returns(plot_args, intermediate_data_dir, first_n_pcs, origin_param,
                                                     eval_string=eval_string, n_comp=2, pca_center=pca_center)):
 
         from stable_baselines.ppo2.run_mujoco import eval_return
-        thetas_to_eval = [origin_param + x * first_n_pcs[0] + y * first_n_pcs[1] for y in ycoordinates_to_eval for x in xcoordinates_to_eval]
+        thetas_to_eval = [origin_param + x * two_pcs_eval[0] + y * two_pcs_eval[1] for y in ycoordinates_to_eval for x in xcoordinates_to_eval]
 
         tic = time.time()
 

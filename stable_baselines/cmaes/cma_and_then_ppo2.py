@@ -290,7 +290,7 @@ def main():
         proj_coords = project(result["pcs_components"], pcs_slice=pcs_to_plot_contour, origin_name=origin_name,
                               origin_param=origin_param, IPCA_chunk_size=cma_args.chunk_size,
                               traj_params_dir_name=traj_params_dir_name, intermediate_data_dir=intermediate_data_dir,
-                              n_components=cma_args.n_components, reuse=True)
+                              n_components=cma_args.n_components, reuse=False)
 
         assert proj_coords.shape[1] == 2
         if len(pca_indexes) == 1:
@@ -310,7 +310,7 @@ def main():
         plot_contour_trajectory(cma_and_then_ppo_plot_dir, f"{origin_name}_origin_eval_return_contour_plot",
                                 xcoordinates_to_eval,
                                 ycoordinates_to_eval, eval_returns, proj_coords[:, 0], proj_coords[:, 1],
-                                result["explained_variance_ratio"][:2],
+                                result["explained_variance_ratio"][pcs_to_plot_contour],
                                 num_levels=25, show=False, sub_alg_path=full_path)
 
     final_ppo_ep_name = f"final episodes returns CMA PPO"
