@@ -689,6 +689,19 @@ sleep 1; plot_other_plane_return_landscape 0 'DartWalker2d-v1' 675000 4:5 "mean_
 sleep 1; plot_other_plane_return_landscape 0 'DartWalker2d-v1' 675000 200:201 "mean_param"; sleep 1; ps
 sleep 1; plot_other_plane_return_landscape 0 'DartWalker2d-v1' 675000 498:499 "mean_param"; sleep 1; ps
 
+sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 0:1 "start_param"; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 2:3 "start_param"; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 4:5 "start_param"; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 200:201 "start_param"; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 498:499 "start_param"; sleep 1; ps
+
+sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 0:1 "mean_param"; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 2:3 "mean_param"; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 4:5 "mean_param"; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 200:201 "mean_param"; sleep 1; ps
+sleep 1; plot_other_plane_return_landscape 1 'DartWalker2d-v1' 675000 498:499 "mean_param"; sleep 1; ps
+
+
 sleep 1; plot_other_plane_return_landscape 0 'DartHalfCheetah-v1' 675000 0:1 "start_param"; sleep 1; ps
 sleep 1; plot_other_plane_return_landscape 0 'DartHalfCheetah-v1' 675000 2:3 "start_param"; sleep 1; ps
 sleep 1; plot_other_plane_return_landscape 0 'DartHalfCheetah-v1' 675000 4:5 "start_param"; sleep 1; ps
