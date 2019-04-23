@@ -43,7 +43,7 @@ def main():
     cma_args, cma_unknown_args = common_arg_parser.parse_known_args()
 
     origin_name = cma_args.origin
-
+    print(f"##########{origin_name}")
     this_run_dir = get_dir_path_for_this_run(cma_args)
     plot_dir_alg = get_plot_dir(cma_args)
 
@@ -112,7 +112,7 @@ def main():
                                        origin_param,
                         xcoordinates_to_eval, ycoordinates_to_eval, save_dir, pca_center=origin_name, reuse=False)
 
-        plot_contour_trajectory(other_pcs_plot_dir, f"{pca_indexes}_final_origin_eval_return_contour_plot", xcoordinates_to_eval,
+        plot_contour_trajectory(other_pcs_plot_dir, f"{pca_indexes}_{origin_name}_eval_return_contour_plot", xcoordinates_to_eval,
                                 ycoordinates_to_eval, eval_returns, proj_coords[:, 0], proj_coords[:, 1],
                                 result["explained_variance_ratio"][pca_indexes],
                                 num_levels=25, show=False)
