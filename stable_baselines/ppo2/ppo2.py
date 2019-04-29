@@ -45,7 +45,7 @@ class PPO2(ActorCriticRLModel):
     """
 
     def __init__(self, policy, env, gamma=0.99, n_steps=128, ent_coef=0.01, learning_rate=2.5e-4, vf_coef=0.5,
-                 max_grad_norm=0.5, lam=0.95, nminibatches=4, noptepochs=4, cliprange=0.2, verbose=0,
+                 max_grad_norm=0.5, lam=0.95, nminibatches=4, noptepochs=4, cliprange=0.2, verbose=1,
                  tensorboard_log=None, _init_setup_model=True, policy_kwargs=None,
                  full_tensorboard_log=False, optimizer='adam'):
 
@@ -223,6 +223,7 @@ class PPO2(ActorCriticRLModel):
                 self.proba_step = act_model.proba_step
                 self.value = act_model.value
                 self.initial_state = act_model.initial_state
+                self.give_neuron_values = act_model.give_neuron_values
                 tf.global_variables_initializer().run(session=self.sess)  # pylint: disable=E1101
 
                 self.summary = tf.summary.merge_all()
@@ -383,11 +384,10 @@ class PPO2(ActorCriticRLModel):
 
                                 vf_flat_params = self.get_vf_flat()
                                 pi_flat_params = self.get_pi_flat()
-                                self.dump(vf_flat_params, "vf_all_params")
-                                self.dump(pi_flat_params, "pi_all_params")
+                                # self.dump(vf_flat_params, "vf_all_params")
+                                # self.dump(pi_flat_params, "pi_all_params")
 
-                                # self.dump(flat_params, 0)
-                                self.dump(grads, "grads")
+                                # self.dump(grads, "grads")
                                 # current_non_skipped += 1
                                 total_num_dumped += 1
 

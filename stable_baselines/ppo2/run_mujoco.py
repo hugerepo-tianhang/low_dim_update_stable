@@ -65,12 +65,13 @@ def train(args):
 
     def make_env():
         env_out = gym.make(args.env)
-        env_out.env.disableViewer = True
         env_out.env.visualize = False
         env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
         return env_out
 
     env = DummyVecEnv([make_env])
+    env.envs[0].env.env.disableViewer = True
+
     if args.normalize:
         env = VecNormalize(env)
 
@@ -142,6 +143,52 @@ def eval_return(args, save_dir, pi_theta, eval_timesteps, i):
     ep_infos = []
     for _ in range(eval_timesteps):
         actions = model.step(obs)[0]
+        obs, rew, done, infos = env.step(actions)
+
+        for info in infos:
+            maybe_ep_info = info.get('episode')
+            if maybe_ep_info is not None:
+                ep_infos.append(maybe_ep_info)
+
+        # env.render()
+        done = done.any()
+        if done:
+            if pi_theta is None:
+                episode_rew = safe_mean([ep_info['r'] for ep_info in ep_infos])
+                print(f'episode_rew={episode_rew}')
+            obs = env.reset()
+
+    return safe_mean([ep_info['r'] for ep_info in ep_infos])
+
+def visualize_neurons(args, save_dir, pi_theta, eval_timesteps):
+    # logger.log(f"#######EVAL: {args}")
+
+    def make_env():
+        env_out = gym.make(args.env)
+        env_out.env.disableViewer = True
+        env_out.env.visualize = False
+        env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
+        return env_out
+    env = DummyVecEnv([make_env])
+    if args.normalize:
+        env = VecNormalize(env)
+
+    model = PPO2.load(f"{save_dir}/ppo2") # this also loads V function
+    if pi_theta is not None:
+        model.set_pi_from_flat(pi_theta)
+
+    if args.normalize:
+        env.load_running_average(save_dir)
+
+
+
+    obs = np.zeros((env.num_envs,) + env.observation_space.shape)
+    obs[:] = env.reset()
+    ep_infos = []
+    for _ in range(eval_timesteps):
+        actions = model.step(obs)[0]
+        neuron_values = model.give_neuron_values(obs)
+
         obs, rew, done, infos = env.step(actions)
 
         for info in infos:

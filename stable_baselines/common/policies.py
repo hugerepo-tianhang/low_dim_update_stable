@@ -88,7 +88,7 @@ def mlp_extractor_with_mult_tensor(mult_tensors, flat_observations, net_arch, ac
     return latent_policy, latent_value
 
 
-def mlp_extractor(flat_observations, net_arch, act_fun):
+def mlp_extractor(flat_observations, net_arch, act_fun, policy=None):
     """
     Constructs an MLP that receives observations as an input and outputs a latent representation for the policy and
     a value network. The ``net_arch`` parameter allows to specify the amount and size of the hidden layers and how many
@@ -122,6 +122,7 @@ def mlp_extractor(flat_observations, net_arch, act_fun):
         if isinstance(layer, int):  # Check that this is a shared layer
             layer_size = layer
             latent = act_fun(linear(latent, "shared_fc{}".format(idx), layer_size, init_scale=np.sqrt(2)))
+            policy.policy_neurons.append(latent)
         else:
             assert isinstance(layer, dict), "Error: the net_arch list can only contain ints and dicts"
             if 'pi' in layer:
@@ -140,6 +141,7 @@ def mlp_extractor(flat_observations, net_arch, act_fun):
         if pi_layer_size is not None:
             assert isinstance(pi_layer_size, int), "Error: net_arch[-1]['pi'] must only contain integers."
             latent_policy = act_fun(linear(latent_policy, "pi_fc{}".format(idx), pi_layer_size, init_scale=np.sqrt(2)))
+            policy.policy_neurons.append(latent_policy)
 
         if vf_layer_size is not None:
             assert isinstance(vf_layer_size, int), "Error: net_arch[-1]['vf'] must only contain integers."
@@ -613,7 +615,7 @@ class FeedForwardPolicy(ActorCriticPolicy):
                  act_fun=tf.tanh, cnn_extractor=nature_cnn, feature_extraction="cnn", **kwargs):
         super(FeedForwardPolicy, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=reuse,
                                                 scale=(feature_extraction == "cnn"))
-
+        self.policy_neurons = []
         self._kwargs_check(feature_extraction, kwargs)
 
         if layers is not None:
@@ -632,15 +634,22 @@ class FeedForwardPolicy(ActorCriticPolicy):
             if feature_extraction == "cnn":
                 pi_latent = vf_latent = cnn_extractor(self.processed_obs, **kwargs)
             else:
-                pi_latent, vf_latent = mlp_extractor(tf.layers.flatten(self.processed_obs), net_arch, act_fun)
+                # pi_latent, vf_latent = mlp_extractor(tf.layers.flatten(self.processed_obs), net_arch, act_fun)
+                pi_latent, vf_latent = mlp_extractor(tf.layers.flatten(self.processed_obs), net_arch, act_fun, policy=self)
 
             self.value_fn = linear(vf_latent, 'vf', 1)
 
             self.proba_distribution, self.policy, self.q_value = \
-                self.pdtype.proba_distribution_from_latent(pi_latent, vf_latent, init_scale=0.01)
+                self.pdtype.proba_distribution_from_latent(pi_latent, vf_latent, init_scale=0.01, policy=self)
 
         self.initial_state = None
         self._setup_init()
+
+    def give_neuron_values(self, obs):
+        neurons = self.sess.run(self.policy_neurons, {self.obs_ph: obs})
+
+
+        return neurons
 
     def step(self, obs, state=None, mask=None, deterministic=False):
         if deterministic:

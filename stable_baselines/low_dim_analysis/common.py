@@ -99,9 +99,9 @@ def gen_subspace_coords(plot_args, proj_coord, center_length=None):
     ymin -= plot_args.padding_fraction * y_len
     ymax += plot_args.padding_fraction * y_len
     if center_length is not None:
-        xmin = min(xmin, -center_length)
+        xmin = min(xmin, -1*center_length)
         xmax = max(xmax, center_length)
-        ymin = min(ymin, -center_length)
+        ymin = min(ymin, -1*center_length)
         ymax = max(ymax, center_length)
 
     xcoordinates_to_eval = np.linspace(xmin, xmax, plot_args.xnum)
