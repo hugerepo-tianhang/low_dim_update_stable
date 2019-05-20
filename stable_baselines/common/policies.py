@@ -116,6 +116,10 @@ def mlp_extractor(flat_observations, net_arch, act_fun, policy=None):
     latent = flat_observations
     policy_only_layers = []  # Layer sizes of the network that only belongs to the policy network
     value_only_layers = []  # Layer sizes of the network that only belongs to the value network
+    policy.policy_neurons.append(latent)
+    # policy.fake_input_tensor = tf.get_variable("fake_tensor", dtype=float,
+    #                                     shape=[1, flat_observations.get_shape().as_list()[1]],
+    #                                            collections=['my_scope', tf.GraphKeys.VARIABLES])
 
     # Iterate through the shared layers and build the shared parts of the network
     for idx, layer in enumerate(net_arch):
@@ -140,7 +144,10 @@ def mlp_extractor(flat_observations, net_arch, act_fun, policy=None):
     for idx, (pi_layer_size, vf_layer_size) in enumerate(zip_longest(policy_only_layers, value_only_layers)):
         if pi_layer_size is not None:
             assert isinstance(pi_layer_size, int), "Error: net_arch[-1]['pi'] must only contain integers."
-            latent_policy = act_fun(linear(latent_policy, "pi_fc{}".format(idx), pi_layer_size, init_scale=np.sqrt(2)))
+            # if idx == 0:
+            #     latent_policy = act_fun(linear(tf.math.add(latent_policy, policy.fake_input_tensor), "pi_fc{}".format(idx), pi_layer_size, init_scale=np.sqrt(2)))
+            # else:
+            latent_policy = act_fun(linear(latent_policy, "pi_fc{}".format(idx), pi_layer_size, init_scale=np.sqrt(2), policy=policy))
             policy.policy_neurons.append(latent_policy)
 
         if vf_layer_size is not None:
@@ -541,6 +548,8 @@ class FeedForwardWithMultiPolicy(ActorCriticPolicy):
         self._kwargs_check(feature_extraction, kwargs)
 
         self.multi_tensors = []
+        self.pi_weights = []
+
         for i in range(num_comp):
             v = tf.get_variable(f"weights_{i}", [1], initializer=tf.ones_initializer())
             self.multi_tensors.append(v)
@@ -616,6 +625,9 @@ class FeedForwardPolicy(ActorCriticPolicy):
         super(FeedForwardPolicy, self).__init__(sess, ob_space, ac_space, n_env, n_steps, n_batch, reuse=reuse,
                                                 scale=(feature_extraction == "cnn"))
         self.policy_neurons = []
+        self.layer_weights = []
+        self.pi_weights = []
+
         self._kwargs_check(feature_extraction, kwargs)
 
         if layers is not None:
@@ -645,6 +657,17 @@ class FeedForwardPolicy(ActorCriticPolicy):
         self.initial_state = None
         self._setup_init()
 
+    def get_weight_values(self, ijs, weight_index=1):
+        #'model/pi_fc1/w:0'
+        weight_tensor = self.pi_weights[weight_index]
+
+        tensors_to_get  = [weight_tensor[ij[0], ij[1]] for ij in ijs]
+        result = self.sess.run(tensors_to_get)
+        print(f"layer1 neuron {ijs[0][1]} biggest abs weight {max(list(map(abs, result)))}")
+        that_column_tensors = [weight_tensor[:, ij[1]] for ij in ijs]
+        col_result = self.sess.run(that_column_tensors)
+        return result
+
     def give_neuron_values(self, obs):
         neurons = self.sess.run(self.policy_neurons, {self.obs_ph: obs})
 
@@ -660,6 +683,14 @@ class FeedForwardPolicy(ActorCriticPolicy):
                                                    {self.obs_ph: obs})
         return action, value, self.initial_state, neglogp
 
+    def step_with_neurons(self, obs, state=None, mask=None, deterministic=False):
+        if deterministic:
+            neurons, action, value, neglogp = self.sess.run([self.policy_neurons, self.deterministic_action, self._value, self.neglogp],
+                                                   {self.obs_ph: obs})
+        else:
+            neurons, action, value, neglogp = self.sess.run([self.policy_neurons, self.action, self._value, self.neglogp],
+                                                   {self.obs_ph: obs})
+        return neurons, action, value, self.initial_state, neglogp
     def proba_step(self, obs, state=None, mask=None):
         return self.sess.run(self.policy_proba, {self.obs_ph: obs})
 

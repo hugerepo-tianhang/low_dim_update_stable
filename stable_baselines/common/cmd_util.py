@@ -111,9 +111,9 @@ def mujoco_arg_parser():
     parser = arg_parser()
     parser.register('type', 'bool', str2bool)
     parser.add_argument("--normalize", type='bool', default=True)
-    parser.add_argument('--env', help='environment ID', type=str, default='DartHopper-v1')
+    parser.add_argument('--env', help='environment ID', type=str, default='DartWalker2d-v1')
     parser.add_argument('--seed', help='RNG seed', type=int, default=0)
-    parser.add_argument('--run_num', default=0, type=int, help='which run number')
+    parser.add_argument('--run_num', default=10, type=int, help='which run number')
     parser.add_argument('--use_run_num_start', default=-1, type=int, help='which run number')
 
 
@@ -123,7 +123,7 @@ def mujoco_arg_parser():
 
     parser.add_argument('--optimizer', help='environment ID', type=str, default='adam')
 
-    parser.add_argument('--num-timesteps', type=int, default=1000000)
+    parser.add_argument('--num-timesteps', type=int, default=10)
     parser.add_argument('--play', default=False, action='store_true')
     return parser
 

@@ -13,7 +13,7 @@ n_components=500
 
 n_comp_to_use=2
 cma_num_timesteps=500000
-ppos_num_timesteps=1000000
+ppos_num_timesteps=2000000
 eval_num_timesteps=1024
 even_check_point_num=5
 normalize=True
@@ -634,12 +634,10 @@ WPCA_first_n_VS_last_plane () {
 #sleep 1; run 12 'DartWalker2d-v1' 32 2048 675000 'adam' 10& sleep 1; ps
 #sleep 1; run 13 'DartWalker2d-v1' 32 2048 675000 'adam' 10& sleep 1; ps
 #sleep 1; run 3 'DartWalker2d-v1' 32 2048 675000 'adam'& sleep 1; ps
-sleep 1; run 0 'DartWalker2d-v1' 64 4096 3000000 'adam' -1& sleep 1; ps
-sleep 1; run 1 'DartWalker2d-v1' 32 2048 2000000 'adam' -1& sleep 1; ps
-sleep 1; run 2 'DartWalker2d-v1' 64 4096 2000000 'adam' -1& sleep 1; ps
-sleep 1; run 0 'DartHopper-v1' 64 4096 3000000 'adam' -1& sleep 1; ps
-sleep 1; run 1 'DartHopper-v1' 32 2048 2000000 'adam' -1& sleep 1; ps
-sleep 1; run 2 'DartHopper-v1' 64 4096 2000000 'adam' -1& sleep 1; ps
+sleep 1; run 1 'DartWalker2d-v1' 64 4096 3000000 'adam' -1& sleep 1; ps
+sleep 1; run 2 'DartWalker2d-v1' 64 4096 3000000 'adam' -1& sleep 1; ps
+sleep 1; run 1 'DartHopper-v1' 64 4096 3000000 'adam' -1& sleep 1; ps
+sleep 1; run 2 'DartHopper-v1' 64 4096 3000000 'adam' -1& sleep 1; ps
 
 #
 #sleep 1; run 0 'DartReacher-v1' 32 2048 675000 'adam'& sleep 1; ps

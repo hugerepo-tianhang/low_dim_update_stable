@@ -161,7 +161,7 @@ def linear_with_mult(mult_tensors, input_tensor, scope, n_hidden, *, init_scale=
         return tf.matmul(input_tensor, final_weight) + final_bias
 
 
-def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0):
+def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0, policy=None):
     """
     Creates a fully connected layer for TensorFlow
 
@@ -172,9 +172,12 @@ def linear(input_tensor, scope, n_hidden, *, init_scale=1.0, init_bias=0.0):
     :param init_bias: (int) The initialization offset bias
     :return: (TensorFlow Tensor) fully connected layer
     """
+
     with tf.variable_scope(scope):
         n_input = input_tensor.get_shape()[1].value
         weight = tf.get_variable("w", [n_input, n_hidden], initializer=ortho_init(init_scale))
+        if policy is not None and "pi_fc" in scope:
+            policy.pi_weights.append(weight)
         bias = tf.get_variable("b", [n_hidden], initializer=tf.constant_initializer(init_bias))
         return tf.matmul(input_tensor, weight) + bias
 

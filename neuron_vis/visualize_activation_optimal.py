@@ -1,34 +1,21 @@
-from stable_baselines.ppo2.run_mujoco import eval_return
-import cma
 
-import numpy as np
-from stable_baselines.low_dim_analysis.eval_util import *
 from stable_baselines.low_dim_analysis.common import *
 
-from stable_baselines import logger
-import matplotlib.pyplot as plt
+
 import matplotlib.colors
 import pandas as pd
-from sklearn.decomposition import PCA
 
-from joblib import Parallel, delayed
 from matplotlib import pyplot as plt
-import time
-import os
-from stable_baselines.common.cmd_util import mujoco_arg_parser
+
 from stable_baselines.low_dim_analysis.common_parser import get_common_parser
-from numpy import linalg as LA
 import numpy as np
 import gym
+from stable_baselines.common.policies import MlpPolicy
 
-from stable_baselines.common.cmd_util import mujoco_arg_parser
 from stable_baselines import bench, logger
-from stable_baselines.common import set_global_seeds
 from stable_baselines.common.vec_env.vec_normalize import VecNormalize
 from stable_baselines.ppo2 import PPO2
-from stable_baselines.common.policies import MlpPolicy
 from stable_baselines.common.vec_env.dummy_vec_env import DummyVecEnv
-import csv
 import os
 from stable_baselines.low_dim_analysis.eval_util import get_full_param_traj_file_path, get_full_params_dir, get_dir_path_for_this_run, get_log_dir, get_save_dir
 def safe_mean(arr):
@@ -57,6 +44,11 @@ def neuron_values_generator(args, save_dir, pi_theta, eval_timesteps):
     if args.normalize:
         env = VecNormalize(env)
 
+
+    # policy = MlpPolicy
+    # # model = PPO2.load(f"{save_dir}/ppo2") # this also loads V function
+    # model = PPO2(policy=policy, env=env, n_steps=args.n_steps, nminibatches=args.nminibatches, lam=0.95, gamma=0.99, noptepochs=10,
+    #              ent_coef=0.0, learning_rate=3e-4, cliprange=0.2, optimizer=args.optimizer)
     model = PPO2.load(f"{save_dir}/ppo2") # this also loads V function
     if pi_theta is not None:
         model.set_pi_from_flat(pi_theta)
@@ -70,9 +62,9 @@ def neuron_values_generator(args, save_dir, pi_theta, eval_timesteps):
     obs[:] = env.reset()
     env.render()
     ep_infos = []
-    for _ in range(eval_timesteps):
-        actions = model.step(obs)[0]
-        neuron_values = model.give_neuron_values(obs)
+    while 1:
+        neuron_values, actions, _, _, _ = model.step_with_neurons(obs)
+        # neuron_values = model.give_neuron_values(obs)
 
         # neuron_values_list.append( neuron_values )
         yield neuron_values
@@ -109,8 +101,10 @@ def preload_neurons(args, save_dir, pi_theta, eval_timesteps):
 
     if args.normalize:
         env = VecNormalize(env)
-
+    # policy = MlpPolicy
     model = PPO2.load(f"{save_dir}/ppo2") # this also loads V function
+    # model = PPO2(policy=policy, env=env, n_steps=args.n_steps, nminibatches=args.nminibatches, lam=0.95, gamma=0.99, noptepochs=10,
+    #              ent_coef=0.0, learning_rate=3e-4, cliprange=0.2, optimizer=args.optimizer)
     if pi_theta is not None:
         model.set_pi_from_flat(pi_theta)
 
@@ -123,7 +117,7 @@ def preload_neurons(args, save_dir, pi_theta, eval_timesteps):
     obs[:] = env.reset()
     env.render()
     ep_infos = []
-    for _ in range(eval_timesteps):
+    for _ in range(1024):
         actions = model.step(obs)[0]
         neuron_values = model.give_neuron_values(obs)
 
@@ -151,28 +145,27 @@ def give_normalizers(preload_neuron_values_list):
 
 
     def process_values(neuron_values):
-        latents = neuron_values[:-2]
-        latents = np.concatenate(latents, axis=1)
+        obz = neuron_values[0]
 
         dist = neuron_values[-2:]
         dist = np.concatenate(dist, axis=1)
 
-        return [np.max(latents), np.min(latents), np.max(dist), np.min(dist)]
+        return [np.max(obz), np.min(obz), np.max(dist), np.min(dist)]
 
     result = np.array([process_values(neuron_values) for neuron_values in preload_neuron_values_list])
 
-
-    latent_max, latent_min, dist_max, dist_min = np.max(result[:,0]),\
+    obz_max, obz_min, dist_max, dist_min = np.max(result[:,0]),\
                                                  np.min(result[:,1]), \
                                                  np.max(result[:,2]), \
                                                  np.min(result[:,3])
 
     #since it's tanh, HARDCODE -1, 1
     latent_norm = matplotlib.colors.Normalize(vmin=-1, vmax=1)
+    obz_norm = matplotlib.colors.Normalize(vmin=obz_min, vmax=obz_max)
 
 
     dist_norm = matplotlib.colors.Normalize(vmin=dist_min, vmax=dist_max)
-    return latent_norm, dist_norm
+    return obz_norm, latent_norm, dist_norm
 
 def main():
 
@@ -204,8 +197,9 @@ def main():
     ax.axis('off')
 
     preload_neuron_values_list = preload_neurons(args, save_dir, final_params, args.eval_num_timesteps)
-    latent_norm, dist_norm = give_normalizers(preload_neuron_values_list)
+    obz_norm, latent_norm, dist_norm = give_normalizers(preload_neuron_values_list)
     latent_cmap = plt.get_cmap("Oranges")
+    obz_cmap = plt.get_cmap("Blues")
     dist_cmap = plt.get_cmap("Greys")
 
     neuron_values_gen = neuron_values_generator(args, save_dir, final_params, args.eval_num_timesteps)
@@ -231,7 +225,11 @@ def main():
             layer_size = len(neuron_layer_value)
             layer_top = v_spacing * (layer_size - 1) / 2. + (top + bottom) / 2.
             for m, neuron_value in enumerate(neuron_layer_value):
-                if n >= len(first_neurons)-2:
+                if n == 0:
+                    # obz
+                    circle = plt.Circle((n * h_spacing + left, layer_top - m * v_spacing), v_spacing / 4.,
+                                        color=obz_cmap(obz_norm(neuron_value)), ec='k', zorder=4)
+                elif n >= len(first_neurons)-2:
                     # dist
                     circle = plt.Circle((n * h_spacing + left, layer_top - m * v_spacing), v_spacing / 4.,
                                         color=dist_cmap(dist_norm(neuron_value)), ec='k', zorder=4)
@@ -244,12 +242,17 @@ def main():
         return result_artists
 
     def update_neuron(neuron_values):
+        num_of_obz_neurons = neuron_values[0].reshape(-1).shape[0]
         num_of_dist_neurons = np.concatenate(neuron_values[-2:], axis=1).shape[1]
 
 
         neuron_values = np.concatenate(neuron_values, axis=1).reshape(-1).ravel()
         for i, neuron_value in enumerate(neuron_values):
-            if i >= neuron_values.shape[0] - num_of_dist_neurons:
+            if i < num_of_obz_neurons:
+                # obz
+                result_artists[i].set_color(obz_cmap(obz_norm(neuron_value)))
+
+            elif i >= neuron_values.shape[0] - num_of_dist_neurons:
                 # dist
                 result_artists[i].set_color(dist_cmap(dist_norm(neuron_value)))
             else:
@@ -262,7 +265,7 @@ def main():
 
 
 
-    rot_animation = FuncAnimation(fig, update_neuron, frames=neuron_values_gen, init_func=init, interval=100)
+    rot_animation = FuncAnimation(fig, update_neuron, frames=neuron_values_gen, init_func=init, interval=3)
     plt.show()
 
     print(f"~~~~~~~~~~~~~~~~~~~~~~saving to {plot_dir_alg}/neuron_vis.pdf")

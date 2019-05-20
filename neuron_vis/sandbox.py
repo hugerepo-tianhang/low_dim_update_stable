@@ -1,55 +1,56 @@
 import matplotlib.pyplot as plt
-import matplotlib.colors
-def draw_neural_net(ax, left, right, bottom, top, neuron_values):
-    '''
-    Draw a neural network cartoon using matplotilb.
-
-    :usage:
-        >>> fig = plt.figure(figsize=(12, 12))
-        >>> draw_neural_net(fig.gca(), .1, .9, .1, .9, [4, 7, 2])
-
-    :parameters:
-        - ax : matplotlib.axes.AxesSubplot
-            The axes on which to plot the cartoon (get e.g. by plt.gca())
-        - left : float
-            The center of the leftmost node(s) will be placed here
-        - right : float
-            The center of the rightmost node(s) will be placed here
-        - bottom : float
-            The center of the bottommost node(s) will be placed here
-        - top : float
-            The center of the topmost node(s) will be placed here
-        - layer_sizes : list of int
-            List of layer sizes, including input and output dimensionality
-    '''
-    n_layers = len(neuron_values)
-    layer_sizes = [layer.shape[1] for layer in neuron_values]
-    v_spacing = (top - bottom) / float(max(layer_sizes))
-    h_spacing = (right - left) / float(len(layer_sizes) - 1)
-    # Nodes
-    cmap = plt.get_cmap("Oranges")
-    norm = matplotlib.colors.Normalize(vmin=1.5, vmax=4.5)
-
-    for n, neuron_layer_value in enumerate(neuron_values):
-        neuron_layer_value = neuron_layer_value.reshape(-1)
-        layer_size = len(neuron_layer_value)
-        layer_top = v_spacing * (layer_size - 1) / 2. + (top + bottom) / 2.
-        for m, neuron_value in enumerate(neuron_layer_value):
-            circle = plt.Circle((n * h_spacing + left, layer_top - m * v_spacing), v_spacing / 4.,
-                                color=cmap(norm(neuron_value)), ec='k', zorder=4)
-            ax.add_artist(circle)
-    # # Edges
-    # for n, (layer_size_a, layer_size_b) in enumerate(zip(layer_sizes[:-1], layer_sizes[1:])):
-    #     layer_top_a = v_spacing * (layer_size_a - 1) / 2. + (top + bottom) / 2.
-    #     layer_top_b = v_spacing * (layer_size_b - 1) / 2. + (top + bottom) / 2.
-    #     for m in range(layer_size_a):
-    #         for o in range(layer_size_b):
-    #             line = plt.Line2D([n * h_spacing + left, (n + 1) * h_spacing + left],
-    #                               [layer_top_a - m * v_spacing, layer_top_b - o * v_spacing], c='k')
-    #             ax.add_artist(line)
 import numpy as np
-fig = plt.figure(figsize=(12, 12))
-ax = fig.gca()
-ax.axis('off')
-draw_neural_net(ax, .1, .9, .1, .9, [ np.array([[1,2,3]]), np.array([[4,5,6]]) ])
-plt.show()
+import minepy
+def compute_alpha(npoints):
+    NPOINTS_BINS = [1, 25, 50, 250, 500, 1000, 2500, 5000, 10000, 40000]
+    ALPHAS = [0.85, 0.80, 0.75, 0.70, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4]
+
+    if npoints < 1:
+        raise ValueError("the number of points must be >=1")
+
+    return ALPHAS[np.digitize([npoints], NPOINTS_BINS)[0] - 1]
+
+def mic(x,y):
+    alpha_cl = compute_alpha(x.shape[0])
+    mine = minepy.MINE(alpha=alpha_cl, c=5, est="mic_e")
+    mine.compute_score(x, y)
+    mic = mine.mic()
+    return mic
+
+Fs = 8000
+f = 5
+sample = 8000
+x = np.arange(sample)
+# y = np.sin(2 * np.pi * f * x / Fs)
+# z = np.sin(2 * np.pi * f * x / Fs + np.pi/2)
+# # plt.figure()
+# # plt.plot(x, y)
+# # plt.savefig("first_sin.jpg")
+# # plt.figure()
+# # plt.plot(x, z)
+# # plt.savefig("second_sin.jpg")
+#
+out_dir = "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/neuron_vis"
+#
+# plt.figure()
+# plt.plot(y, z)
+# plt.savefig(f"{out_dir}/first_VS_second_pi_div_2.jpg")
+#
+# print(mic(y,z))
+
+x = np.arange(sample)
+y = np.sin(2 * np.pi * f * x / Fs)
+z = np.sin(4 * np.pi * f * x / Fs)
+plt.figure()
+plt.plot(x, y)
+plt.savefig("first_sin.jpg")
+plt.figure()
+plt.plot(x, z)
+plt.savefig("second_sin.jpg")
+
+
+plt.figure()
+plt.plot(y, z)
+plt.savefig(f"{out_dir}/first_VS_second_double_freq.jpg")
+
+print(mic(y,z))

@@ -16,8 +16,11 @@ def get_run_name(args):
     return f'optimizer_{args.optimizer}_env_{args.env}_time_step_{args.num_timesteps}_' \
            f'normalize_{args.normalize}_n_steps_{args.n_steps}_nminibatches_{args.nminibatches}_run_{args.run_num}'
 
-def get_dir_path_for_this_run(args):
-    return f'{get_project_dir()}/stable_baselines/{args.alg}/{get_run_name(args)}'
+def get_dir_path_for_this_run(args, proj_dir=None):
+    if proj_dir is not None:
+        return f'{proj_dir}/stable_baselines/{args.alg}/{get_run_name(args)}'
+    else:
+        return f'{get_project_dir()}/stable_baselines/{args.alg}/{get_run_name(args)}'
 
 
 def get_log_dir(this_run_dir):

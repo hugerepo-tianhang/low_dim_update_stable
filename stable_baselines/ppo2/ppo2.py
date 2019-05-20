@@ -220,10 +220,14 @@ class PPO2(ActorCriticRLModel):
                 self.train_model = train_model
                 self.act_model = act_model
                 self.step = act_model.step
+
+                self.step_with_neurons = act_model.step_with_neurons
                 self.proba_step = act_model.proba_step
                 self.value = act_model.value
                 self.initial_state = act_model.initial_state
                 self.give_neuron_values = act_model.give_neuron_values
+                self.get_weight_values = act_model.get_weight_values
+
                 tf.global_variables_initializer().run(session=self.sess)  # pylint: disable=E1101
 
                 self.summary = tf.summary.merge_all()
