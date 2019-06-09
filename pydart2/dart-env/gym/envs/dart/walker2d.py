@@ -35,6 +35,7 @@ def lagrangian_to_include_in_state(linear_global_dict, non_linear_global_dict, t
 
     concat = np.vstack((linear_M_nd, linear_C_nd, linear_COM_nd))
     max_for_each = np.max(concat, axis=1)
+    top_to_include = min(len(max_for_each), top_to_include)
     argtop = np.argpartition(max_for_each, -top_to_include)
     return translate_to_lagrangian_index(argtop[-top_to_include:], num_M, num_C, num_COM)
 

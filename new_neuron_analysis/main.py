@@ -27,9 +27,9 @@ def complete_run(policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
 def main():
     from joblib import Parallel, delayed
 
-    seeds = [0]
-    run_nums = [0]
-    policy_num_timesteps = 10000
+    seeds = [0, 1]
+    run_nums = [0, 1]
+    policy_num_timesteps = 2000000
     policy_env = "DartWalker2d-v1"
     augment_env = 'DartWalker2d_aug_input_current_trial-v1'
 
@@ -39,9 +39,9 @@ def main():
     # trained_policy_run_nums = [0,1,2]
     # network_sizes = [16, 32, 64, 128]
 
-    augment_num_timesteps = 5000
-    top_num_to_includes = [10, 20]
-    network_sizes = [16]
+    augment_num_timesteps = 1000000
+    top_num_to_includes = [10, 20, 30, 60]
+    network_sizes = [16, 32, 64]
 
     for policy_seed in seeds:
         for policy_run_num in run_nums:
