@@ -207,7 +207,7 @@ def eval_trained_policy_and_collect_data(seed, run_num, policy_env, policy_num_t
     neuron_values = model.give_neuron_values(obs)
     raw_layer_values_list = [[neuron_value.reshape((-1,1))] for neuron_value in neuron_values]
 
-    env.render()
+    # env.render()
     ep_infos = []
     steps_to_first_done = 0
     first_done = False
@@ -239,7 +239,7 @@ def eval_trained_policy_and_collect_data(seed, run_num, policy_env, policy_num_t
         lagrangian_values["COM"].append(sk.C.reshape((-1, 1)))
         lagrangian_values["Coriolis"].append(sk.c.reshape((-1, 1)))
 
-        env.render()
+        # env.render()
 
         # time.sleep(1)
         for info in infos:
