@@ -94,7 +94,7 @@ class DartEnv(gym.Env):
         self.screen_width = screen_width
         self.screen_height = screen_height
 
-        # self.disableViewer=True
+        self.disableViewer=True
         self._get_viewer()
         # Give different observation space for different kind of envs
         if self._obs_type == 'parameter':
