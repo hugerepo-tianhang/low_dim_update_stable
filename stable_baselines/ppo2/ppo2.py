@@ -227,6 +227,7 @@ class PPO2(ActorCriticRLModel):
                 self.initial_state = act_model.initial_state
                 self.give_neuron_values = act_model.give_neuron_values
                 self.get_weight_values = act_model.get_weight_values
+                self.get_all_weight_values = act_model.get_all_weight_values
 
                 tf.global_variables_initializer().run(session=self.sess)  # pylint: disable=E1101
 
@@ -349,7 +350,7 @@ class PPO2(ActorCriticRLModel):
             ep_info_buf = deque(maxlen=100)
             t_first_start = time.time()
 
-            nupdates = total_timesteps // self.n_batch
+            nupdates = int(total_timesteps // self.n_batch)
             for update in range(1, nupdates + 1):
                 assert self.n_batch % self.nminibatches == 0
                 batch_size = self.n_batch // self.nminibatches

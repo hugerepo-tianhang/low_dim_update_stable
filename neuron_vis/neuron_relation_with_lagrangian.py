@@ -337,7 +337,26 @@ def compute_alpha(npoints):
 
     return ALPHAS[np.digitize([npoints], NPOINTS_BINS)[0] - 1]
 
-PLOT_CUTOFF = 300
+
+regr = linear_model.LinearRegression()
+def get_normalized_SSE(lagrange_l, neuron_l, regr):
+
+    range_neuron = max(neuron_l) - min(neuron_l)
+    neuron_l = neuron_l/range_neuron
+    X = lagrange_l.reshape(-1,1)
+    y = neuron_l.reshape(-1,1)
+    regr.fit(X, y)
+    y_pred = regr.predict(X)
+    SSE = ((y - y_pred) ** 2).sum()
+    TV = ((y - np.average(y)) ** 2).sum()
+    return SSE,TV
+
+def get_Reflective_correlation_coefficient(lagrange_l, neuron_l):
+
+    prod = np.dot(lagrange_l, neuron_l)
+    A = np.sum(lagrange_l**2)
+    B = np.sum(neuron_l**2)
+    return prod/np.sqrt(A*B)
 
 def scatter_the_nonlinear_significant_but_not_linear_ones(lagrangian_values,
                                                           layer_values_list, linear_threshold, nonlinear_threshold, out_dir):
@@ -363,15 +382,20 @@ def scatter_the_nonlinear_significant_but_not_linear_ones(lagrangian_values,
                         plt.close()
 
 
+
 def scatter_the_linear_significant_ones(lagrangian_values, layer_values_list, threshold, out_dir):
     for key, nda in lagrangian_values.items():
         for ind, lagrange_l in enumerate(nda):
             for layer_ind, layer in enumerate(layer_values_list):
                 for neuron_ind, neuron_l in enumerate(layer):
                     co = np.corrcoef(lagrange_l, neuron_l)[1,0]
-                    if abs(co) > threshold:
+                    normalized_SSE, TV = get_normalized_SSE(lagrange_l, neuron_l, regr)
+                    Reflective_correlation_coefficient = get_Reflective_correlation_coefficient(lagrange_l, neuron_l)
+                    # if abs(co) > threshold:
+                    if (abs(co) > threshold and normalized_SSE < 200):
                         name = f"{out_dir}/{key}_index_{ind}_VS_layer_{layer_ind}_neuron_{neuron_ind}_" \
-                               f"linear_correlation{co}.jpg"
+                               f"linear_correlation{co}_normalized_SSE_{normalized_SSE}_Syy_{TV}" \
+                               f"_Reflective_correlation_coefficient_{Reflective_correlation_coefficient}.jpg"
                         plt.figure()
 
                         plt.scatter(lagrange_l,neuron_l)
@@ -382,7 +406,7 @@ def scatter_the_linear_significant_ones(lagrangian_values, layer_values_list, th
                         plt.close()
 
 
-def plot_everything(lagrangian_values, layer_values_list, out_dir):
+def plot_everything(lagrangian_values, layer_values_list, out_dir, PLOT_CUTOFF):
     for key, nda in lagrangian_values.items():
         for ind, l in enumerate(nda):
             name = f"{out_dir}/{key}_index_{ind}.jpg"
@@ -405,9 +429,14 @@ def plot_everything(lagrangian_values, layer_values_list, out_dir):
 # what is the nonlinear relationship that's not linear. plot them out
 # X is sin, Y is sin with phase shift. Do they have functional relation?
 # does MIC capture relationship of 2 sin wave?
-
+from stable_baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
+from gym import wrappers
 
 #TODO Mddq + C = t M is general for all motor skill(task independent),
+
+#TODO give correlated M to input and see if it accelerates the learning, give neuron to input and see if it acc.
+#TODO ask visak for perfect human walk policy and do the viz to see correlation
+#TODO C(q,dq) is actually two terms JMdJ dq + JwMJ dq. does neuron correlate to one of them?
 def main():
 
 
@@ -420,12 +449,10 @@ def main():
     plot_dir_alg = get_plot_dir(args)
 
     traj_params_dir_name = get_full_params_dir(this_run_dir)
-    intermediate_data_dir = get_intermediate_data_dir(this_run_dir, params_scope="pi")
     save_dir = get_save_dir( this_run_dir)
 
 
-    if not os.path.exists(intermediate_data_dir):
-        os.makedirs(intermediate_data_dir)
+
     if not os.path.exists(plot_dir_alg):
         os.makedirs(plot_dir_alg)
 
@@ -434,14 +461,15 @@ def main():
     final_params = pd.read_csv(final_file, header=None).values[0]
 
 
-    layer_values_list = []
     def make_env():
         env_out = gym.make(args.env)
-
         env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
+
         return env_out
     env = DummyVecEnv([make_env])
 
+        # env_out = gym.make(args.env)
+        # env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
     if args.normalize:
         env = VecNormalize(env)
     # policy = MlpPolicy
@@ -450,6 +478,7 @@ def main():
     #              ent_coef=0.0, learning_rate=3e-4, cliprange=0.2, optimizer=args.optimizer)
     model.set_pi_from_flat(final_params)
 
+
     if args.normalize:
         env.load_running_average(save_dir)
 
@@ -457,7 +486,12 @@ def main():
     lagrangian_values = {}
 
     obs = np.zeros((env.num_envs,) + env.observation_space.shape)
+
     obs[:] = env.reset()
+
+    # env = VecVideoRecorder(env, "./",
+    #                            record_video_trigger=lambda x: x == 0, video_length=3000,
+    #                            name_prefix="3000000agent-{}".format(args.env))
 
     lagrangian_values["M"] = [sk.M.reshape((-1,1))]
     lagrangian_values["COM"] = [sk.C.reshape((-1,1))]
@@ -474,11 +508,19 @@ def main():
 
     env.render()
     ep_infos = []
+    steps_to_first_done = 0
+    first_done = False
     for _ in range(3000):
         actions = model.step(obs)[0]
 
         # yield neuron_values
         obs, rew, done, infos = env.step(actions)
+        if done and not first_done:
+            first_done = True
+
+        if not first_done:
+            steps_to_first_done += 1
+
 
         neuron_values = model.give_neuron_values(obs)
 
@@ -535,8 +577,14 @@ def main():
         shutil.rmtree(out_dir)
     os.makedirs(out_dir)
 
+    all_weights = model.get_all_weight_values()
 
-    plot_everything(lagrangian_values, layer_values_list, out_dir)
+    for ind, weights in enumerate(all_weights):
+        fname = f"{out_dir}/weights_layer_{ind}.txt"
+        np.savetxt(fname, weights)
+
+    PLOT_CUTOFF = steps_to_first_done
+    plot_everything(lagrangian_values, layer_values_list, out_dir, PLOT_CUTOFF)
     scatter_the_linear_significant_ones(lagrangian_values, layer_values_list, threshold=0.6, out_dir=out_dir)
     scatter_the_nonlinear_significant_but_not_linear_ones(lagrangian_values,
                                                           layer_values_list,

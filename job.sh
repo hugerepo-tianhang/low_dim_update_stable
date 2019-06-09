@@ -85,11 +85,12 @@ run () {
 
     local optimizer=$6
     local use_run_num_start=$7
+    local additional_notes=$8
 
     echo "Welcome to RUN: run number  $env $run"
     python -m stable_baselines.ppo2.run_mujoco --env=$env --num-timesteps=$time_steps\
             --run_num=$run --normalize=$normalize --nminibatches=$nminibatches\
-            --n_steps=$n_steps --optimizer=$optimizer --use_run_num_start=$use_run_num_start
+            --n_steps=$n_steps --optimizer=$optimizer --use_run_num_start=$use_run_num_start --additional_notes=$additional_notes
 
 }
 
@@ -634,10 +635,13 @@ WPCA_first_n_VS_last_plane () {
 #sleep 1; run 12 'DartWalker2d-v1' 32 2048 675000 'adam' 10& sleep 1; ps
 #sleep 1; run 13 'DartWalker2d-v1' 32 2048 675000 'adam' 10& sleep 1; ps
 #sleep 1; run 3 'DartWalker2d-v1' 32 2048 675000 'adam'& sleep 1; ps
-sleep 1; run 1 'DartWalker2d-v1' 64 4096 3000000 'adam' -1& sleep 1; ps
-sleep 1; run 2 'DartWalker2d-v1' 64 4096 3000000 'adam' -1& sleep 1; ps
-sleep 1; run 1 'DartHopper-v1' 64 4096 3000000 'adam' -1& sleep 1; ps
-sleep 1; run 2 'DartHopper-v1' 64 4096 3000000 'adam' -1& sleep 1; ps
+sleep 1; run 3 'DartWalker2dM_input-v1' 64 4096 1000000 'adam' -1 "TrianUpper_M_input"& sleep 1; ps
+sleep 1; run 4 'DartWalker2dM_input-v1' 64 4096 1000000 'adam' -1 "TrianUpper_M_input"& sleep 1; ps
+sleep 1; run 5 'DartWalker2dM_input-v1' 64 4096 1000000 'adam' -1 "TrianUpper_M_input"& sleep 1; ps
+#sleep 1; run 0 'DartHopper-v1' 64 4096 1000000 'adam' -1 "M_input"& sleep 1; ps
+#sleep 1; run 1 'DartHopper-v1' 64 4096 1000000 'adam' -1 "M_input"& sleep 1; ps
+#sleep 1; run 2 'DartHopper-v1' 64 4096 1000000 'adam' -1 "M_input"& sleep 1; ps
+#sleep 1; run 2 'DartHopper-v1' 64 4096 3000000 'adam' -1& sleep 1; ps
 
 #
 #sleep 1; run 0 'DartReacher-v1' 32 2048 675000 'adam'& sleep 1; ps

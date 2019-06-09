@@ -210,6 +210,9 @@ def visualize_neurons(args, save_dir, pi_theta, eval_timesteps):
 if __name__ == '__main__':
     import sys
     # import pandas as pd
+    cmd_line = ["--num-timesteps", "3000000", "--run_num", "0", "--seed", "0"]
+
+
     train(sys.argv)
     # args = mujoco_arg_parser().parse_args()
     # this_run_dir = get_dir_path_for_this_run("ppo2", args.num_timesteps,

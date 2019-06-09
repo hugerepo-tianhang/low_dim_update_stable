@@ -14,10 +14,11 @@ def get_common_parser():
     parser.add_argument('--chunk_size', default=10000, type=int, help='total timesteps agent runs')
     parser.add_argument('--optimizer', help='environment ID', type=str, default='adam')
     parser.add_argument('--seed', help='RNG seed', type=int, default=0)
+    parser.add_argument('--additional_notes', default="", type=str, help='which run number')
 
     # PCA parameters
     parser.add_argument('--alg', default='ppo2', help='algorithm to train on')
-    parser.add_argument('--env', default='DartHopper-v1', help='algorithm to train on')
+    parser.add_argument('--env', default='DartWalker2d-v1', help='algorithm to train on')
     parser.add_argument('--num-timesteps', default=3000000, type=int, help='total timesteps agent runs')
     parser.add_argument('--run_num', default=0, type=int, help='which run number')
 

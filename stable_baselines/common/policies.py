@@ -668,6 +668,13 @@ class FeedForwardPolicy(ActorCriticPolicy):
         col_result = self.sess.run(that_column_tensors)
         return result
 
+    def get_all_weight_values(self):
+        #'model/pi_fc1/w:0'
+        result = self.sess.run(self.pi_weights)
+
+        return result
+
+
     def give_neuron_values(self, obs):
         neurons = self.sess.run(self.policy_neurons, {self.obs_ph: obs})
 
@@ -675,6 +682,7 @@ class FeedForwardPolicy(ActorCriticPolicy):
         return neurons
 
     def step(self, obs, state=None, mask=None, deterministic=False):
+
         if deterministic:
             action, value, neglogp = self.sess.run([self.deterministic_action, self._value, self.neglogp],
                                                    {self.obs_ph: obs})

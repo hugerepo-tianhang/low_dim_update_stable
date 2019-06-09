@@ -68,7 +68,7 @@ def ts2xy(timesteps, xaxis):
     return x_var, y_var
 
 
-def plot_curves(xy_list, xaxis, title):
+def plot_curves(xy_list, labels, xaxis, title):
     """
     plot the curves
 
@@ -78,14 +78,22 @@ def plot_curves(xy_list, xaxis, title):
     :param title: (str) the title of the plot
     """
 
-    plt.figure(figsize=(8, 2))
+    num = len(labels)
+    len_label = len(labels[0])
+    fig = plt.figure(figsize=(len_label//6, num*2))
+    figLegend = plt.figure(figsize=(len_label//6, num*2))
+    ax = fig.add_subplot(111)
+
     maxx = max(xy[0][-1] for xy in xy_list)
     minx = 0
     for (i, (x, y)) in enumerate(xy_list):
         color = COLORS[i]
-        plt.scatter(x, y, s=2)
+
+        ax.scatter(x, y, s=2)
         x, y_mean = window_func(x, y, EPISODES_WINDOW, np.mean)  # So returns average of last EPISODE_WINDOW episodes
-        plt.plot(x, y_mean, color=color)
+        ax.plot(x, y_mean, color=color, label=labels[i])
+        ax.legend(loc="upper left")
+
     plt.xlim(minx, maxx)
     plt.title(title)
     plt.xlabel(xaxis)
@@ -93,7 +101,10 @@ def plot_curves(xy_list, xaxis, title):
     plt.tight_layout()
 
 
-def plot_results(dirs, num_timesteps, xaxis, task_name):
+    figLegend.legend(*ax.get_legend_handles_labels(), "center")
+    return fig, figLegend
+
+def plot_results(dirs, num_timesteps, xaxis, task_name, labels):
     """
     plot the results
 
@@ -110,7 +121,7 @@ def plot_results(dirs, num_timesteps, xaxis, task_name):
         timesteps = timesteps[timesteps.l.cumsum() <= num_timesteps]
         tslist.append(timesteps)
     xy_list = [ts2xy(timesteps_item, xaxis) for timesteps_item in tslist]
-    plot_curves(xy_list, xaxis, task_name)
+    return plot_curves(xy_list, labels, xaxis, task_name)
 
 
 def main():
@@ -139,4 +150,24 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    # plot_results(["/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartHopper-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_0/the_log_dir",
+    #               "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartHopper-v1_time_step_3000000_normalize_True_n_steps_4096_nminibatches_64_run_0/the_log_dir",
+    #               "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartHopper-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_0_additional_notes_M_input/the_log_dir",
+    #                 "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartHopper-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_1_additional_notes_M_input/the_log_dir",
+    #                 "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartHopper-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_2_additional_notes_M_input/the_log_dir"]
+    #              ,1000000, X_TIMESTEPS, "SSS", ["normal_run_0", "normal_run_1", "M_input_run_0", "M_input_run_1", "M_input_run_2"])
+    # plt.show()
+
+    plot_results(["/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_0_additional_notes_M_input/the_log_dir",
+                "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_1_additional_notes_M_input/the_log_dir",
+                "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_2_additional_notes_M_input/the_log_dir",
+                "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_3000000_normalize_True_n_steps_4096_nminibatches_64_run_0/the_log_dir",
+                "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_3000000_normalize_True_n_steps_4096_nminibatches_64_run_1/the_log_dir",
+                "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_3000000_normalize_True_n_steps_4096_nminibatches_64_run_2/the_log_dir",
+                  "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2dM_input-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_0_additional_notes_TrianUpper_M_input/the_log_dir",
+                  "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2dM_input-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_1_additional_notes_TrianUpper_M_input/the_log_dir",
+                  "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2dM_input-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_2_additional_notes_TrianUpper_M_input/the_log_dir"],
+                1000000, X_TIMESTEPS, "SSS", ["M_input_run_0", "M_input_run_1", "M_input_run_2", "normal_run_0", "normal_run_1", "norm 2", "triU_run_0", "triU_run_1", "triU 2"])
+
+    plt.show()
