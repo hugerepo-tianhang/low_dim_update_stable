@@ -1,7 +1,9 @@
 import sys
 import os
 d = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..'))
+od = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..', '..'))
 sys.path.append(d)
+sys.path.append(od)
 
 from new_neuron_analysis.run_trained_policy import eval_trained_policy_and_collect_data
 from new_neuron_analysis.analyse_data import crunch_and_plot_data
