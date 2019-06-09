@@ -12,7 +12,9 @@ def create_dir_if_not(dir_name):
 
 
 def get_proj_dir():
-    return "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/new_neuron_analysis"
+    project_dir = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..'))
+
+    return f"{project_dir}/new_neuron_analysis"
 
 
 def get_run_name(env, policy_num_timesteps, policy_run_num, policy_seed, run_seed, run_run_num):
