@@ -29,21 +29,21 @@ def safe_mean(arr):
     return np.nan if len(arr) == 0 else np.mean(arr)
 
 
-def get_run_name_experiment(env, num_timesteps,run_num,seed, top_num_to_include, network_size):
+def get_run_name_experiment(env, num_timesteps,run_num,seed, learning_rate, top_num_to_include, network_size):
 
     return f'env_{env}_time_step_{num_timesteps}_' \
-           f'run_{run_num}_seed_{seed}_top_num_to_include_{top_num_to_include}_network_size_{network_size}'
+           f'run_{run_num}_seed_{seed}_learning_rate_{learning_rate}_top_num_to_include_{top_num_to_include}_network_size_{network_size}'
 
 
-def get_experiment_path_for_this_run(env, num_timesteps,run_num,seed, top_num_to_include, result_dir, network_size):
+def get_experiment_path_for_this_run(env, num_timesteps,run_num,seed, learning_rate, top_num_to_include, result_dir, network_size):
 
-    return f'{result_dir}/{get_run_name_experiment(env, num_timesteps,run_num,seed, top_num_to_include, network_size)}'
+    return f'{result_dir}/{get_run_name_experiment(env, num_timesteps,run_num,seed, learning_rate, top_num_to_include, network_size)}'
 
 class AttributeDict(dict):
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
-def train_augmented_input(augment_env, augment_num_timesteps, top_num_to_include, augment_seed, augment_run_num, network_size,
-                          policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num):
+def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augment_run_num, network_size,
+                          policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate):
 
     args = AttributeDict()
 
@@ -65,7 +65,6 @@ def train_augmented_input(augment_env, augment_num_timesteps, top_num_to_include
 
     with open(non_linear_global_dict_path, 'r') as fp:
         non_linear_global_dict = json.load(fp)
-    learning_rate = 64/network_size*3e-4
 
     experiment_label = f"learning_rate_{learning_rate}_augment_num_timesteps{augment_num_timesteps}_top_num_to_include{top_num_to_include}" \
                        f"_augment_seed{augment_seed}_augment_run_num{augment_run_num}_network_size{network_size}" \
@@ -85,7 +84,7 @@ def train_augmented_input(augment_env, augment_num_timesteps, top_num_to_include
     result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
 
     this_run_dir = get_experiment_path_for_this_run(entry_point, args.num_timesteps, args.run_num,
-                                                    args.seed, top_num_to_include=top_num_to_include,
+                                                    args.seed, learning_rate=learning_rate, top_num_to_include=top_num_to_include,
                                                     result_dir=result_dir, network_size=network_size)
     full_param_traj_dir_path = get_full_params_dir(this_run_dir)
     log_dir = get_log_dir(this_run_dir)
@@ -145,17 +144,6 @@ def train_augmented_input(augment_env, augment_num_timesteps, top_num_to_include
 
     return log_dir
 
-def run_experiment(augment_env, augment_num_timesteps, top_num_to_include, augment_seed, augment_run_num, network_size,
-                          policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num):
-    """
-    Runs the test
-    """
-
-    log_dir = train_augmented_input(augment_env, augment_num_timesteps, top_num_to_include, augment_seed, augment_run_num, network_size,
-                          policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
-
-
-    # return [experiment_label, log_dir]
 
 if __name__ == "__main__":
     augment_env = 'DartWalker2d_aug_input_current_trial-v1'

@@ -41,7 +41,6 @@ def main():
     run_nums = [0, 1]
     policy_num_timesteps = 2000000
     policy_env = "DartWalker2d-v1"
-    augment_env = 'DartWalker2d_aug_input_current_trial-v1'
 
     augment_num_timesteps = 1000000
     top_num_to_includes = [0, 10, 60]
@@ -67,17 +66,30 @@ def main():
                     # run_experiment(augment_env, augment_num_timesteps, 0, 0,
                     # 0, 10,
                     # policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                    # eval_run_num)
+                    # eval_run_num, learning_rate=3e-4)
                     # #
-                    Parallel(n_jobs=8)(delayed(run_experiment)(augment_env, augment_num_timesteps, top_num_to_include, augment_seed,
-                                               augment_run_num, network_size,
-                                               policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                                               eval_run_num)
+                    #
+                    for augment_seed in seeds:
+                        for augment_run_num in run_nums:
+                            for top_num_to_include in top_num_to_includes:
+                                for network_size in network_sizes:
+                                    learning_rates = [64 / network_size * 3e-4, 64/network_size*64/network_size*3e-4, (64/network_size+64/network_size)*3e-4]
+                                    for learning_rate in learning_rates:
+                                        run_experiment(augment_num_timesteps, top_num_to_include, augment_seed,
+                                                       augment_run_num, network_size,
+                                                       policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                                                       eval_run_num, learning_rate=learning_rate)
 
-                            for augment_seed in seeds
-                            for augment_run_num in run_nums
-                            for top_num_to_include in top_num_to_includes
-                            for network_size in network_sizes)
+
+                    # Parallel(n_jobs=8)(delayed(run_experiment)(augment_env, augment_num_timesteps, top_num_to_include, augment_seed,
+                    #                            augment_run_num, network_size,
+                    #                            policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                    #                            eval_run_num)
+                    #
+                    #         for augment_seed in seeds
+                    #         for augment_run_num in run_nums
+                    #         for top_num_to_include in top_num_to_includes
+                    #         for network_size in network_sizes)
 
                     # result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
                     #                             policy_seed, eval_seed, eval_run_num)
