@@ -27,25 +27,25 @@ def complete_run(policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
 def main():
     from joblib import Parallel, delayed
 
-    # seeds = [0, 1]
-    # run_nums = [0, 1]
-    # policy_num_timesteps = 1000
-    # policy_env = "DartWalker2d-v1"
-    # augment_env = 'DartWalker2d_aug_input_current_trial-v1'
-    #
-    # augment_num_timesteps = 1000
-    # top_num_to_includes = [10, 60]
-    # network_sizes = [16, 32]
-
     seeds = [0, 1]
     run_nums = [0, 1]
-    policy_num_timesteps = 2000000
+    policy_num_timesteps = 1000
     policy_env = "DartWalker2d-v1"
     augment_env = 'DartWalker2d_aug_input_current_trial-v1'
 
-    augment_num_timesteps = 1000000
-    top_num_to_includes = [10, 20, 30, 60]
-    network_sizes = [16, 32, 64]
+    augment_num_timesteps = 1000
+    top_num_to_includes = [10, 60]
+    network_sizes = [16, 32]
+
+    # seeds = [0, 1]
+    # run_nums = [0, 1]
+    # policy_num_timesteps = 2000000
+    # policy_env = "DartWalker2d-v1"
+    # augment_env = 'DartWalker2d_aug_input_current_trial-v1'
+    #
+    # augment_num_timesteps = 1000000
+    # top_num_to_includes = [10, 20, 30, 60]
+    # network_sizes = [16, 32, 64]
 
 
 
@@ -64,8 +64,12 @@ def main():
 
                     crunch_and_plot_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                                          eval_run_num)
+                    # run_experiment(augment_env, augment_num_timesteps, 10, 0,
+                    # 0, 10,
+                    # policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                    # eval_run_num)
 
-                    results = Parallel(n_jobs=-1)(delayed(run_experiment)(augment_env, augment_num_timesteps, top_num_to_include, augment_seed,
+                    Parallel(n_jobs=8)(delayed(run_experiment)(augment_env, augment_num_timesteps, top_num_to_include, augment_seed,
                                                augment_run_num, network_size,
                                                policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                                                eval_run_num)
@@ -75,9 +79,9 @@ def main():
                             for top_num_to_include in top_num_to_includes
                             for network_size in network_sizes)
 
-                    result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
-                                                policy_seed, eval_seed, eval_run_num)
-                    plot(result_dir)
+                    # result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
+                    #                             policy_seed, eval_seed, eval_run_num)
+                    # plot(result_dir)
 
 
 

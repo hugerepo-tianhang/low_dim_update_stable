@@ -29,15 +29,15 @@ def safe_mean(arr):
     return np.nan if len(arr) == 0 else np.mean(arr)
 
 
-def get_run_name_experiment(args, top_num_to_include, network_size):
+def get_run_name_experiment(env, num_timesteps,run_num,seed, top_num_to_include, network_size):
 
-    return f'env_{args.env}_time_step_{args.num_timesteps}_' \
-           f'run_{args.run_num}_seed_{args.seed}_top_num_to_include_{top_num_to_include}_network_size_{network_size}'
+    return f'env_{env}_time_step_{num_timesteps}_' \
+           f'run_{run_num}_seed_{seed}_top_num_to_include_{top_num_to_include}_network_size_{network_size}'
 
 
-def get_experiment_path_for_this_run(args, top_num_to_include, result_dir, network_size):
+def get_experiment_path_for_this_run(env, num_timesteps,run_num,seed, top_num_to_include, result_dir, network_size):
 
-    return f'{result_dir}/{get_run_name_experiment(args, top_num_to_include, network_size)}'
+    return f'{result_dir}/{get_run_name_experiment(env, num_timesteps,run_num,seed, top_num_to_include, network_size)}'
 
 class AttributeDict(dict):
     __getattr__ = dict.__getitem__
@@ -48,7 +48,6 @@ def train_augmented_input(augment_env, augment_num_timesteps, top_num_to_include
     args = AttributeDict()
 
     args.normalize = True
-    args.env = augment_env
     args.num_timesteps = augment_num_timesteps
     args.run_num = augment_run_num
     args.alg = "ppo2"
@@ -67,18 +66,25 @@ def train_augmented_input(augment_env, augment_num_timesteps, top_num_to_include
     with open(non_linear_global_dict_path, 'r') as fp:
         non_linear_global_dict = json.load(fp)
 
+    experiment_label = f"augment_num_timesteps{augment_num_timesteps}_top_num_to_include{top_num_to_include}" \
+                       f"_augment_seed{augment_seed}_augment_run_num{augment_run_num}_network_size{network_size}" \
+                       f"_policy_num_timesteps{policy_num_timesteps}_policy_run_num{policy_run_num}_policy_seed{policy_seed}" \
+                       f"_eval_seed{eval_seed}_eval_run_num{eval_run_num}"
+
+    entry_point = 'gym.envs.dart:DartWalker2dEnv_aug_input'
+    args.env = f'{experiment_label}_{entry_point}-v1'
     register(
-        id='DartWalker2d_aug_input_current_trial-v1',
-        entry_point='gym.envs.dart:DartWalker2dEnv_aug_input',
+        id=args.env,
+        entry_point=entry_point,
         max_episode_steps=1000,
         kwargs={'linear_global_dict':linear_global_dict,
                 'non_linear_global_dict':non_linear_global_dict,
                 'top_to_include':top_num_to_include}
-
     )
     result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
 
-    this_run_dir = get_experiment_path_for_this_run(args, top_num_to_include=top_num_to_include,
+    this_run_dir = get_experiment_path_for_this_run(entry_point, args.num_timesteps, args.run_num,
+                                                    args.seed, top_num_to_include=top_num_to_include,
                                                     result_dir=result_dir, network_size=network_size)
     full_param_traj_dir_path = get_full_params_dir(this_run_dir)
     log_dir = get_log_dir(this_run_dir)
@@ -146,12 +152,8 @@ def run_experiment(augment_env, augment_num_timesteps, top_num_to_include, augme
     log_dir = train_augmented_input(augment_env, augment_num_timesteps, top_num_to_include, augment_seed, augment_run_num, network_size,
                           policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
 
-    experiment_label = f"augment_env{augment_env}, augment_num_timesteps{augment_num_timesteps}, top_num_to_include{top_num_to_include}" \
-                       f", augment_seed{augment_seed}, augment_run_num{augment_run_num}, network_size{network_size}, policy_env{policy_env}" \
-                       f", policy_num_timesteps{policy_num_timesteps}, policy_run_num{policy_run_num}, policy_seed{policy_seed}" \
-                       f", eval_seed{eval_seed}, eval_run_num{eval_run_num}"
 
-    return [experiment_label, log_dir]
+    # return [experiment_label, log_dir]
 
 if __name__ == "__main__":
     augment_env = 'DartWalker2d_aug_input_current_trial-v1'
