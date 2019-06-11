@@ -65,8 +65,9 @@ def train_augmented_input(augment_env, augment_num_timesteps, top_num_to_include
 
     with open(non_linear_global_dict_path, 'r') as fp:
         non_linear_global_dict = json.load(fp)
+    learning_rate = 64/network_size*3e-4
 
-    experiment_label = f"augment_num_timesteps{augment_num_timesteps}_top_num_to_include{top_num_to_include}" \
+    experiment_label = f"learning_rate_{learning_rate}_augment_num_timesteps{augment_num_timesteps}_top_num_to_include{top_num_to_include}" \
                        f"_augment_seed{augment_seed}_augment_run_num{augment_run_num}_network_size{network_size}" \
                        f"_policy_num_timesteps{policy_num_timesteps}_policy_run_num{policy_run_num}_policy_seed{policy_seed}" \
                        f"_eval_seed{eval_seed}_eval_run_num{eval_run_num}"
@@ -128,10 +129,11 @@ def train_augmented_input(augment_env, augment_num_timesteps, top_num_to_include
                 "full_param_traj_dir_path": full_param_traj_dir_path}
 
     layers = [network_size, network_size]
+
     policy_kwargs = {"net_arch" : [dict(vf=layers, pi=layers)]}
     model = PPO2(policy=policy, env=env, n_steps=4096, nminibatches=64, lam=0.95, gamma=0.99,
                  noptepochs=10,
-                 ent_coef=0.0, learning_rate=3e-4, cliprange=0.2, optimizer='adam', policy_kwargs=policy_kwargs)
+                 ent_coef=0.0, learning_rate=learning_rate, cliprange=0.2, optimizer='adam', policy_kwargs=policy_kwargs)
     model.tell_run_info(run_info)
 
     model.learn(total_timesteps=args.num_timesteps)

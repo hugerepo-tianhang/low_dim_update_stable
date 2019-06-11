@@ -44,12 +44,12 @@ def main():
     augment_env = 'DartWalker2d_aug_input_current_trial-v1'
 
     augment_num_timesteps = 1000000
-    top_num_to_includes = [10, 20, 30, 60]
-    network_sizes = [16, 32, 64]
+    top_num_to_includes = [0, 10, 60]
+    network_sizes = [16, 32, 64, 128]
 
 
 
-    for policy_seed in [1]:
+    for policy_seed in [0,1]:
         for policy_run_num in [0]:
             cmd_line = ["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
                         str(policy_seed)]
