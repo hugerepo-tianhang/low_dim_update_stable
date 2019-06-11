@@ -2,79 +2,87 @@ from stable_baselines.results_plotter import plot_results, X_TIMESTEPS, plt
 from new_neuron_analysis.experiment_augment_input import get_experiment_path_for_this_run, \
      get_log_dir, get_result_dir, AttributeDict, os, get_proj_dir
 
-env = 'DartWalker2d_aug_input_current_trial-v1'
-trained_policy_env = "DartWalker2d-v1"
-trained_policy_num_timesteps = 10000
-policy_run_num = 0
-policy_seed = 0
-run_seed = 0
-run_run_num = 0
-# num_timesteps = 5000
-# top_num_to_includes = [10]
-# trained_policy_seeds = [0, 1]
-# trained_policy_run_nums = [0, 1]
-# network_sizes = [16]
 
 
-num_timesteps = 5000
-top_num_to_includes = [10]
-trained_policy_seeds = [0]
-trained_policy_run_nums = [0]
-network_sizes = [16]
+def get_results(result_dir):
+    labels = []
+    log_dirs = []
+    for label in os.listdir(result_dir):
+        this_run_dir = f"{result_dir}/{label}"
+        log_dir = get_log_dir(this_run_dir)
+        if not os.path.exists(log_dir):
+            continue
 
-def get_results(trained_policy_seeds, trained_policy_run_nums, top_num_to_includes, network_sizes):
-    labels, total_log_dirs = [], []
-    for trained_policy_run_num in trained_policy_run_nums:
-        for trained_policy_seed in trained_policy_seeds:
-            for top_num_to_include in top_num_to_includes:
-                for network_size in network_sizes:
-                    experiment_label, log_dir = get_result(trained_policy_seed, trained_policy_run_num,
-                                                           top_num_to_include, network_size)
-                    labels.append(experiment_label)
-
-                    total_log_dirs.append(log_dir)
-    return labels, total_log_dirs
-
-def get_result(trained_policy_seed, trained_policy_run_num, top_num_to_include, network_size):
-
-    args = AttributeDict()
-    seed = 0
-    run_num = 0 #HARD CODE!
-    args.normalize = True
-    args.env = env
-    args.num_timesteps = num_timesteps
-    args.run_num = run_num
-    args.alg = "ppo2"
-    args.seed = seed
+        labels.append(label)
+        log_dirs.append(log_dir)
 
 
-    result_dir = get_result_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, run_seed, run_run_num)
-    this_run_dir = get_experiment_path_for_this_run(args, top_num_to_include=top_num_to_include,
-                                                    result_dir=result_dir, network_size=network_size)
-    log_dir = get_log_dir(this_run_dir)
+    return labels, log_dirs
 
-    experiment_label = f"trained_policy_seed{trained_policy_seed}, " \
-                       f"trained_policy_run_num{trained_policy_run_num},top_num_to_include{top_num_to_include}, " \
-                       f"network_size{network_size}"
+def extra(label):
+    top_num_to_include = int(label.split("top_num_to_include_")[1].split("_")[0])
+    network_size = int(label.split("network_size_")[1])
+    return top_num_to_include, network_size
 
-    return experiment_label, log_dir
-
-
+def plot(result_dir):
+    top_num_to_include_plot_data = {}
+    network_size_plot_data = {}
 
 
-def plot(labels, total_log_dirs, name):
+    for label in os.listdir(result_dir):
+
+        this_run_dir = f"{result_dir}/{label}"
+        log_dir = get_log_dir(this_run_dir)
+        if not os.path.exists(log_dir):
+            continue
+
+
+        top_num_to_include, network_size = extra(label)
+        if top_num_to_include not in top_num_to_include_plot_data:
+            top_num_to_include_plot_data[top_num_to_include] = {"log_dirs": [log_dir], "labels": [label]}
+        else:
+            top_num_to_include_plot_data[top_num_to_include]["log_dirs"].append(log_dir)
+            top_num_to_include_plot_data[top_num_to_include]["labels"].append(label)
+
+        if network_size not in network_size_plot_data:
+            network_size_plot_data[network_size] = {"log_dirs": [log_dir], "labels": [label]}
+        else:
+            network_size_plot_data[network_size]["log_dirs"].append(log_dir)
+            network_size_plot_data[network_size]["labels"].append(label)
+
+
+    for top_num_to_include, data in top_num_to_include_plot_data.items():
+        title = f"fix top_num_to_include {top_num_to_include}"
+        _plot(data["labels"], data["log_dirs"], aug_num_timesteps, result_dir, title)
+
+    for network_size, data in network_size_plot_data.items():
+        title = f"fix network_size {network_size}"
+        _plot(data["labels"], data["log_dirs"], aug_num_timesteps, result_dir, title)
+
+
+
+
+
+def _plot(labels, total_log_dirs, aug_num_timesteps, result_dir, title):
     task_name = "augmented_input"
 
-    fig, figlegend = plot_results(dirs=total_log_dirs, num_timesteps=num_timesteps, xaxis=X_TIMESTEPS, task_name=task_name, labels=labels)
-    # save_dir = os.path.abspath(os.path.join(total_log_dirs[0], '..', '..'))
-    outer_result_dir = f"{get_proj_dir()}/result/"
-    fig.savefig(f"{outer_result_dir}/result_{name}.png")
-    figlegend.savefig(f"{outer_result_dir}/result_{name}_legend.png")
+    fig, figlegend = plot_results(dirs=total_log_dirs, num_timesteps=aug_num_timesteps, xaxis=X_TIMESTEPS, task_name=task_name, labels=labels)
+    fig.savefig(f"{result_dir}/{title}.png")
+    # figlegend.savefig(f"{result_dir}/{title}_legend.png")
 
 if __name__ =="__main__":
+    env = 'DartWalker2d_aug_input_current_trial-v1'
+    trained_policy_env = "DartWalker2d-v1"
+    trained_policy_num_timesteps = 2000000
+    policy_run_num = 0
+    policy_seed = 0
+    eval_seed = 0
+    eval_run_num = 0
 
+    aug_num_timesteps = 1000000
 
-    labels, total_log_dirs = get_results(trained_policy_seeds, trained_policy_run_nums, top_num_to_includes,
-                                         network_sizes)
+    result_dir = get_result_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
 
-    plot(labels, total_log_dirs)
+    # labels, total_log_dirs = get_results(result_dir)
+
+    plot(result_dir)

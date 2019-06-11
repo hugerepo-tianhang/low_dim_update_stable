@@ -1,0 +1,56 @@
+import sys
+import os
+d = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..'))
+od = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..', '..'))
+sys.path.append(d)
+sys.path.append(od)
+
+from new_neuron_analysis.run_trained_policy import eval_trained_policy_and_collect_data
+from new_neuron_analysis.analyse_data import crunch_and_plot_data
+from new_neuron_analysis.experiment_augment_input import run_experiment
+from stable_baselines.ppo2.run_mujoco import train
+from new_neuron_analysis.plot_result import plot, get_results
+
+
+def complete_run(policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                 eval_run_num, augment_env, augment_num_timesteps, top_num_to_include, augment_seed,
+                 policy_env, augment_run_num, network_size):
+
+
+
+    experiment_label, log_dir = run_experiment(augment_env, augment_num_timesteps, top_num_to_include, augment_seed,
+                                               augment_run_num, network_size,
+                                               policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                                               eval_run_num)
+    return [experiment_label, log_dir]
+
+def main():
+
+    seeds = [0, 1, 2]
+    run_nums = [0, 1, 2]
+    policy_num_timesteps = 2000000
+    policy_env = "DartWalker2d-v1"
+    augment_env = 'DartWalker2d_aug_input_current_trial-v1'
+
+    augment_num_timesteps = 1000000
+    top_num_to_includes = [10, 20, 30, 60]
+    network_sizes = [16, 32, 64]
+
+    top_num_to_include = 10
+    augment_seed = 0
+    augment_run_num = 1
+    network_size = 64
+    policy_run_num = 0
+    policy_seed = 0
+    eval_seed = 0
+    eval_run_num = 0
+    run_experiment(augment_env, augment_num_timesteps, top_num_to_include, augment_seed,
+                                               augment_run_num, network_size,
+                                               policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                                               eval_run_num)
+
+
+
+
+
+main()

@@ -159,15 +159,17 @@ if __name__ == '__main__':
     #              ,1000000, X_TIMESTEPS, "SSS", ["normal_run_0", "normal_run_1", "M_input_run_0", "M_input_run_1", "M_input_run_2"])
     # plt.show()
 
-    plot_results(["/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_0_additional_notes_M_input/the_log_dir",
-                "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_1_additional_notes_M_input/the_log_dir",
-                "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_2_additional_notes_M_input/the_log_dir",
+    plot_results([
+        # "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_0_additional_notes_M_input/the_log_dir",
+        #         "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_1_additional_notes_M_input/the_log_dir",
+        #         "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_2_additional_notes_M_input/the_log_dir",
                 "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_3000000_normalize_True_n_steps_4096_nminibatches_64_run_0/the_log_dir",
                 "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_3000000_normalize_True_n_steps_4096_nminibatches_64_run_1/the_log_dir",
                 "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2d-v1_time_step_3000000_normalize_True_n_steps_4096_nminibatches_64_run_2/the_log_dir",
-                  "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2dM_input-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_0_additional_notes_TrianUpper_M_input/the_log_dir",
-                  "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2dM_input-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_1_additional_notes_TrianUpper_M_input/the_log_dir",
-                  "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2dM_input-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_2_additional_notes_TrianUpper_M_input/the_log_dir"],
-                1000000, X_TIMESTEPS, "SSS", ["M_input_run_0", "M_input_run_1", "M_input_run_2", "normal_run_0", "normal_run_1", "norm 2", "triU_run_0", "triU_run_1", "triU 2"])
+                  # "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2dM_input-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_0_additional_notes_TrianUpper_M_input/the_log_dir",
+                  # "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2dM_input-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_1_additional_notes_TrianUpper_M_input/the_log_dir",
+                  # "/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/stable_baselines/ppo2/optimizer_adam_env_DartWalker2dM_input-v1_time_step_1000000_normalize_True_n_steps_4096_nminibatches_64_run_2_additional_notes_TrianUpper_M_input/the_log_dir"
+        ],
+                1000000, X_TIMESTEPS, "SSS", ["normal_run_0", "normal_run_1", "norm 2"])
 
     plt.show()

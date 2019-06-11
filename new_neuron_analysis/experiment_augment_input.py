@@ -85,18 +85,6 @@ def train_augmented_input(augment_env, augment_num_timesteps, top_num_to_include
     save_dir = get_save_dir(this_run_dir)
 
 
-    create_dir_if_not(result_dir)
-    create_dir_remove(this_run_dir)
-    create_dir_remove(full_param_traj_dir_path)
-    create_dir_remove(save_dir)
-    create_dir_remove(log_dir)
-
-    logger.configure(log_dir)
-
-
-
-
-
 
     def make_env():
         env_out = gym.make(args.env)
@@ -106,6 +94,16 @@ def train_augmented_input(augment_env, augment_num_timesteps, top_num_to_include
 
     env = DummyVecEnv([make_env])
     env.envs[0].env.env.disableViewer = True
+
+
+    create_dir_if_not(result_dir)
+    create_dir_remove(this_run_dir)
+    create_dir_remove(full_param_traj_dir_path)
+    create_dir_remove(save_dir)
+    create_dir_remove(log_dir)
+
+    logger.configure(log_dir)
+
 
     if args.normalize:
         env = VecNormalize(env)
