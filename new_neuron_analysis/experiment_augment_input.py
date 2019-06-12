@@ -12,11 +12,12 @@ from stable_baselines.common.policies import MlpPolicy
 from stable_baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 import csv
 import os
-from stable_baselines.low_dim_analysis.eval_util import get_full_param_traj_file_path, get_full_params_dir, get_dir_path_for_this_run, get_log_dir, get_save_dir
+from stable_baselines.low_dim_analysis.eval_util import get_aug_plot_dir, get_full_params_dir, get_dir_path_for_this_run, get_log_dir, get_save_dir
 
 import pandas as pd
 from gym.envs.registration import register
 import json
+from new_neuron_analysis.analyse_data import read_data
 
 def safe_mean(arr):
     """
@@ -42,6 +43,24 @@ def get_experiment_path_for_this_run(env, num_timesteps,run_num,seed, learning_r
 class AttributeDict(dict):
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
+
+
+def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, num_layers=2):
+    lagrangian_values, input_values, layers_values, all_weights = read_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, num_layers)
+
+    trained_policy_data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
+
+    linear_global_dict_path = f"{trained_policy_data_dir}/linear_global_dict.json"
+    non_linear_global_dict_path = f"{trained_policy_data_dir}/non_linear_global_dict.json"
+
+    with open(linear_global_dict_path, 'r') as fp:
+        linear_global_dict = json.load(fp)
+
+    with open(non_linear_global_dict_path, 'r') as fp:
+        non_linear_global_dict = json.load(fp)
+
+    return linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights
+
 def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augment_run_num, network_size,
                           policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate):
 
@@ -55,16 +74,8 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
 
     logger.log(f"#######TRAIN: {args}")
 
-    trained_policy_data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
-
-    linear_global_dict_path = f"{trained_policy_data_dir}/linear_global_dict.json"
-    non_linear_global_dict_path = f"{trained_policy_data_dir}/non_linear_global_dict.json"
-
-    with open(linear_global_dict_path, 'r') as fp:
-        linear_global_dict = json.load(fp)
-
-    with open(non_linear_global_dict_path, 'r') as fp:
-        non_linear_global_dict = json.load(fp)
+    linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = read_all_data(
+        policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
 
     experiment_label = f"learning_rate_{learning_rate}_augment_num_timesteps{augment_num_timesteps}_top_num_to_include{top_num_to_include}" \
                        f"_augment_seed{augment_seed}_augment_run_num{augment_run_num}_network_size{network_size}" \
@@ -72,15 +83,6 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
                        f"_eval_seed{eval_seed}_eval_run_num{eval_run_num}"
 
     entry_point = 'gym.envs.dart:DartWalker2dEnv_aug_input'
-    args.env = f'{experiment_label}_{entry_point}-v1'
-    register(
-        id=args.env,
-        entry_point=entry_point,
-        max_episode_steps=1000,
-        kwargs={'linear_global_dict':linear_global_dict,
-                'non_linear_global_dict':non_linear_global_dict,
-                'top_to_include':top_num_to_include}
-    )
     result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
 
     this_run_dir = get_experiment_path_for_this_run(entry_point, args.num_timesteps, args.run_num,
@@ -89,7 +91,29 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
     full_param_traj_dir_path = get_full_params_dir(this_run_dir)
     log_dir = get_log_dir(this_run_dir)
     save_dir = get_save_dir(this_run_dir)
+    aug_plot_dir = get_aug_plot_dir(this_run_dir)
 
+
+    create_dir_if_not(result_dir)
+    create_dir_remove(this_run_dir)
+    create_dir_remove(full_param_traj_dir_path)
+    create_dir_remove(save_dir)
+    create_dir_remove(log_dir)
+    logger.configure(log_dir)
+
+
+    args.env = f'{experiment_label}_{entry_point}-v1'
+    register(
+        id=args.env,
+        entry_point=entry_point,
+        max_episode_steps=1000,
+        kwargs={'linear_global_dict':linear_global_dict,
+                'non_linear_global_dict':non_linear_global_dict,
+                'top_to_include':top_num_to_include,
+                'aug_plot_dir': aug_plot_dir,
+                "lagrangian_values":lagrangian_values,
+                "layers_values":layers_values}
+    )
 
 
     def make_env():
@@ -102,14 +126,6 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
     env.envs[0].env.env.disableViewer = True
 
 
-    create_dir_if_not(result_dir)
-    create_dir_remove(this_run_dir)
-    create_dir_remove(full_param_traj_dir_path)
-    create_dir_remove(save_dir)
-    create_dir_remove(log_dir)
-
-    logger.configure(log_dir)
-
 
     if args.normalize:
         env = VecNormalize(env)
@@ -118,9 +134,6 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
     policy = MlpPolicy
 
     # extra run info I added for my purposes
-
-
-
 
 
     run_info = {"run_num": args.run_num,

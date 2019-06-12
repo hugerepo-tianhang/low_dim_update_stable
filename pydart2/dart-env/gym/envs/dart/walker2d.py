@@ -2,46 +2,113 @@ import numpy as np
 from gym import utils
 from gym.envs.dart import dart_env
 from gym.envs.dart.dart_world import DartWorld
-
+from matplotlib import pyplot as plt
+from new_neuron_analysis.dir_tree_util import *
 import os
-def translate_to_lagrangian_index(argtop, num_M, num_C, num_COM):
-    result = {"M": [], "Coriolis": [], "COM": []}
-    n = np.sqrt(num_M)
-    upper_tri_inds = np.triu_indices(n)
-    flattened_ind = [row * n + col for row, col in zip(upper_tri_inds[0], upper_tri_inds[1])]
+def translate_to_lagrangian_index_and_plot(argtop, num_tri_M, num_C, num_COM, flattened_M_indes,
+                                           max_over_neurons_concat, aug_plot_dir, lagrangian_values, layers_values):
 
-    assert n == int(n)
+    result = {"M": [], "Coriolis": [], "COM": []}
+    if len(argtop) == 0:
+        return result
+
     for ind in argtop:
-        if ind < num_M:
-            if ind in flattened_ind:
-                result["M"].append(ind)
-        elif ind < num_C + num_M:
-            C_ind = ind - num_M
-            result["Coriolis"].append(C_ind)
-        elif ind < num_M + num_C + num_COM:
-            COM_ind = ind - (num_M + num_C)
-            result["COM"].append(COM_ind)
+        neuron_coord = max_over_neurons_concat[ind][-2:]
+        linear_co =  max_over_neurons_concat[ind][0]
+        if ind < num_tri_M:
+            lagrangian_key = "M"
+            #ind is actually tri_M_index
+            M_ind = flattened_M_indes[ind]
+            lagrangian_index = M_ind
+
+
+        elif ind < num_C + num_tri_M:
+            lagrangian_key = "Coriolis"
+
+            C_ind = ind - num_tri_M
+            lagrangian_index = C_ind
+
+
+        elif ind < num_tri_M + num_C + num_COM:
+            lagrangian_key = "COM"
+
+            COM_ind = ind - (num_tri_M + num_C)
+            lagrangian_index = COM_ind
+
+
         else:
             raise Exception(f"WHAT? ind{ ind }")
+
+        result[lagrangian_key].append(lagrangian_index)
+
+        lagrangian_l = lagrangian_values[lagrangian_key][lagrangian_index]
+        neuron_l = layers_values[int(neuron_coord[0]), int(neuron_coord[1]), :]
+        fig_name = f"{lagrangian_key}_{lagrangian_index}_VS_layer{neuron_coord[0]}" \
+                   f"_neuron_{neuron_coord[1]}_linear_co_{linear_co}.jpg"
+
+
+        plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir)
+
     return result
-def lagrangian_to_include_in_state(linear_global_dict, non_linear_global_dict, top_to_include):
-    linear_M_nd = np.array(linear_global_dict["M"])[:, :, 0]
-    linear_C_nd = np.array(linear_global_dict["Coriolis"])[:, :, 0]
-    linear_COM_nd = np.array(linear_global_dict["COM"])[:, :, 0]
+
+
+def plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir):
+
+    plt.figure()
+
+    plt.scatter(lagrangian_l, neuron_l)
+    plt.xlabel("lagrange")
+    plt.ylabel("neuron")
+
+    plt.savefig(f"{aug_plot_dir}/{fig_name}")
+    plt.close()
+
+
+
+
+def lagrangian_to_include_in_state(linear_global_dict, non_linear_global_dict, top_to_include, aug_plot_dir,
+                                   lagrangian_values,layers_values):
+    linear_M_nd = np.array(linear_global_dict["M"])
+    linear_C_nd = np.array(linear_global_dict["Coriolis"])
+    linear_COM_nd = np.array(linear_global_dict["COM"])
 
     num_M = linear_M_nd.shape[0]
     num_C = linear_C_nd.shape[0]
     num_COM = linear_COM_nd.shape[0]
 
-    concat = np.vstack((linear_M_nd, linear_C_nd, linear_COM_nd))
-    max_for_each = np.max(concat, axis=1)
-    top_to_include = min(len(max_for_each), top_to_include)
-    argtop = np.argpartition(max_for_each, -top_to_include)
-    return translate_to_lagrangian_index(argtop[-top_to_include:], num_M, num_C, num_COM)
+    n = np.sqrt(num_M)
+    upper_tri_inds = np.triu_indices(n)
+    flattened_ind = [int(row * n + col) for row, col in zip(upper_tri_inds[0], upper_tri_inds[1])]
+    upper_tri_linear_M_nd = linear_M_nd[flattened_ind,:]
 
+    num_tri_M = upper_tri_linear_M_nd.shape[0]
+
+    concat = np.abs(np.vstack((upper_tri_linear_M_nd, linear_C_nd, linear_COM_nd)))
+
+
+    linear_cos = concat[:,:,0]
+    argmax_for_each = np.argmax(linear_cos, axis=1)
+    max_over_neurons_concat = concat[np.arange(len(argmax_for_each)), argmax_for_each]
+
+    max_for_each_lagrange = max_over_neurons_concat[:,0]
+
+
+    top_to_include = min(len(max_for_each_lagrange), top_to_include)
+    # if top_to_include == 0:
+
+    argtop = np.argpartition(max_for_each_lagrange, -top_to_include)[len(max_for_each_lagrange)-top_to_include:]
+
+    create_dir_remove(aug_plot_dir)
+    lagrangian_inds_to_include = translate_to_lagrangian_index_and_plot(argtop, num_tri_M, num_C, num_COM, flattened_ind,
+                                                                        max_over_neurons_concat, aug_plot_dir, lagrangian_values, layers_values)
+
+
+
+    return lagrangian_inds_to_include
 
 class DartWalker2dEnv_aug_input(dart_env.DartEnv, utils.EzPickle):
-    def __init__(self, linear_global_dict, non_linear_global_dict, top_to_include):
+    def __init__(self, linear_global_dict, non_linear_global_dict, top_to_include,
+                 aug_plot_dir, lagrangian_values, layers_values):
 
         self.control_bounds = np.array([[1.0]*6,[-1.0]*6])
         self.action_scale = np.array([100, 100, 20, 100, 100, 20])
@@ -73,7 +140,8 @@ class DartWalker2dEnv_aug_input(dart_env.DartEnv, utils.EzPickle):
 
         self.lagrangian_inds_to_include = lagrangian_to_include_in_state(linear_global_dict,
                                                                     non_linear_global_dict,
-                                                                    top_to_include)
+                                                                    top_to_include, aug_plot_dir,
+                                                                         lagrangian_values,layers_values)
 
 
         num_inds_to_add = sum(map(len, self.lagrangian_inds_to_include.values()))

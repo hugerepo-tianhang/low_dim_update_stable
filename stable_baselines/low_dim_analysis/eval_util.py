@@ -41,6 +41,10 @@ def get_full_params_dir(this_run_dir):
 
     return f"{this_run_dir}/full_params"
 
+def get_aug_plot_dir(this_run_dir):
+
+    return f"{this_run_dir}/aug_plot_dir"
+
 def get_intermediate_data_dir(this_run_dir, params_scope="pi"):
 
     return f"{this_run_dir}/{params_scope}_intermediate_data"

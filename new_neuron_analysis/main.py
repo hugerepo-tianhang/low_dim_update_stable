@@ -31,10 +31,9 @@ def main():
     # run_nums = [0, 1]
     # policy_num_timesteps = 1000
     # policy_env = "DartWalker2d-v1"
-    # augment_env = 'DartWalker2d_aug_input_current_trial-v1'
     #
     # augment_num_timesteps = 1000
-    # top_num_to_includes = [0]
+    # top_num_to_includes = [0, 10]
     # network_sizes = [16]
 
     seeds = [0, 1]
@@ -43,8 +42,8 @@ def main():
     policy_env = "DartWalker2d-v1"
 
     augment_num_timesteps = 800000
-    top_num_to_includes = [0]
-    network_sizes = [16]
+    top_num_to_includes = [0, 5, 10, 20]
+    network_sizes = [16, 32, 64]
 
 
 
@@ -63,7 +62,7 @@ def main():
 
                     crunch_and_plot_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                                          eval_run_num)
-                    # run_experiment(augment_env, augment_num_timesteps, 0, 0,
+                    # run_experiment(augment_num_timesteps, 10, 0,
                     # 0, 10,
                     # policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                     # eval_run_num, learning_rate=3e-4)

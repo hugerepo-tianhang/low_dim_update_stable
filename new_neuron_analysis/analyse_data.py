@@ -203,6 +203,12 @@ def crunch_linear_correlation(lagrangian_values, layers_values_list, data_dir):
             linear_co = 0
         if np.isnan(linear_co):
             linear_co = 0
+
+        normalized_SSE, best_TV = get_normalized_SSE(lagrange_l, neuron_l, regr)
+        #TODO get a weighted metric??
+        if normalized_SSE > 150:
+            linear_co = 0
+
         linear_global_dict_row = LinearGlobalDictRow.get_linear_global_dict_row(linear_co, layer_ind, neuron_ind)
         return linear_global_dict_row
 
