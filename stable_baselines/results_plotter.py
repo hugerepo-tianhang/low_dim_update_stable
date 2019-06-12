@@ -89,7 +89,7 @@ def plot_curves(xy_list, labels, xaxis, title):
     for (i, (x, y)) in enumerate(xy_list):
         color = COLORS[i]
 
-        ax.scatter(x, y, s=2)
+        ax.scatter(x, y, s=2, color=color)
         x, y_mean = window_func(x, y, EPISODES_WINDOW, np.mean)  # So returns average of last EPISODE_WINDOW episodes
         ax.plot(x, y_mean, color=color, label=labels[i])
         ax.legend(loc="upper left")

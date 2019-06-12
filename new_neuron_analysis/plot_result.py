@@ -1,6 +1,6 @@
 from stable_baselines.results_plotter import plot_results, X_TIMESTEPS, plt
 from new_neuron_analysis.experiment_augment_input import get_experiment_path_for_this_run, \
-     get_log_dir, get_result_dir, AttributeDict, os, get_proj_dir
+     get_log_dir, get_result_dir, AttributeDict, os, get_proj_dir, get_save_dir
 
 
 
@@ -21,23 +21,26 @@ def get_results(result_dir):
 
 def extra(label):
     top_num_to_include = int(label.split("top_num_to_include_")[1].split("_")[0])
+    lr = float(label.split("learning_rate_")[1].split("_")[0])
     network_size = int(label.split("network_size_")[1])
-    return top_num_to_include, network_size
+    return top_num_to_include, network_size, lr
 
 def plot(result_dir):
     top_num_to_include_plot_data = {}
     network_size_plot_data = {}
+    lr_plot_data = {}
 
 
     for label in os.listdir(result_dir):
 
         this_run_dir = f"{result_dir}/{label}"
         log_dir = get_log_dir(this_run_dir)
-        if not os.path.exists(log_dir):
+        save_dir = get_save_dir(this_run_dir)
+        if not os.path.exists(log_dir) or len(os.listdir(save_dir)) == 0:
             continue
 
 
-        top_num_to_include, network_size = extra(label)
+        top_num_to_include, network_size, lr = extra(label)
         if top_num_to_include not in top_num_to_include_plot_data:
             top_num_to_include_plot_data[top_num_to_include] = {"log_dirs": [log_dir], "labels": [label]}
         else:
@@ -50,6 +53,11 @@ def plot(result_dir):
             network_size_plot_data[network_size]["log_dirs"].append(log_dir)
             network_size_plot_data[network_size]["labels"].append(label)
 
+        if lr not in lr_plot_data:
+            lr_plot_data[lr] = {"log_dirs": [log_dir], "labels": [label]}
+        else:
+            lr_plot_data[lr]["log_dirs"].append(log_dir)
+            lr_plot_data[lr]["labels"].append(label)
 
     for top_num_to_include, data in top_num_to_include_plot_data.items():
         title = f"fix top_num_to_include {top_num_to_include}"
@@ -57,6 +65,10 @@ def plot(result_dir):
 
     for network_size, data in network_size_plot_data.items():
         title = f"fix network_size {network_size}"
+        _plot(data["labels"], data["log_dirs"], aug_num_timesteps, result_dir, title)
+
+    for lr, data in lr_plot_data.items():
+        title = f"fix lr {lr}"
         _plot(data["labels"], data["log_dirs"], aug_num_timesteps, result_dir, title)
 
 

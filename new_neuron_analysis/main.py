@@ -42,21 +42,21 @@ def main():
     policy_num_timesteps = 2000000
     policy_env = "DartWalker2d-v1"
 
-    augment_num_timesteps = 1000000
-    top_num_to_includes = [0, 10, 60]
-    network_sizes = [16, 32, 64, 128]
+    augment_num_timesteps = 800000
+    top_num_to_includes = [0]
+    network_sizes = [16]
 
 
 
     for policy_seed in [0,1]:
         for policy_run_num in [0]:
-            cmd_line = ["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
-                        str(policy_seed)]
+            # cmd_line = ["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
+            #             str(policy_seed)]
+            #
+            # train(cmd_line)
 
-            train(cmd_line)
-
-            for eval_seed in [0]:
-                for eval_run_num in [0]:
+            for eval_seed in [2]:
+                for eval_run_num in [2]:
                     eval_trained_policy_and_collect_data(seed=eval_seed, run_num=eval_run_num, policy_env=policy_env,
                                                          policy_num_timesteps=policy_num_timesteps,
                                                          policy_run_num=policy_run_num, policy_seed=policy_seed)
@@ -69,27 +69,29 @@ def main():
                     # eval_run_num, learning_rate=3e-4)
                     # #
                     #
-                    for augment_seed in seeds:
-                        for augment_run_num in run_nums:
-                            for top_num_to_include in top_num_to_includes:
-                                for network_size in network_sizes:
-                                    learning_rates = [64 / network_size * 3e-4, 64/network_size*64/network_size*3e-4, (64/network_size+64/network_size)*3e-4]
-                                    for learning_rate in learning_rates:
-                                        run_experiment(augment_num_timesteps, top_num_to_include, augment_seed,
-                                                       augment_run_num, network_size,
-                                                       policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                                                       eval_run_num, learning_rate=learning_rate)
+                    # for augment_seed in seeds:
+                    #     for augment_run_num in run_nums:
+                    #         for top_num_to_include in top_num_to_includes:
+                    #             for network_size in network_sizes:
+                    #                 learning_rates = [64 / network_size * 3e-4, 64/network_size*64/network_size*3e-4, (64/network_size+64/network_size)*3e-4]
+                    #                 for learning_rate in learning_rates:
+                    #                     run_experiment(augment_num_timesteps, top_num_to_include, augment_seed,
+                    #                                    augment_run_num, network_size,
+                    #                                    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                    #                                    eval_run_num, learning_rate=learning_rate)
 
 
-                    # Parallel(n_jobs=8)(delayed(run_experiment)(augment_env, augment_num_timesteps, top_num_to_include, augment_seed,
-                    #                            augment_run_num, network_size,
-                    #                            policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                    #                            eval_run_num)
-                    #
-                    #         for augment_seed in seeds
-                    #         for augment_run_num in run_nums
-                    #         for top_num_to_include in top_num_to_includes
-                    #         for network_size in network_sizes)
+
+                    Parallel(n_jobs=8)(delayed(run_experiment)(augment_num_timesteps, top_num_to_include, augment_seed,
+                                               augment_run_num, network_size,
+                                               policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                                               eval_run_num, learning_rate=learning_rate)
+                            for learning_rate in   [64 / network_size * 3e-4,
+                                                    (64 / network_size + 64 / network_size) * 3e-4]
+                            for augment_seed in seeds
+                            for augment_run_num in run_nums
+                            for top_num_to_include in top_num_to_includes
+                            for network_size in network_sizes)
 
                     # result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
                     #                             policy_seed, eval_seed, eval_run_num)
