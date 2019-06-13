@@ -51,10 +51,10 @@ def main():
 
     for policy_seed in [0,1]:
         for policy_run_num in [0]:
-            # cmd_line = ["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
-            #             str(policy_seed)]
-            #
-            # train(cmd_line)
+            cmd_line = ["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
+                        str(policy_seed)]
+
+            train(cmd_line)
 
             for eval_seed in [2]:
                 for eval_run_num in [2]:
