@@ -10,7 +10,9 @@ from new_neuron_analysis.analyse_data import crunch_and_plot_data
 from new_neuron_analysis.experiment_augment_input import run_experiment, get_result_dir
 from stable_baselines.ppo2.run_mujoco import train
 from new_neuron_analysis.plot_result import plot, get_results
-
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['MKL_DYNAMIC'] = 'FALSE'
 
 def complete_run(policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                  eval_run_num, augment_env, augment_num_timesteps, top_num_to_include, augment_seed,
@@ -26,23 +28,23 @@ def complete_run(policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
 
 def main():
     from joblib import Parallel, delayed
-    seeds = [0, 1]
-    run_nums = [0, 1]
-    policy_num_timesteps = 2000000
-    policy_env = "DartWalker2d-v1"
-
-    augment_num_timesteps = 800000
-    top_num_to_includes = [0, 5, 10, 20]
-    network_sizes = [16, 32, 64]
-
     # seeds = [0, 1]
     # run_nums = [0, 1]
-    # policy_num_timesteps = 1000
+    # policy_num_timesteps = 2000000
     # policy_env = "DartWalker2d-v1"
     #
-    # augment_num_timesteps = 1000
-    # top_num_to_includes = [0, 10]
-    # network_sizes = [16, 32]
+    # augment_num_timesteps = 800000
+    # top_num_to_includes = [0, 5, 10, 20]
+    # network_sizes = [16, 32, 64]
+
+    seeds = [0, 1]
+    run_nums = [0, 1]
+    policy_num_timesteps = 1000
+    policy_env = "DartWalker2d-v1"
+
+    augment_num_timesteps = 1000
+    top_num_to_includes = [0, 10, 30]
+    network_sizes = [16, 32]
 
 
 
