@@ -1,6 +1,36 @@
-import numpy as np
+import multiprocessing
 
-a = np.array([[[2,1,1],[3,2,2],[4,3,3]], [[5,4,4],[6,5,5],[7,6,6]]])
+NUMS = list(range(1, 40))
 
-print(np.max(a, axis=1))
 
+def fib(n):
+    if n <= 1:
+        return 1
+    else:
+        return fib(n - 1) + fib(n - 2)
+
+
+if __name__ == '__main__':
+    import time
+
+    start = time.time()
+    results = []
+    for num in NUMS:
+        results.append(fib(num))
+    end = time.time()
+    print(f"duration {end-start}")
+    print(results)
+
+
+    with multiprocessing.Pool(8) as pool:
+        start = time.time()
+        results = pool.map(fib, NUMS)
+        end = time.time()
+        print(f"duration {end-start}")
+        print(results)
+
+        # start = time.time()
+        # results = pool.starmap(fib, NUMS)
+        # end = time.time()
+        # print(f"duration {end-start}")
+        # print(results)

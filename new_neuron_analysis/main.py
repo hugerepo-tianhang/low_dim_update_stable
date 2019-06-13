@@ -28,27 +28,25 @@ def complete_run(policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
 def main():
     import multiprocessing as mp
 
-    # Step 1: Init multiprocessing.Pool()
 
-
-    # from joblib import Parallel, delayed
-    # seeds = [0, 1]
-    # run_nums = [0, 1]
-    # policy_num_timesteps = 2000000
-    # policy_env = "DartWalker2d-v1"
-    #
-    # augment_num_timesteps = 800000
-    # top_num_to_includes = [0, 5, 10, 20]
-    # network_sizes = [16, 32, 64]
 
     seeds = [0, 1]
     run_nums = [0, 1]
-    policy_num_timesteps = 1000
+    policy_num_timesteps = 2000000
     policy_env = "DartWalker2d-v1"
 
-    augment_num_timesteps = 1000
-    top_num_to_includes = [0, 10, 30]
-    network_sizes = [16, 32]
+    augment_num_timesteps = 800000
+    top_num_to_includes = [0, 5, 10, 20]
+    network_sizes = [16, 32, 64]
+
+    # seeds = [0, 1]
+    # run_nums = [0, 1]
+    # policy_num_timesteps = 1000
+    # policy_env = "DartWalker2d-v1"
+    #
+    # augment_num_timesteps = 1000
+    # top_num_to_includes = [0, 10, 30]
+    # network_sizes = [16, 32]
 
 
 
@@ -56,13 +54,13 @@ def main():
 
         for policy_seed in [0,1]:
             for policy_run_num in [0]:
-                cmd_line = ["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
-                            str(policy_seed)]
+                # cmd_line = ["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
+                #             str(policy_seed)]
+                #
+                # train(cmd_line)
 
-                train(cmd_line)
-
-                for eval_seed in [2]:
-                    for eval_run_num in [2]:
+                for eval_seed in [3]:
+                    for eval_run_num in [3]:
                         eval_trained_policy_and_collect_data(seed=eval_seed, run_num=eval_run_num, policy_env=policy_env,
                                                              policy_num_timesteps=policy_num_timesteps,
                                                              policy_run_num=policy_run_num, policy_seed=policy_seed)
