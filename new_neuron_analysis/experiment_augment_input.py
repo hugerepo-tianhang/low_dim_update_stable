@@ -56,10 +56,10 @@ def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
     with open(linear_global_dict_path, 'r') as fp:
         linear_global_dict = json.load(fp)
 
-    with open(non_linear_global_dict_path, 'r') as fp:
-        non_linear_global_dict = json.load(fp)
-
-    return linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights
+    # with open(non_linear_global_dict_path, 'r') as fp:
+    #     non_linear_global_dict = json.load(fp)
+    # non_linear_global_dict
+    return linear_global_dict , lagrangian_values, input_values, layers_values, all_weights
 
 def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augment_run_num, network_size,
                           policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate):
@@ -73,8 +73,8 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
     args.seed = augment_seed
 
     logger.log(f"#######TRAIN: {args}")
-
-    linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = read_all_data(
+    # non_linear_global_dict
+    linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = read_all_data(
         policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
 
     experiment_label = f"learning_rate_{learning_rate}_augment_num_timesteps{augment_num_timesteps}_top_num_to_include{top_num_to_include}" \
@@ -108,7 +108,7 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
         entry_point=entry_point,
         max_episode_steps=1000,
         kwargs={'linear_global_dict':linear_global_dict,
-                'non_linear_global_dict':non_linear_global_dict,
+                'non_linear_global_dict':None,
                 'top_to_include':top_num_to_include,
                 'aug_plot_dir': aug_plot_dir,
                 "lagrangian_values":lagrangian_values,

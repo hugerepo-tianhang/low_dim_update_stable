@@ -294,7 +294,7 @@ def crunch_and_plot_data(policy_env, policy_num_timesteps, policy_run_num, polic
     # scatter_the_linear_significant_ones(linear_global_dict, BEST_TO_TAKE, layers_values_list, lagrangian_values, plot_dir)
 
 
-    non_linear_global_dict = crunch_non_linear_correlation(lagrangian_values, layers_values_list, data_dir)
+    # non_linear_global_dict = crunch_non_linear_correlation(lagrangian_values, layers_values_list, data_dir)
     # scatter_the_non_linear_significant_ones(non_linear_global_dict, BEST_TO_TAKE, layers_values_list,
     #                                         lagrangian_values, plot_dir)
 
