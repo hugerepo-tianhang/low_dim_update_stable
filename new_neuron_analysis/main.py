@@ -50,8 +50,8 @@ def main():
 
     with mp.Pool(mp.cpu_count()) as pool:
 
-        for policy_seed in [0,1]:
-            for policy_run_num in [0,1]:
+        for policy_seed in [0,1,2]:
+            for policy_run_num in [0,1,2]:
                 cmd_line = ["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
                             str(policy_seed)]
 
