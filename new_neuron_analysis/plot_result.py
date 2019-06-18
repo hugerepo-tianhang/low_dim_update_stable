@@ -1,4 +1,4 @@
-from stable_baselines.results_plotter import plot_results, X_TIMESTEPS, plt
+from stable_baselines.results_plotter import *
 from new_neuron_analysis.experiment_augment_input import get_experiment_path_for_this_run, \
      get_log_dir, get_result_dir, AttributeDict, os, get_proj_dir, get_save_dir
 
@@ -74,11 +74,48 @@ def plot(result_dir):
 
 
 
+def plot_results_group_by_run_and_seed(dirs, num_timesteps, xaxis, task_name, labels):
+    """
+    plot the results
+
+    :param dirs: ([str]) the save location of the results to plot
+    :param num_timesteps: (int) only plot the points below this value
+    :param xaxis: (str) the axis for the x and y output
+        (can be X_TIMESTEPS='timesteps', X_EPISODES='episodes' or X_WALLTIME='walltime_hrs')
+    :param task_name: (str) the title of the task to plot
+    """
+
+    xy_dict = {}
+    for i, folder in enumerate(dirs):
+        label = labels[i]
+        top_num_to_include, network_size, lr = extra(label)
+        new_label = f"top_num_to_include{top_num_to_include}, network_size{network_size}, lr{lr}"
+
+
+        timesteps = load_results(folder)
+        timesteps = timesteps[timesteps.l.cumsum() <= num_timesteps]
+        if new_label not in xy_dict:
+            xy_dict[new_label] = [ts2xy(timesteps, xaxis)]
+        else:
+            xy_dict[new_label].append(ts2xy(timesteps, xaxis))
+
+    xy_list = []
+    new_labels = []
+    for label, xy_sublist in xy_dict.items():
+        new_labels.append(label)
+        lens = np.array([len(xy[1]) for xy in xy_sublist])
+        amin = np.argmin(lens)
+        min_len = np.min(lens)
+        new_x = xy_sublist[amin][0]
+
+        new_y = np.mean([xy_item[1][:min_len] for xy_item in xy_sublist], axis=0)
+        xy_list.append((new_x, new_y))
+    return plot_curves(xy_list, new_labels, xaxis, task_name)
 
 def _plot(labels, total_log_dirs, aug_num_timesteps, result_dir, title):
     task_name = "augmented_input"
 
-    fig, figlegend = plot_results(dirs=total_log_dirs, num_timesteps=aug_num_timesteps, xaxis=X_TIMESTEPS, task_name=task_name, labels=labels)
+    fig, figlegend = plot_results_group_by_run_and_seed(dirs=total_log_dirs, num_timesteps=aug_num_timesteps, xaxis=X_TIMESTEPS, task_name=task_name, labels=labels)
     fig.savefig(f"{result_dir}/{title}.png")
     # figlegend.savefig(f"{result_dir}/{title}_legend.png")
 
@@ -87,11 +124,11 @@ if __name__ =="__main__":
     trained_policy_env = "DartWalker2d-v1"
     trained_policy_num_timesteps = 2000000
     policy_run_num = 0
-    policy_seed = 0
-    eval_seed = 0
-    eval_run_num = 0
+    policy_seed = 1
+    eval_seed = 2
+    eval_run_num = 2
 
-    aug_num_timesteps = 1000000
+    aug_num_timesteps = 800000
 
     result_dir = get_result_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
 

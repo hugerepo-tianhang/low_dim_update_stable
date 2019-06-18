@@ -26,9 +26,9 @@ def get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, 
                f"{get_run_name(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)}"
     return data_dir
 
-def get_plot_dir(env, policy_num_timesteps, policy_run_num, policy_seed, run_seed, run_run_num):
+def get_plot_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num):
     data_dir = f"{get_proj_dir()}/plot/" \
-               f"{get_run_name(env, policy_num_timesteps, policy_run_num, policy_seed, run_seed, run_run_num)}"
+               f"{get_run_name(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)}"
     return data_dir
 
 def get_result_dir(env, policy_num_timesteps, policy_run_num, policy_seed, run_seed, run_run_num):

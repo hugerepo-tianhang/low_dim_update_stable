@@ -28,14 +28,12 @@ def complete_run(policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
 def main():
     import multiprocessing as mp
 
-
-
-    seeds = [0, 1]
-    run_nums = [0, 1]
+    seeds = [0, 1, 2]
+    run_nums = [0, 1, 2]
     policy_num_timesteps = 2000000
     policy_env = "DartWalker2d-v1"
 
-    augment_num_timesteps = 800000
+    augment_num_timesteps = 1000000
     top_num_to_includes = [0, 5, 10, 20]
     network_sizes = [16, 32, 64]
 
@@ -53,36 +51,20 @@ def main():
     with mp.Pool(mp.cpu_count()) as pool:
 
         for policy_seed in [0,1]:
-            for policy_run_num in [0]:
-                # cmd_line = ["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
-                #             str(policy_seed)]
-                #
-                # train(cmd_line)
+            for policy_run_num in [0,1]:
+                cmd_line = ["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
+                            str(policy_seed)]
 
-                for eval_seed in [3]:
-                    for eval_run_num in [3]:
+                train(cmd_line)
+
+                for eval_seed in [4]:
+                    for eval_run_num in [4]:
                         eval_trained_policy_and_collect_data(seed=eval_seed, run_num=eval_run_num, policy_env=policy_env,
                                                              policy_num_timesteps=policy_num_timesteps,
                                                              policy_run_num=policy_run_num, policy_seed=policy_seed)
 
                         crunch_and_plot_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                                              eval_run_num)
-                        # run_experiment(augment_num_timesteps, 10, 0,
-                        # 0, 10,
-                        # policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                        # eval_run_num, learning_rate=3e-4)
-                        # #
-                        #
-                        # for augment_seed in seeds:
-                        #     for augment_run_num in run_nums:
-                        #         for top_num_to_include in top_num_to_includes:
-                        #             for network_size in network_sizes:
-                        #                 learning_rates = [64 / network_size * 3e-4, 64/network_size*64/network_size*3e-4, (64/network_size+64/network_size)*3e-4]
-                        #                 for learning_rate in learning_rates:
-                        #                     run_experiment(augment_num_timesteps, top_num_to_include, augment_seed,
-                        #                                    augment_run_num, network_size,
-                        #                                    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                        #                                    eval_run_num, learning_rate=learning_rate)
 
                         args = [(augment_num_timesteps, top_num_to_include, augment_seed,
                                                 augment_run_num, network_size,

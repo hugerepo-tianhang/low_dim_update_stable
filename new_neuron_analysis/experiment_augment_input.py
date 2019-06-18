@@ -166,6 +166,7 @@ if __name__ == "__main__":
     # trained_policy_seeds = [0,1,2]
     # trained_policy_run_nums = [0,1,2]
     # network_sizes = [16, 32, 64, 128]
+    policy_env = "DartWalker2d-v1"
 
     augment_num_timesteps = 5000
     top_num_to_includes = [10]
@@ -175,11 +176,10 @@ if __name__ == "__main__":
     #     for total_num_to_include in total_num_to_includes:
     #     for trained_policy_run_num in trained_policy_run_nums:
     #         for trained_policy_seed in trained_policy_seeds:
-    augment_env, augment_num_timesteps, top_num_to_include, augment_seed, augment_run_num, network_size,
-    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num
-    run_experiment(    augment_env, augment_num_timesteps, top_num_to_include, augment_seed, augment_run_num, network_size,
-    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
-
+    run_experiment(augment_num_timesteps, top_num_to_include=10, augment_seed=0,
+     augment_run_num=0, network_size=16,
+     policy_env=policy_env, policy_num_timesteps=2000000, policy_run_num=0, policy_seed=0, eval_seed=3,
+     eval_run_num=3, learning_rate=0.0001)
     #
     # from joblib import Parallel, delayed
     #

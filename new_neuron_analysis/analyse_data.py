@@ -30,13 +30,14 @@ class NonLinearGlobalDictRow(object):
 
 
 class LinearGlobalDictRow(object):
-    length = 3
-    reg = {"co": 0, "layer_ind": 1, "neuron_ind": 2}
+    length = 4
+    reg = {"co": 0, "normalized_SSE": 1, "layer_ind": 2, "neuron_ind": 3}
 
     @classmethod
-    def get_linear_global_dict_row(cls, linear_co, layer_ind, neuron_ind):
+    def get_linear_global_dict_row(cls, linear_co, normalized_SSE, layer_ind, neuron_ind):
         result = [np.nan] * cls.length
         result[cls.reg["co"]] = linear_co
+        result[cls.reg["normalized_SSE"]] = normalized_SSE
         result[cls.reg["layer_ind"]] = layer_ind
         result[cls.reg["neuron_ind"]] = neuron_ind
 
@@ -209,7 +210,7 @@ def crunch_linear_correlation(lagrangian_values, layers_values_list, data_dir):
         if normalized_SSE > 150:
             linear_co = 0
 
-        linear_global_dict_row = LinearGlobalDictRow.get_linear_global_dict_row(linear_co, layer_ind, neuron_ind)
+        linear_global_dict_row = LinearGlobalDictRow.get_linear_global_dict_row(linear_co, normalized_SSE, layer_ind, neuron_ind)
         return linear_global_dict_row
 
     linear_global_dict = {}

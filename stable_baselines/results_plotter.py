@@ -3,6 +3,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 from stable_baselines.bench.monitor import load_results
+import matplotlib.cm as cm
 
 # matplotlib.use('TkAgg')  # Can change to 'Agg' for non-interactive mode
 plt.rcParams['svg.fonttype'] = 'none'
@@ -14,7 +15,9 @@ POSSIBLE_X_AXES = [X_TIMESTEPS, X_EPISODES, X_WALLTIME]
 EPISODES_WINDOW = 100
 COLORS = ['blue', 'green', 'red', 'cyan', 'magenta', 'yellow', 'black', 'purple', 'pink',
           'brown', 'orange', 'teal', 'coral', 'lightblue', 'lime', 'lavender', 'turquoise',
-          'darkgreen', 'tan', 'salmon', 'gold', 'lightpurple', 'darkred', 'darkblue']
+          'darkgreen', 'tan', 'salmon', 'gold', 'darkred', 'darkblue', 'yellow', "black"]
+import matplotlib._color_data as mcd
+
 
 
 def rolling_window(array, window):
@@ -79,17 +82,26 @@ def plot_curves(xy_list, labels, xaxis, title):
     """
 
     num = len(labels)
-    len_label = len(labels[0])
-    fig = plt.figure(figsize=(len_label//6, num*2))
-    figLegend = plt.figure(figsize=(len_label//6, num*2))
+    width = len(labels[0])
+    fig = plt.figure(figsize=(width//3, num*1.5))
+    figLegend = plt.figure(figsize=(width//6, num*2))
     ax = fig.add_subplot(111)
 
     maxx = max(xy[0][-1] for xy in xy_list)
     minx = 0
-    for (i, (x, y)) in enumerate(xy_list):
-        color = COLORS[i]
 
-        ax.scatter(x, y, s=2, color=color)
+    # colors = iter(cm.rainbow(np.linspace(0, 1, len(xy_list))))
+    # names = list(mcd.CSS4_COLORS.keys())
+
+    cm = plt.get_cmap('CMRmap')
+
+
+    for (i, (x, y)) in enumerate(xy_list):
+        # color = COLORS[i]
+        color = cm(1.*i/len(xy_list))
+
+
+        # ax.scatter(x, y, s=2, color=color)
         x, y_mean = window_func(x, y, EPISODES_WINDOW, np.mean)  # So returns average of last EPISODE_WINDOW episodes
         ax.plot(x, y_mean, color=color, label=labels[i])
         ax.legend(loc="upper left")

@@ -2,6 +2,7 @@ from low_dim_update_stable.new_neuron_analysis.dir_tree_util import *
 import pandas as pd
 from sklearn import linear_model
 
+from stable_baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
 
 from stable_baselines.low_dim_analysis.common_parser import get_common_parser
 import numpy as np
@@ -20,6 +21,8 @@ import sys
 
 import minepy
 import pickle
+from matplotlib import pyplot as plt
+
 
 def safe_mean(arr):
     """
@@ -296,16 +299,163 @@ def eval_trained_policy_and_collect_data(seed, run_num, policy_env, policy_num_t
         fname = f"{data_dir}/weights_layer_{ind}.txt"
         np.savetxt(fname, weights)
 
+def visualize_policy_and_collect_COM(seed, run_num, policy_env, policy_num_timesteps, policy_seed, policy_run_num):
+
+
+    logger.log(sys.argv)
+    common_arg_parser = get_common_parser()
+    args, cma_unknown_args = common_arg_parser.parse_known_args()
+    args.env = policy_env
+    args.seed = policy_seed
+    args.num_timesteps = policy_num_timesteps
+    args.run_num = policy_run_num
+    this_run_dir = get_dir_path_for_this_run(args)
+    traj_params_dir_name = get_full_params_dir(this_run_dir)
+    save_dir = get_save_dir( this_run_dir)
+
+
+
+    final_file = get_full_param_traj_file_path(traj_params_dir_name, "pi_final")
+    final_params = pd.read_csv(final_file, header=None).values[0]
+
+
+    def make_env():
+        env_out = gym.make(args.env)
+        env_out.env.disableViewer = False
+
+        env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
+        env_out.seed(seed)
+        return env_out
+    env = DummyVecEnv([make_env])
+
+
+    if args.normalize:
+        env = VecNormalize(env)
+
+    model = PPO2.load(f"{save_dir}/ppo2")
+    model.set_pi_from_flat(final_params)
+    if args.normalize:
+        env.load_running_average(save_dir)
+
+
+
+    sk = env.venv.envs[0].env.env.robot_skeleton
+    lagrangian_values = {}
+
+    obs = np.zeros((env.num_envs,) + env.observation_space.shape)
+
+    obs[:] = env.reset()
+    plot_dir = get_plot_dir(policy_env=args.env, policy_num_timesteps=policy_num_timesteps, policy_run_num=policy_run_num
+                            , policy_seed=policy_seed, eval_seed=seed, eval_run_num=run_num)
+    if os.path.exists(plot_dir):
+        shutil.rmtree(plot_dir)
+    os.makedirs(plot_dir)
+    env = VecVideoRecorder(env, plot_dir, record_video_trigger=lambda x: x == 0, video_length=3000, name_prefix="3000000agent-{}".format(args.env))
+
+    lagrangian_values["M"] = [sk.M.reshape((-1,1))]
+    lagrangian_values["COM"] = [sk.C.reshape((-1,1))]
+    lagrangian_values["Coriolis"] = [sk.c.reshape((-1,1))]
+    lagrangian_values["q"] = [sk.q.reshape((-1, 1))]
+    lagrangian_values["dq"] = [sk.dq.reshape((-1, 1))]
+
+
+    contact_values = {}
+
+
+    neuron_values = model.give_neuron_values(obs)
+    raw_layer_values_list = [[neuron_value.reshape((-1,1))] for neuron_value in neuron_values]
+
+    env.render()
+    ep_infos = []
+    steps_to_first_done = 0
+    first_done = False
+    for _ in range(3000):
+        actions = model.step(obs)[0]
+
+        # yield neuron_values
+        obs, rew, done, infos = env.step(actions)
+        if done and not first_done:
+            first_done = True
+
+        if not first_done:
+            steps_to_first_done += 1
+
+
+        neuron_values = model.give_neuron_values(obs)
+
+
+        for i, layer in enumerate(neuron_values):
+            raw_layer_values_list[i].append(layer.reshape((-1,1)))
+
+        # fill_contacts_jac_dict(infos[0]["contacts"], contact_dict=contact_values, neuron_values=neuron_values)
+
+
+
+        lagrangian_values["M"].append(sk.M.reshape((-1, 1)))
+        lagrangian_values["q"].append(sk.q.reshape((-1, 1)))
+        lagrangian_values["dq"].append(sk.dq.reshape((-1, 1)))
+        lagrangian_values["COM"].append(sk.C.reshape((-1, 1)))
+        lagrangian_values["Coriolis"].append(sk.c.reshape((-1, 1)))
+
+        # env.render()
+
+        # time.sleep(1)
+        for info in infos:
+            maybe_ep_info = info.get('episode')
+            if maybe_ep_info is not None:
+                ep_infos.append(maybe_ep_info)
+
+        env.render()
+        done = done.any()
+        if done:
+            episode_rew = safe_mean([ep_info['r'] for ep_info in ep_infos])
+            print(f'episode_rew={episode_rew}')
+            obs = env.reset()
+
+
+    #Hstack into a big matrix
+    lagrangian_values["M"] = np.hstack(lagrangian_values["M"])
+    lagrangian_values["COM"] = np.hstack(lagrangian_values["COM"])
+    lagrangian_values["Coriolis"] = np.hstack(lagrangian_values["Coriolis"])
+    lagrangian_values["q"] = np.hstack(lagrangian_values["q"])
+    lagrangian_values["dq"] = np.hstack(lagrangian_values["dq"])
+
+    # for contact_body_name, l in contact_values.items():
+    #     body_contact_dict = contact_values[contact_body_name]
+    #     for name, l in body_contact_dict.items():
+    #         body_contact_dict[name] = np.hstack(body_contact_dict[name])
+    input_values = np.hstack(raw_layer_values_list[0])
+
+    layers_values = [np.hstack(layer_list) for layer_list in raw_layer_values_list][1:-2]# drop variance and inputs
+
+
+
+    for i, com in enumerate(lagrangian_values["COM"]):
+        plt.figure()
+        plt.plot(np.arange(len(com)), com)
+        plt.xlabel("time")
+        plt.ylabel(f"COM{i}")
+
+        plt.savefig(f"{plot_dir}/COM{i}.jpg")
+        plt.close()
+
 
 
 if __name__ == '__main__':
-    eval_trained_policy_and_collect_data(seed=0, run_num=0, policy_num_timesteps=3000000, policy_run_num=0, policy_seed=0)
-    # seeds = [0, 1, 2]
+    # visualize_policy_and_collect_COM(seed=0, run_num=0, policy_num_timesteps=3000000, policy_run_num=0, policy_seed=0)
+
+    policy_env = "DartWalker2d-v1"
+
+    visualize_policy_and_collect_COM(seed=3, run_num=3, policy_env=policy_env, policy_num_timesteps=2000000,
+                                     policy_seed=0, policy_run_num=0)
+    # visualize_policy_and_collect_COM(seed=3, run_num=3, policy_env=policy_env, policy_num_timesteps=2000000,
+    #                              policy_seed=1, policy_run_num=0)
+# seeds = [0, 1, 2]
     # run_nums = [0, 1, 2]
     # for seed in seeds:
     #     for run_num in run_nums:
     #         run_trained_policy(seed=seed, run_num=run_num)
     #
-
+    # visualize_trained_policy(seed=3, run_num, policy_env, policy_num_timesteps, policy_seed, policy_run_num)
 #TODO Give filenames more info to identify which hyperparameter is the data for
 
