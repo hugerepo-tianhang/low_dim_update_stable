@@ -1,0 +1,2 @@
+#!/bin/bash
+scp -r hang@berlin.cc.gatech.edu:~/projects/low_dim_update_stable/new_neuron_analysis/result/ /home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/new_neuron_analysis

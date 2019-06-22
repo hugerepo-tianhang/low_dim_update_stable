@@ -323,7 +323,7 @@ def visualize_policy_and_collect_COM(seed, run_num, policy_env, policy_num_times
         env_out = gym.make(args.env)
         env_out.env.disableViewer = False
 
-        env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
+        # env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
         env_out.seed(seed)
         return env_out
     env = DummyVecEnv([make_env])

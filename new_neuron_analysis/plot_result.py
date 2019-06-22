@@ -1,6 +1,6 @@
 from stable_baselines.results_plotter import *
 from new_neuron_analysis.experiment_augment_input import get_experiment_path_for_this_run, \
-     get_log_dir, get_result_dir, AttributeDict, os, get_proj_dir, get_save_dir
+     get_log_dir, get_result_dir, AttributeDict, os, get_project_dir, get_save_dir
 
 
 
@@ -123,15 +123,15 @@ if __name__ =="__main__":
     env = 'DartWalker2d_aug_input_current_trial-v1'
     trained_policy_env = "DartWalker2d-v1"
     trained_policy_num_timesteps = 2000000
-    policy_run_num = 0
-    policy_seed = 1
-    eval_seed = 2
-    eval_run_num = 2
-
-    aug_num_timesteps = 800000
-
-    result_dir = get_result_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
+    policy_run_nums = [0, 1, 2]
+    policy_seeds = [0]
+    eval_seed = 4
+    eval_run_num = 4
+    aug_num_timesteps = 1000000
+    for policy_run_num in policy_run_nums:
+        for policy_seed in policy_seeds:
+            result_dir = get_result_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
 
     # labels, total_log_dirs = get_results(result_dir)
 
-    plot(result_dir)
+            plot(result_dir)
