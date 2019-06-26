@@ -148,7 +148,7 @@ def plot_everything(lagrangian_values, layer_values_list, out_dir, PLOT_CUTOFF):
             plt.close()
 
 
-def eval_trained_policy_and_collect_data(seed, run_num, policy_env, policy_num_timesteps, policy_seed, policy_run_num):
+def visualize_policy_and_collect_COM(seed, run_num, policy_env, policy_num_timesteps, policy_seed, policy_run_num):
 
 
     logger.log(sys.argv)
@@ -170,6 +170,8 @@ def eval_trained_policy_and_collect_data(seed, run_num, policy_env, policy_num_t
 
     def make_env():
         env_out = gym.make(args.env)
+        env_out.env.disableViewer = False
+
         env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
         env_out.seed(seed)
         return env_out
@@ -192,14 +194,14 @@ def eval_trained_policy_and_collect_data(seed, run_num, policy_env, policy_num_t
     obs = np.zeros((env.num_envs,) + env.observation_space.shape)
 
     obs[:] = env.reset()
-
-    # env = VecVideoRecorder(env, "./",
-    #                            record_video_trigger=lambda x: x == 0, video_length=3000,
-    #                            name_prefix="3000000agent-{}".format(args.env))
+    plot_dir = get_plot_dir(policy_env=args.env, policy_num_timesteps=policy_num_timesteps, policy_run_num=policy_run_num
+                            , policy_seed=policy_seed, eval_seed=seed, eval_run_num=run_num)
+    if os.path.exists(plot_dir):
+        shutil.rmtree(plot_dir)
+    os.makedirs(plot_dir)
+    env = VecVideoRecorder(env, plot_dir, record_video_trigger=lambda x: x == 0, video_length=3000, name_prefix="3000000agent-{}".format(args.env))
 
     lagrangian_values["M"] = [sk.M.reshape((-1,1))]
-
-
     lagrangian_values["COM"] = [sk.C.reshape((-1,1))]
     lagrangian_values["Coriolis"] = [sk.c.reshape((-1,1))]
     lagrangian_values["q"] = [sk.q.reshape((-1, 1))]
@@ -212,15 +214,18 @@ def eval_trained_policy_and_collect_data(seed, run_num, policy_env, policy_num_t
     neuron_values = model.give_neuron_values(obs)
     raw_layer_values_list = [[neuron_value.reshape((-1,1))] for neuron_value in neuron_values]
 
-    # env.render()
+    env.render()
     ep_infos = []
     steps_to_first_done = 0
     first_done = False
+
+    # epi_rew = 0
     for _ in range(3000):
         actions = model.step(obs)[0]
 
         # yield neuron_values
         obs, rew, done, infos = env.step(actions)
+        # epi_rew+= rew[0]
         if done and not first_done:
             first_done = True
 
@@ -252,11 +257,13 @@ def eval_trained_policy_and_collect_data(seed, run_num, policy_env, policy_num_t
             if maybe_ep_info is not None:
                 ep_infos.append(maybe_ep_info)
 
-        # env.render()
+        env.render()
         done = done.any()
         if done:
             episode_rew = safe_mean([ep_info['r'] for ep_info in ep_infos])
             print(f'episode_rew={episode_rew}')
+            # print(f'episode_rew={epi_rew}')
+            # epi_rew = 0
             obs = env.reset()
 
 
@@ -276,30 +283,15 @@ def eval_trained_policy_and_collect_data(seed, run_num, policy_env, policy_num_t
     layers_values = [np.hstack(layer_list) for layer_list in raw_layer_values_list][1:-2]# drop variance and inputs
 
 
-    data_dir = get_data_dir(policy_env=args.env, policy_num_timesteps=policy_num_timesteps, policy_run_num=policy_run_num
-                            , policy_seed=policy_seed, eval_seed=seed, eval_run_num=run_num)
-    if os.path.exists(data_dir):
-        shutil.rmtree(data_dir)
-    os.makedirs(data_dir)
 
+    for i, com in enumerate(lagrangian_values["COM"]):
+        plt.figure()
+        plt.plot(np.arange(len(com)), com)
+        plt.xlabel("time")
+        plt.ylabel(f"COM{i}")
 
-    lagrangian_values_fn = f"{data_dir}/lagrangian.pickle"
-
-    with open(lagrangian_values_fn, 'wb') as handle:
-        pickle.dump(lagrangian_values, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-    input_values_fn = f"{data_dir}/input_values.npy"
-    layers_values_fn = f"{data_dir}/layer_values.npy"
-
-    np.save(input_values_fn, input_values)
-    np.save(layers_values_fn, layers_values)
-
-
-    all_weights = model.get_all_weight_values()
-
-    for ind, weights in enumerate(all_weights):
-        fname = f"{data_dir}/weights_layer_{ind}.txt"
-        np.savetxt(fname, weights)
+        plt.savefig(f"{plot_dir}/COM{i}.jpg")
+        plt.close()
 
 
 

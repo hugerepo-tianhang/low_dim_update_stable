@@ -1,5 +1,10 @@
 import shutil
 import os
+import datetime
+def get_time_stamp(style='%Y-%m-%d %H:%M:%S'):
+    return datetime.datetime.now().strftime(style)
+
+
 def create_dir_remove(dir_name):
     if os.path.exists(dir_name):
         shutil.rmtree(dir_name)
@@ -31,7 +36,17 @@ def get_plot_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, 
                f"{get_run_name(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)}"
     return data_dir
 
-def get_result_dir(env, policy_num_timesteps, policy_run_num, policy_seed, run_seed, run_run_num):
+def get_result_dir(env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num):
     data_dir = f"{get_project_dir()}/result/" \
-               f"{get_run_name(env, policy_num_timesteps, policy_run_num, policy_seed, run_seed, run_run_num)}"
+               f"{get_run_name(env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)}"
+    return data_dir
+
+def get_test_dir(env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, augment_seed):
+    data_dir = f"{get_project_dir()}/test/" \
+               f"{get_run_name(env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)}"
+    return data_dir
+
+def get_original_env_test_dir(env,augment_seed):
+    data_dir = f"{get_project_dir()}/test/" \
+               f"original: {env} augment_seed{augment_seed}"
     return data_dir

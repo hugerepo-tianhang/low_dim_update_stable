@@ -64,8 +64,22 @@ def plot(result_dir):
         _plot(data["labels"], data["log_dirs"], aug_num_timesteps, result_dir, title)
 
     for network_size, data in network_size_plot_data.items():
-        title = f"fix network_size {network_size}"
-        _plot(data["labels"], data["log_dirs"], aug_num_timesteps, result_dir, title)
+        for lr, data_lr in lr_plot_data.items():
+            title = f"fix network_size {network_size} learning_rate {lr}"
+
+            all_data_network_size_set = list(zip(data["labels"], data["log_dirs"]))
+            all_data_lr_set = list(zip(data_lr["labels"], data_lr["log_dirs"]))
+
+
+            final_all_data = set(all_data_network_size_set).intersection(set(all_data_lr_set))
+            final_data = {}
+
+            if len(final_all_data) == 0:
+                continue
+
+            final_data["labels"], final_data["log_dirs"] = zip(*final_all_data)
+
+            _plot(final_data["labels"], final_data["log_dirs"], aug_num_timesteps, result_dir, title)
 
     for lr, data in lr_plot_data.items():
         title = f"fix lr {lr}"
@@ -123,15 +137,12 @@ if __name__ =="__main__":
     env = 'DartWalker2d_aug_input_current_trial-v1'
     trained_policy_env = "DartWalker2d-v1"
     trained_policy_num_timesteps = 2000000
-    policy_run_nums = [0, 1, 2]
+    policy_run_nums = [0]
     policy_seeds = [0]
-    eval_seed = 4
-    eval_run_num = 4
-    aug_num_timesteps = 1000000
+    eval_seed = 3
+    eval_run_num = 3
     for policy_run_num in policy_run_nums:
         for policy_seed in policy_seeds:
             result_dir = get_result_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
-
-    # labels, total_log_dirs = get_results(result_dir)
 
             plot(result_dir)
