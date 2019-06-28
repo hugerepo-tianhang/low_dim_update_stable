@@ -181,7 +181,7 @@ def visualize_policy_and_collect_COM(seed, run_num, policy_env, policy_num_times
     if args.normalize:
         env = VecNormalize(env)
 
-    model = PPO2.load(f"{save_dir}/ppo2")
+    model = PPO2.load(f"{save_dir}/ppo2", seed=seed)
     model.set_pi_from_flat(final_params)
     if args.normalize:
         env.load_running_average(save_dir)

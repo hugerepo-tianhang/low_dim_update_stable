@@ -28,7 +28,7 @@ def complete_run(policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
 
 def crunch_correlation_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                          eval_run_num):
-    eval_trained_policy_and_collect_data(seed=eval_seed, run_num=eval_run_num, policy_env=policy_env,
+    eval_trained_policy_and_collect_data(eval_seed=eval_seed, eval_run_num=eval_run_num, policy_env=policy_env,
                                          policy_num_timesteps=policy_num_timesteps,
                                          policy_run_num=policy_run_num, policy_seed=policy_seed)
 

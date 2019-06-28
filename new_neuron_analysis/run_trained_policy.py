@@ -22,6 +22,7 @@ import sys
 import minepy
 import pickle
 from matplotlib import pyplot as plt
+from stable_baselines.common import set_global_seeds
 
 
 def safe_mean(arr):
@@ -148,7 +149,7 @@ def plot_everything(lagrangian_values, layer_values_list, out_dir, PLOT_CUTOFF):
             plt.close()
 
 
-def eval_trained_policy_and_collect_data(seed, run_num, policy_env, policy_num_timesteps, policy_seed, policy_run_num):
+def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, policy_num_timesteps, policy_seed, policy_run_num):
 
 
     logger.log(sys.argv)
@@ -171,15 +172,19 @@ def eval_trained_policy_and_collect_data(seed, run_num, policy_env, policy_num_t
     def make_env():
         env_out = gym.make(args.env)
         env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
-        env_out.seed(seed)
+        env_out.seed(eval_seed)
         return env_out
     env = DummyVecEnv([make_env])
+    walker_env = env.envs[0].env.env
 
+
+    set_global_seeds(eval_seed)
+    walker_env.seed(eval_seed)
 
     if args.normalize:
         env = VecNormalize(env)
 
-    model = PPO2.load(f"{save_dir}/ppo2")
+    model = PPO2.load(f"{save_dir}/ppo2", seed=eval_seed)
     model.set_pi_from_flat(final_params)
     if args.normalize:
         env.load_running_average(save_dir)
@@ -277,7 +282,7 @@ def eval_trained_policy_and_collect_data(seed, run_num, policy_env, policy_num_t
 
 
     data_dir = get_data_dir(policy_env=args.env, policy_num_timesteps=policy_num_timesteps, policy_run_num=policy_run_num
-                            , policy_seed=policy_seed, eval_seed=seed, eval_run_num=run_num)
+                            , policy_seed=policy_seed, eval_seed=eval_seed, eval_run_num=eval_run_num)
     if os.path.exists(data_dir):
         shutil.rmtree(data_dir)
     os.makedirs(data_dir)
@@ -308,8 +313,9 @@ if __name__ == '__main__':
 
     policy_env = "DartWalker2d-v1"
 
-    visualize_policy_and_collect_COM(seed=3, run_num=3, policy_env=policy_env, policy_num_timesteps=5000000,
-                                     policy_seed=4, policy_run_num=0)
+    eval_trained_policy_and_collect_data(eval_seed=0, eval_run_num=0, policy_env=policy_env,
+                                         policy_num_timesteps=2000000, policy_seed=0,
+                                         policy_run_num=0)
     # visualize_policy_and_collect_COM(seed=3, run_num=3, policy_env=policy_env, policy_num_timesteps=2000000,
     #                              policy_seed=1, policy_run_num=0)
 # seeds = [0, 1, 2]

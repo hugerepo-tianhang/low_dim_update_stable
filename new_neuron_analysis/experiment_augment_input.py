@@ -138,7 +138,6 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
 
     walker_env.disableViewer = True
 
-
     assert comp_dict(walker_env.linear_global_dict, linear_global_dict)
     assert walker_env.non_linear_global_dict == None
     assert walker_env.top_to_include == top_num_to_include
@@ -161,15 +160,16 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
                 "full_param_traj_dir_path": full_param_traj_dir_path}
 
     layers = [network_size, network_size]
+    set_global_seeds(args.seed)
+    walker_env.seed(args.seed)
 
     policy_kwargs = {"net_arch" : [dict(vf=layers, pi=layers)]}
     model = PPO2(policy=policy, env=env, n_steps=4096, nminibatches=64, lam=0.95, gamma=0.99,
                  noptepochs=10,
-                 ent_coef=0.0, learning_rate=learning_rate, cliprange=0.2, optimizer='adam', policy_kwargs=policy_kwargs)
+                 ent_coef=0.0, learning_rate=learning_rate, cliprange=0.2, optimizer='adam', policy_kwargs=policy_kwargs,
+                 seed=args.seed)
     model.tell_run_info(run_info)
 
-    set_global_seeds(args.seed)
-    walker_env.seed(args.seed)
 
     model.learn(total_timesteps=args.num_timesteps, seed=args.seed)
 

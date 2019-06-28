@@ -71,11 +71,12 @@ def train(args):
 
     env = DummyVecEnv([make_env])
     env.envs[0].env.env.disableViewer = True
+    set_global_seeds(args.seed)
+    env.envs[0].env.env.seed(args.seed)
 
     if args.normalize:
         env = VecNormalize(env)
 
-    set_global_seeds(args.seed)
     policy = MlpPolicy
 
     # extra run info I added for my purposes
@@ -99,7 +100,7 @@ def train(args):
                 "full_param_traj_dir_path": full_param_traj_dir_path}
 
     model = PPO2(policy=policy, env=env, n_steps=args.n_steps, nminibatches=args.nminibatches, lam=0.95, gamma=0.99, noptepochs=10,
-                 ent_coef=0.0, learning_rate=3e-4, cliprange=0.2, optimizer=args.optimizer)
+                 ent_coef=0.0, learning_rate=3e-4, cliprange=0.2, optimizer=args.optimizer, seed=args.seed)
     model.tell_run_info(run_info)
 
     if args.use_run_num_start != -1:
