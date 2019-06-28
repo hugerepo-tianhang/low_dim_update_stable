@@ -41,17 +41,17 @@ def main():
 
     policy_num_timesteps = 5000000
     policy_env = "DartWalker2d-v1"
-    policy_seeds = [3, 4, 5]
-    policy_run_nums = [0, 1]
+    policy_seeds = [3,4]
+    policy_run_nums = [0]
 
     eval_seeds = [4]
     eval_run_nums = [4]
 
-    augment_seeds = [0,1]
-    augment_run_nums = range(20)
+    augment_seeds = range(20)
+    augment_run_nums = [0]
     augment_num_timesteps = 1000000
-    top_num_to_includes = [0]
-    network_sizes = [64, 16]
+    top_num_to_includes = [0,5]
+    network_sizes = [16]
 
 
 
