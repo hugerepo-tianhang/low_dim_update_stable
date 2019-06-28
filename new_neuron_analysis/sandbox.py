@@ -1,6 +1,10 @@
-import numpy as np
+import multiprocessing
 
-a = {"a":np.array([1,2,3]), "b":np.array([4,2,3])}
-b = {"a":np.array([1,2,3]), "b":np.array([4,2,3])}
+def f(x):
+    print (multiprocessing.current_process()._identity)
+    if multiprocessing.current_process()._identity == (1,):
+        print("sss")
+    return x * x
 
-print(comp_dict(a,b))
+p = multiprocessing.Pool()
+print (p.map(f, range(6)))

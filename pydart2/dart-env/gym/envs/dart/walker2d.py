@@ -5,6 +5,9 @@ from gym.envs.dart.dart_world import DartWorld
 from matplotlib import pyplot as plt
 # from new_neuron_analysis.dir_tree_util import *
 import os
+
+import sys
+sys.path.append("/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable")
 from new_neuron_analysis.analyse_data import LinearGlobalDictRow
 
 

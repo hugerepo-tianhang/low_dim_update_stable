@@ -10,7 +10,7 @@ from sklearn import  linear_model
 import copy
 from joblib import delayed, Parallel
 import pickle
-from low_dim_update_stable.new_neuron_analysis.dir_tree_util import *
+from new_neuron_analysis.dir_tree_util import *
 import json
 regr = linear_model.LinearRegression()
 

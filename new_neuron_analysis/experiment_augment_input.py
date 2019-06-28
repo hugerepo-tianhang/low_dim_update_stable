@@ -19,6 +19,7 @@ from gym.envs.registration import register
 import json
 from new_neuron_analysis.analyse_data import read_data
 from new_neuron_analysis.util import comp_dict
+import multiprocessing
 def safe_mean(arr):
     """
     Compute the mean of an array if there is at least one element.
@@ -101,8 +102,9 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
     save_dir = get_save_dir(this_run_dir)
     aug_plot_dir = get_aug_plot_dir(this_run_dir)
 
-
-    create_dir_if_not(result_dir)
+    current_process_id = multiprocessing.current_process()._identity
+    if current_process_id == (1,):
+        create_dir_if_not(result_dir)
     create_dir_remove(this_run_dir)
     create_dir_remove(full_param_traj_dir_path)
     create_dir_remove(save_dir)
@@ -200,8 +202,9 @@ def run_check_experiment(augment_num_timesteps, augment_seed, augment_run_num, n
     log_dir = get_log_dir(this_run_dir)
     save_dir = get_save_dir(this_run_dir)
 
-
-    create_dir_if_not(result_dir)
+    current_process_id = multiprocessing.current_process()._identity
+    if current_process_id == (1,):
+        create_dir_if_not(result_dir)
     create_dir_remove(this_run_dir)
     create_dir_remove(full_param_traj_dir_path)
     create_dir_remove(save_dir)
