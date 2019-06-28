@@ -12,10 +12,11 @@ from stable_baselines.common import explained_variance, ActorCriticRLModel, tf_u
 from stable_baselines.common.runners import AbstractEnvRunner
 from stable_baselines.common.policies import LstmPolicy, ActorCriticPolicy
 from stable_baselines.a2c.utils import total_episode_reward_logger
-from stable_baselines.low_dim_analysis.eval_util import get_full_param_traj_file_path
+from stable_baselines.low_dim_analysis.eval_util import *
 import csv
 from stable_baselines.common.tf_util import numel
-
+import json
+from stable_baselines.common import set_global_seeds
 
 class PPO2(ActorCriticRLModel):
     """
@@ -47,11 +48,11 @@ class PPO2(ActorCriticRLModel):
     def __init__(self, policy, env, gamma=0.99, n_steps=128, ent_coef=0.01, learning_rate=2.5e-4, vf_coef=0.5,
                  max_grad_norm=0.5, lam=0.95, nminibatches=4, noptepochs=4, cliprange=0.2, verbose=1,
                  tensorboard_log=None, _init_setup_model=True, policy_kwargs=None,
-                 full_tensorboard_log=False, optimizer='adam'):
+                 full_tensorboard_log=False, optimizer='adam', seed=None):
 
         super(PPO2, self).__init__(policy=policy, env=env, verbose=verbose, requires_vec_env=True,
                                    _init_setup_model=_init_setup_model, policy_kwargs=policy_kwargs)
-
+        self.seed = seed
         self.learning_rate = learning_rate
         self.cliprange = cliprange
         self.n_steps = n_steps
@@ -112,6 +113,8 @@ class PPO2(ActorCriticRLModel):
 
             self.graph = tf.Graph()
             with self.graph.as_default():
+                set_global_seeds(seed=self.seed)
+
                 self.sess = tf_util.make_session(num_cpu=n_cpu, graph=self.graph)
 
                 n_batch_step = None
@@ -122,10 +125,12 @@ class PPO2(ActorCriticRLModel):
                     n_batch_step = self.n_envs
                     n_batch_train = self.n_batch // self.nminibatches
 
+
                 act_model = self.policy(self.sess, self.observation_space, self.action_space, self.n_envs, 1,
                                         n_batch_step, reuse=False, **self.policy_kwargs)
                 with tf.variable_scope("train_model", reuse=True,
                                        custom_getter=tf_util.outer_scope_getter("train_model")):
+
                     train_model = self.policy(self.sess, self.observation_space, self.action_space,
                                               self.n_envs // self.nminibatches, self.n_steps, n_batch_train,
                                               reuse=True, **self.policy_kwargs)
@@ -236,7 +241,12 @@ class PPO2(ActorCriticRLModel):
     def tell_run_info(self, run_info):
         self.run_info = run_info
 
-
+    #
+    # def dump_runner_data(self, data):
+    #     test_data_dir = get_test_data_dir(this_run_dir=self.run_info["full_param_traj_dir_path"])
+    #     test_data_output_file = "obs"
+    #     with open(test_data_output_file, 'a') as fp:
+    #         json.dump(data, fp)
 
     def dump(self, var_list, index):
         var_output_file = get_full_param_traj_file_path(dir_name=self.run_info["full_param_traj_dir_path"], index=index)
@@ -360,6 +370,14 @@ class PPO2(ActorCriticRLModel):
                 cliprangenow = self.cliprange(frac)
                 # true_reward is the reward without discount
                 obs, returns, masks, actions, values, neglogpacs, states, ep_infos, true_reward = runner.run()
+
+                # d = {"obs":obs, "returns":returns, "masks":masks, "actions":actions,
+                #      "values":values, "neglogpacs":neglogpacs, "states":states,
+                #      "ep_infos":ep_infos, "true_reward":true_reward}
+                # with open("a.test", "w") as fp:
+                #     json.dump(d, fp)
+
+
                 ep_info_buf.extend(ep_infos)
                 ep_full_infos.extend(ep_infos)
 

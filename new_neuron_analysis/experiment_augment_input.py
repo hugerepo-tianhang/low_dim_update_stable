@@ -135,6 +135,7 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
     env = DummyVecEnv([make_env])
     walker_env = env.envs[0].env.env
 
+
     walker_env.disableViewer = True
 
 
@@ -149,9 +150,8 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
 
     if args.normalize:
         env = VecNormalize(env)
-
-    set_global_seeds(args.seed)
     policy = MlpPolicy
+
 
     # extra run info I added for my purposes
 
@@ -168,7 +168,10 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
                  ent_coef=0.0, learning_rate=learning_rate, cliprange=0.2, optimizer='adam', policy_kwargs=policy_kwargs)
     model.tell_run_info(run_info)
 
-    model.learn(total_timesteps=args.num_timesteps)
+    set_global_seeds(args.seed)
+    walker_env.seed(args.seed)
+
+    model.learn(total_timesteps=args.num_timesteps, seed=args.seed)
 
     model.save(f"{save_dir}/ppo2")
 
@@ -221,14 +224,14 @@ def run_check_experiment(augment_num_timesteps, augment_seed, augment_run_num, n
         return env_out
 
     env = DummyVecEnv([make_env])
-    env.envs[0].env.env.disableViewer = True
+    walker_env = env.envs[0].env.env
+    walker_env.disableViewer = True
 
 
 
     if args.normalize:
         env = VecNormalize(env)
 
-    set_global_seeds(args.seed)
     policy = MlpPolicy
 
     # extra run info I added for my purposes
@@ -236,16 +239,23 @@ def run_check_experiment(augment_num_timesteps, augment_seed, augment_run_num, n
 
     run_info = {"run_num": args.run_num,
                 "env_id": args.env,
-                "full_param_traj_dir_path": full_param_traj_dir_path}
+                "full_param_traj_dir_path": full_param_traj_dir_path,
+                "this_run_dir": this_run_dir}
 
     layers = [network_size, network_size]
+
+    set_global_seeds(args.seed)
+    walker_env.seed(args.seed)
 
     policy_kwargs = {"net_arch" : [dict(vf=layers, pi=layers)]}
     model = PPO2(policy=policy, env=env, n_steps=4096, nminibatches=64, lam=0.95, gamma=0.99,
                  noptepochs=10,
-                 ent_coef=0.0, learning_rate=learning_rate, cliprange=0.2, optimizer='adam', policy_kwargs=policy_kwargs)
+                 ent_coef=0.0, learning_rate=learning_rate, cliprange=0.2, optimizer='adam', policy_kwargs=policy_kwargs,
+                 seed=args.seed)
     model.tell_run_info(run_info)
 
+
+    # model.learn(total_timesteps=args.num_timesteps, seed=args.seed)
     model.learn(total_timesteps=args.num_timesteps)
 
     model.save(f"{save_dir}/ppo2")
@@ -265,20 +275,20 @@ if __name__ == "__main__":
     policy_env = "DartWalker2d-v1"
 
     augment_num_timesteps = 5000
-    top_num_to_includes = [10]
-    trained_policy_seeds = [0, 1]
-    trained_policy_run_nums = [0, 1]
-    network_sizes = [16]
+
     #     for total_num_to_include in total_num_to_includes:
     #     for trained_policy_run_num in trained_policy_run_nums:
     #         for trained_policy_seed in trained_policy_seeds:
-    run_experiment(augment_num_timesteps, top_num_to_include=0, augment_seed=0,
-                         augment_run_num=0, network_size=16,
-                         policy_env=policy_env, policy_num_timesteps=2000000, policy_run_num=0, policy_seed=0, eval_seed=3,
-                         eval_run_num=3, learning_rate=0.0001, test=True)
+    # run_experiment(augment_num_timesteps, top_num_to_include=0, augment_seed=0,
+    #                      augment_run_num=1, network_size=64,
+    #                      policy_env=policy_env, policy_num_timesteps=2000000, policy_run_num=0, policy_seed=0, eval_seed=3,
+    #                      eval_run_num=3, learning_rate=0.0001, test=True)
     # run_check_experiment(augment_num_timesteps, augment_seed=0,
-    #                      augment_run_num=0, network_size=16,
+    #                      augment_run_num=0, network_size=64,
     #                      policy_env=policy_env, learning_rate=0.0001)    # from joblib import Parallel, delayed
+    run_check_experiment(augment_num_timesteps, augment_seed=0,
+                         augment_run_num=1, network_size=64,
+                         policy_env=policy_env, learning_rate=0.0001)    # from joblib import Parallel, delayed
 
     # results = Parallel(n_jobs=-1)(delayed(run_experiment)(env=env, num_timesteps=num_timesteps,
     #                                                        trained_policy_env="DartWalker2d-v1",

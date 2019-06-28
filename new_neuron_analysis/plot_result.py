@@ -87,6 +87,67 @@ def plot(result_dir):
 
 
 
+def plot_same_everything_just_run_num_check_result_should_be_same(result_dir):
+    top_num_to_include_plot_data = {}
+    network_size_plot_data = {}
+    lr_plot_data = {}
+
+
+    for label in os.listdir(result_dir):
+
+        this_run_dir = f"{result_dir}/{label}"
+        log_dir = get_log_dir(this_run_dir)
+        save_dir = get_save_dir(this_run_dir)
+        if not os.path.exists(log_dir) or len(os.listdir(save_dir)) == 0:
+            continue
+
+
+        top_num_to_include, network_size, lr = extra(label)
+        if top_num_to_include not in top_num_to_include_plot_data:
+            top_num_to_include_plot_data[top_num_to_include] = {"log_dirs": [log_dir], "labels": [label]}
+        else:
+            top_num_to_include_plot_data[top_num_to_include]["log_dirs"].append(log_dir)
+            top_num_to_include_plot_data[top_num_to_include]["labels"].append(label)
+
+        if network_size not in network_size_plot_data:
+            network_size_plot_data[network_size] = {"log_dirs": [log_dir], "labels": [label]}
+        else:
+            network_size_plot_data[network_size]["log_dirs"].append(log_dir)
+            network_size_plot_data[network_size]["labels"].append(label)
+
+        if lr not in lr_plot_data:
+            lr_plot_data[lr] = {"log_dirs": [log_dir], "labels": [label]}
+        else:
+            lr_plot_data[lr]["log_dirs"].append(log_dir)
+            lr_plot_data[lr]["labels"].append(label)
+
+    for top_num_to_include, data in top_num_to_include_plot_data.items():
+        title = f"fix top_num_to_include {top_num_to_include}"
+        _plot(data["labels"], data["log_dirs"], aug_num_timesteps, result_dir, title)
+
+    for network_size, data in network_size_plot_data.items():
+        for lr, data_lr in lr_plot_data.items():
+            title = f"fix network_size {network_size} learning_rate {lr}"
+
+            all_data_network_size_set = list(zip(data["labels"], data["log_dirs"]))
+            all_data_lr_set = list(zip(data_lr["labels"], data_lr["log_dirs"]))
+
+
+            final_all_data = set(all_data_network_size_set).intersection(set(all_data_lr_set))
+            final_data = {}
+
+            if len(final_all_data) == 0:
+                continue
+
+            final_data["labels"], final_data["log_dirs"] = zip(*final_all_data)
+
+            _plot(final_data["labels"], final_data["log_dirs"], aug_num_timesteps, result_dir, title)
+
+    for lr, data in lr_plot_data.items():
+        title = f"fix lr {lr}"
+        _plot(data["labels"], data["log_dirs"], aug_num_timesteps, result_dir, title)
+
+
 
 def plot_results_group_by_run_and_seed(dirs, num_timesteps, xaxis, task_name, labels):
     """
@@ -141,6 +202,7 @@ if __name__ =="__main__":
     policy_seeds = [0]
     eval_seed = 3
     eval_run_num = 3
+    aug_num_timesteps=800000
     for policy_run_num in policy_run_nums:
         for policy_seed in policy_seeds:
             result_dir = get_result_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)

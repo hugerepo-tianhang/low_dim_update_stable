@@ -37,6 +37,10 @@ def get_log_dir(this_run_dir):
 def get_save_dir(this_run_dir):
     return f"{this_run_dir}/the_save_dir"
 
+def get_test_data_dir(this_run_dir):
+
+    return f"{this_run_dir}/test_data"
+
 def get_full_params_dir(this_run_dir):
 
     return f"{this_run_dir}/full_params"
