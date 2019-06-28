@@ -81,8 +81,7 @@ def main():
                          for augment_run_num in augment_run_nums
                          for network_size in network_sizes
                          for learning_rate in
-                         [64 / network_size * 3e-4,
-                          (64 / network_size + 64 / network_size) * 3e-4]]
+                         [64 / network_size * 3e-4]]
         pool.starmap(run_check_experiment, run_test_args)
 
         for policy_seed in policy_seeds:
@@ -101,7 +100,7 @@ def main():
                                 for top_num_to_include in top_num_to_includes
                                 for network_size in network_sizes
                                 for learning_rate in
-                                [64 / network_size * 3e-4, (64 / network_size + 64 / network_size) * 3e-4]]
+                                [64 / network_size * 3e-4]]
 
 
                         pool.starmap(run_experiment, run_experiment_args)
