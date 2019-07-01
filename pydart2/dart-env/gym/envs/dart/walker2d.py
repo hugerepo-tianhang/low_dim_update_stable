@@ -48,17 +48,17 @@ def lagrangian_to_include_in_state(linear_global_dict, non_linear_global_dict, t
     upper_tri_linear_M_nd, flattened_ind = get_upper_tri(linear_M_nd)
     num_tri_M = upper_tri_linear_M_nd.shape[0]
 
-    concat = np.abs(np.vstack((upper_tri_linear_M_nd, linear_C_nd, linear_COM_nd)))
+    concat = np.vstack((upper_tri_linear_M_nd, linear_C_nd, linear_COM_nd))
 
 
-    linear_cos = concat[:,:,0]
+    linear_cos = np.abs(concat[:,:,0])
     normalized_SSE = concat[:,:,1]
     max_normalized_SSE = 150 #hard code since > 150 will be made 0
     new_metric_matrix = 0.5*linear_cos + (1 - normalized_SSE/max_normalized_SSE) * 0.5
     argmax_for_each = np.argmax(new_metric_matrix, axis=1)
 
     max_over_neurons_concat = concat[np.arange(len(argmax_for_each)), argmax_for_each]
-    max_for_each_lagrange = max_over_neurons_concat[:,0]
+    max_for_each_lagrange = np.abs(max_over_neurons_concat[:,0])
 
     top_to_include = min(len(max_for_each_lagrange), top_to_include)
     argtop = np.argpartition(max_for_each_lagrange, -top_to_include)[len(max_for_each_lagrange)-top_to_include:]
@@ -100,9 +100,10 @@ def lagrangian_to_include_in_state(linear_global_dict, non_linear_global_dict, t
         result[lagrangian_key].append(lagrangian_index)
 
         lagrangian_l = lagrangian_values[lagrangian_key][lagrangian_index]
-
-        assert linear_global_dict[lagrangian_key][lagrangian_index][LinearGlobalDictRow.reg["co"]] == linear_co
-        assert linear_global_dict[lagrangian_key][lagrangian_index][LinearGlobalDictRow.reg["normalized_SSE"]] == normalized_SSE
+        # check_linear_co = np.max(np.abs(np.array(linear_global_dict[lagrangian_key][lagrangian_index])[:,LinearGlobalDictRow.reg["co"]]))
+        # if check_linear_co != linear_co:
+        #     print("s")
+        # assert  check_linear_co == linear_co, f"check_linear_co {check_linear_co} VS linear_co{linear_co}"
 
 
         neuron_l = layers_values[int(neuron_coord[0]), int(neuron_coord[1]), :]

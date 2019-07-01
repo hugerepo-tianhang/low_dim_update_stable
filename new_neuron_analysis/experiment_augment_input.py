@@ -272,23 +272,47 @@ if __name__ == "__main__":
     # trained_policy_seeds = [0,1,2]
     # trained_policy_run_nums = [0,1,2]
     # network_sizes = [16, 32, 64, 128]
+    policy_seeds = [3]
+    policy_run_nums = [0]
+    policy_num_timesteps = 5000
     policy_env = "DartWalker2d-v1"
+
+    eval_seeds = [4]
+    eval_run_nums = [4]
+
+    augment_seeds = [0]
+    augment_run_nums = range(2)
+    augment_num_timesteps = 5000
+    top_num_to_includes = [10]
+    network_sizes = [16]
+
 
     augment_num_timesteps = 5000
 
     #     for total_num_to_include in total_num_to_includes:
     #     for trained_policy_run_num in trained_policy_run_nums:
     #         for trained_policy_seed in trained_policy_seeds:
-    # run_experiment(augment_num_timesteps, top_num_to_include=0, augment_seed=0,
-    #                      augment_run_num=1, network_size=64,
-    #                      policy_env=policy_env, policy_num_timesteps=2000000, policy_run_num=0, policy_seed=0, eval_seed=3,
-    #                      eval_run_num=3, learning_rate=0.0001, test=True)
+    for policy_seed in policy_seeds:
+        for policy_run_num in policy_run_nums:
+            for eval_seed in eval_seeds:
+                for eval_run_num in eval_run_nums:
+                   for augment_seed in augment_seeds:
+                       for augment_run_num in augment_run_nums:
+                           for top_num_to_include in top_num_to_includes:
+                                for network_size in network_sizes:
+                                    for learning_rate in [64 / network_size * 3e-4, (64 / network_size + 64 / network_size) * 3e-4]:
+
+                                        run_experiment(augment_num_timesteps, top_num_to_include=top_num_to_include, augment_seed=augment_seed,
+                                                             augment_run_num=augment_run_num, network_size=network_size,
+                                                             policy_env=policy_env, policy_num_timesteps=policy_num_timesteps,
+                                                       policy_run_num=policy_run_num, policy_seed=policy_seed, eval_seed=eval_seed,
+                                                             eval_run_num=eval_run_num, learning_rate=learning_rate, test=True)
     # run_check_experiment(augment_num_timesteps, augment_seed=0,
     #                      augment_run_num=0, network_size=64,
     #                      policy_env=policy_env, learning_rate=0.0001)    # from joblib import Parallel, delayed
-    run_check_experiment(augment_num_timesteps, augment_seed=0,
-                         augment_run_num=1, network_size=64,
-                         policy_env=policy_env, learning_rate=0.0001)    # from joblib import Parallel, delayed
+    # run_check_experiment(augment_num_timesteps, augment_seed=0,
+    #                      augment_run_num=1, network_size=64,
+    #                      policy_env=policy_env, learning_rate=0.0001)    # from joblib import Parallel, delayed
 
     # results = Parallel(n_jobs=-1)(delayed(run_experiment)(env=env, num_timesteps=num_timesteps,
     #                                                        trained_policy_env="DartWalker2d-v1",
