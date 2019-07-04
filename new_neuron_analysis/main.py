@@ -46,13 +46,13 @@ def main():
     eval_seeds = [4]
     eval_run_nums = [4]
 
-    augment_seeds = range(20)
+    augment_seeds = range(30)
     augment_run_nums = [0]
     augment_num_timesteps = 1500000
-    top_num_to_includes = [0, 10, 20]
+    top_num_to_includes = [slice(10,20), slice(20,30), slice(30,40)]
     network_sizes = [16, 64]
 
-
+    #
     # policy_seeds = [3, 4]
     # policy_run_nums = [0]
     # policy_num_timesteps = 5000
@@ -64,7 +64,7 @@ def main():
     # augment_seeds = [0]
     # augment_run_nums = range(2)
     # augment_num_timesteps = 5000
-    # top_num_to_includes = [10]
+    # top_num_to_includes = [slice(30,40)]
     # network_sizes = [16]
 
 
@@ -121,10 +121,10 @@ def main():
         eval_seeds = [3]
         eval_run_nums = [3]
 
-        augment_seeds = range(20)
+        augment_seeds = range(30)
         augment_run_nums = [0]
         augment_num_timesteps = 1500000
-        top_num_to_includes = [0, 10, 20]
+        top_num_to_includes = [slice(10, 20), slice(20, 30), slice(30, 40)]
         network_sizes = [16, 64]
 
         for policy_seed in policy_seeds:

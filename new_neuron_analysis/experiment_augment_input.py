@@ -34,7 +34,7 @@ def safe_mean(arr):
 def get_run_name_experiment(env, num_timesteps,run_num,seed, learning_rate, top_num_to_include, network_size):
 
     return f'env_{env}_time_step_{num_timesteps}_' \
-           f'run_{run_num}_seed_{seed}_learning_rate_{learning_rate}_top_num_to_include_{top_num_to_include}_network_size_{network_size}'
+           f'run_{run_num}_seed_{seed}_learning_rate_{learning_rate}_top_num_to_include_{top_num_to_include.start}:{top_num_to_include.stop}_network_size_{network_size}'
 
 
 def get_experiment_path_for_this_run(env, num_timesteps,run_num,seed, learning_rate, top_num_to_include, result_dir, network_size):
@@ -66,8 +66,8 @@ def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
     # non_linear_global_dict
     return linear_global_dict , lagrangian_values, input_values, layers_values, all_weights
 
-def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augment_run_num, network_size,
-                          policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate, test=False):
+def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
+                   policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate, test=False):
 
     args = AttributeDict()
 
@@ -82,7 +82,8 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
     linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = read_all_data(
         policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
     timestamp = get_time_stamp('%Y_%m_%d_%H_%M_%S')
-    experiment_label = f"learning_rate_{learning_rate}timestamp_{timestamp}_augment_num_timesteps{augment_num_timesteps}_top_num_to_include{top_num_to_include}" \
+    experiment_label = f"learning_rate_{learning_rate}timestamp_{timestamp}_augment_num_timesteps{augment_num_timesteps}" \
+                       f"_top_num_to_include{top_num_to_include_slice.start}_{top_num_to_include_slice.stop}" \
                        f"_augment_seed{augment_seed}_augment_run_num{augment_run_num}_network_size{network_size}" \
                        f"_policy_num_timesteps{policy_num_timesteps}_policy_run_num{policy_run_num}_policy_seed{policy_seed}" \
                        f"_eval_seed{eval_seed}_eval_run_num{eval_run_num}"
@@ -95,7 +96,7 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
 
 
     this_run_dir = get_experiment_path_for_this_run(entry_point, args.num_timesteps, args.run_num,
-                                                    args.seed, learning_rate=learning_rate, top_num_to_include=top_num_to_include,
+                                                    args.seed, learning_rate=learning_rate, top_num_to_include=top_num_to_include_slice,
                                                     result_dir=result_dir, network_size=network_size)
     full_param_traj_dir_path = get_full_params_dir(this_run_dir)
     log_dir = get_log_dir(this_run_dir)
@@ -119,7 +120,7 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
         max_episode_steps=1000,
         kwargs={'linear_global_dict':linear_global_dict,
                 'non_linear_global_dict':None,
-                'top_to_include':top_num_to_include,
+                'top_to_include_slice':top_num_to_include_slice,
                 'aug_plot_dir': aug_plot_dir,
                 "lagrangian_values":lagrangian_values,
                 "layers_values":layers_values}
@@ -140,7 +141,7 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
 
     assert comp_dict(walker_env.linear_global_dict, linear_global_dict)
     assert walker_env.non_linear_global_dict == None
-    assert walker_env.top_to_include == top_num_to_include
+    assert walker_env.top_to_include_slice == top_num_to_include_slice
     assert walker_env.aug_plot_dir == aug_plot_dir
     assert comp_dict(walker_env.lagrangian_values, lagrangian_values)
     assert (walker_env.layers_values == layers_values).all()
@@ -179,7 +180,6 @@ def run_experiment(augment_num_timesteps, top_num_to_include, augment_seed, augm
         env.save_running_average(save_dir)
 
     return log_dir
-
 
 def run_check_experiment(augment_num_timesteps, augment_seed, augment_run_num, network_size,
                          policy_env, learning_rate):
@@ -283,7 +283,7 @@ if __name__ == "__main__":
     augment_seeds = [0]
     augment_run_nums = range(2)
     augment_num_timesteps = 5000
-    top_num_to_includes = [10]
+    top_num_to_includes = [slice(0,0)]
     network_sizes = [16]
 
 
@@ -302,11 +302,11 @@ if __name__ == "__main__":
                                 for network_size in network_sizes:
                                     for learning_rate in [64 / network_size * 3e-4, (64 / network_size + 64 / network_size) * 3e-4]:
 
-                                        run_experiment(augment_num_timesteps, top_num_to_include=top_num_to_include, augment_seed=augment_seed,
-                                                             augment_run_num=augment_run_num, network_size=network_size,
-                                                             policy_env=policy_env, policy_num_timesteps=policy_num_timesteps,
+                                        run_experiment(augment_num_timesteps, top_num_to_include_slice=top_num_to_include, augment_seed=augment_seed,
+                                                       augment_run_num=augment_run_num, network_size=network_size,
+                                                       policy_env=policy_env, policy_num_timesteps=policy_num_timesteps,
                                                        policy_run_num=policy_run_num, policy_seed=policy_seed, eval_seed=eval_seed,
-                                                             eval_run_num=eval_run_num, learning_rate=learning_rate, test=True)
+                                                       eval_run_num=eval_run_num, learning_rate=learning_rate, test=False)
     # run_check_experiment(augment_num_timesteps, augment_seed=0,
     #                      augment_run_num=0, network_size=64,
     #                      policy_env=policy_env, learning_rate=0.0001)    # from joblib import Parallel, delayed

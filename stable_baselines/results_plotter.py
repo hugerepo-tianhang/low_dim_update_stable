@@ -71,7 +71,7 @@ def ts2xy(timesteps, xaxis):
     return x_var, y_var
 
 
-def plot_curves(xy_list, labels, xaxis, title):
+def plot_curves(xy_list, labels, xaxis, title, xy_list_details=None):
     """
     plot the curves
 
@@ -79,6 +79,7 @@ def plot_curves(xy_list, labels, xaxis, title):
     :param xaxis: (str) the axis for the x and y output
         (can be X_TIMESTEPS='timesteps', X_EPISODES='episodes' or X_WALLTIME='walltime_hrs')
     :param title: (str) the title of the plot
+    :param xy_list_details: [ [(x,y), (x,y)], [...] ]
     """
 
     num = len(labels)
@@ -104,6 +105,13 @@ def plot_curves(xy_list, labels, xaxis, title):
         # ax.scatter(x, y, s=2, color=color)
         x, y_mean = window_func(x, y, EPISODES_WINDOW, np.mean)  # So returns average of last EPISODE_WINDOW episodes
         ax.plot(x, y_mean, color=color, label=labels[i])
+        if xy_list_details is not None:
+            for (detail_x, detail_y) in xy_list_details[i]:
+                detail_x, detail_y_mean = window_func(detail_x, detail_y, EPISODES_WINDOW,
+                                        np.mean)  # So returns average of last EPISODE_WINDOW episodes
+
+                ax.plot(detail_x, detail_y_mean, color=color, label=labels[i], alpha=0.5)
+
         ax.legend(loc="upper left")
 
     plt.xlim(minx, maxx)
