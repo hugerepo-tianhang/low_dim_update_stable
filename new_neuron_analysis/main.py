@@ -40,19 +40,19 @@ def main():
 
     policy_num_timesteps = 5000000
     policy_env = "DartWalker2d-v1"
-    policy_seeds = [3]
+    policy_seeds = [3, 4, 5]
     policy_run_nums = [1]
 
     eval_seeds = [4]
     eval_run_nums = [4]
 
-    augment_seeds = range(30)
+    augment_seeds = range(10)
     augment_run_nums = [0]
     augment_num_timesteps = 1500000
-    top_num_to_includes = [slice(10,20), slice(20,30), slice(30,40)]
+    top_num_to_includes = [slice(0,0), slice(0,10), slice(0,20)]
     network_sizes = [16, 64]
+    additional_note = "MIC_correlation"
 
-    #
     # policy_seeds = [3, 4]
     # policy_run_nums = [0]
     # policy_num_timesteps = 5000
@@ -64,10 +64,25 @@ def main():
     # augment_seeds = [0]
     # augment_run_nums = range(2)
     # augment_num_timesteps = 5000
-    # top_num_to_includes = [slice(30,40)]
+    # top_num_to_includes = [slice(0,10)]
     # network_sizes = [16]
+    # additional_note = "MIC_correlation"
 
 
+    # policy_num_timesteps = 2000000
+    # policy_env = "DartWalker2d-v1"
+    # policy_seeds = [0]
+    # policy_run_nums = [0]
+    #
+    # eval_seeds = [3]
+    # eval_run_nums = [3]
+    #
+    # augment_seeds = range(1)
+    # augment_run_nums = [0]
+    # augment_num_timesteps = 5000
+    # top_num_to_includes = [slice(0, 10), slice(0,0)]
+    # network_sizes = [64]
+    # additional_note = "non_linear"
 
 
 
@@ -81,7 +96,7 @@ def main():
         # pool.map(train, train_policy_args)
         #
         #
-        # #============================================================
+        #============================================================
         # correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
         #                         for policy_seed in policy_seeds
         #                         for policy_run_num in policy_run_nums
@@ -90,7 +105,7 @@ def main():
         #
         # pool.starmap(crunch_correlation_data, correlation_data_args)
 
-        # ============================================================
+        #============================================================
 
         for policy_seed in policy_seeds:
             for policy_run_num in policy_run_nums:
@@ -100,7 +115,7 @@ def main():
                         run_experiment_args = [(augment_num_timesteps, top_num_to_include, augment_seed,
                                 augment_run_num, network_size,
                                 policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                                eval_run_num, learning_rate)
+                                eval_run_num, learning_rate, additional_note)
 
 
                                 for augment_seed in augment_seeds
@@ -121,10 +136,10 @@ def main():
         eval_seeds = [3]
         eval_run_nums = [3]
 
-        augment_seeds = range(30)
+        augment_seeds = range(15)
         augment_run_nums = [0]
         augment_num_timesteps = 1500000
-        top_num_to_includes = [slice(10, 20), slice(20, 30), slice(30, 40)]
+        top_num_to_includes = [slice(0, 0), slice(0, 10), slice(0, 20)]
         network_sizes = [16, 64]
 
         for policy_seed in policy_seeds:
@@ -135,7 +150,7 @@ def main():
                         run_experiment_args = [(augment_num_timesteps, top_num_to_include, augment_seed,
                                 augment_run_num, network_size,
                                 policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                                eval_run_num, learning_rate)
+                                eval_run_num, learning_rate, additional_note)
 
 
                                 for augment_seed in augment_seeds
@@ -146,7 +161,6 @@ def main():
                                 [64 / network_size * 3e-4, (64 / network_size + 64 / network_size) * 3e-4]]
 
                         pool.starmap(run_experiment, run_experiment_args)
-                        # results = [pool.apply(howmany_within_range, args=(row, 4, 8)) for row in data]
 
         # result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
         #                             policy_seed, eval_seed, eval_run_num)

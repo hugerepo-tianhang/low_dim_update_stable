@@ -128,6 +128,96 @@ def lagrangian_to_include_in_state(linear_global_dict, non_linear_global_dict, t
 
     return result
 
+def lagrangian_to_include_in_state_non_linear(linear_global_dict, non_linear_global_dict, top_to_include_slice, aug_plot_dir,
+                                   lagrangian_values, layers_values):
+
+    result = {"M": [], "Coriolis": [], "COM": []}
+    if top_to_include_slice.stop - top_to_include_slice.start == 0:
+        return result
+
+
+    non_linear_M_nd = np.array(non_linear_global_dict["M"])
+    non_linear_C_nd = np.array(non_linear_global_dict["Coriolis"])
+    non_linear_COM_nd = np.array(non_linear_global_dict["COM"])
+
+    num_C = non_linear_C_nd.shape[0]
+    num_COM = non_linear_COM_nd.shape[0]
+
+    upper_tri_linear_M_nd, flattened_ind = get_upper_tri(non_linear_M_nd)
+    num_tri_M = upper_tri_linear_M_nd.shape[0]
+
+    concat = np.vstack((upper_tri_linear_M_nd, non_linear_C_nd, non_linear_COM_nd))
+
+
+    mics = np.abs(concat[:,:,0])
+
+    new_metric_matrix = mics
+    argmax_for_each = np.argmax(new_metric_matrix, axis=1)
+
+    max_over_neurons_concat = concat[np.arange(len(argmax_for_each)), argmax_for_each]
+    max_for_each_lagrange = np.abs(max_over_neurons_concat[:,0])
+
+    end = top_to_include_slice.stop
+    start = top_to_include_slice.start
+
+    if len(max_for_each_lagrange) < end:
+        raise Exception("Not even enough lagrangian that you asked for")
+
+    arg_to_include_orignal_index = np.argpartition(max_for_each_lagrange, -end)[len(max_for_each_lagrange) - end:]
+
+    num_to_include = end - start
+    arg_to_include_top_index = np.argpartition(max_for_each_lagrange[arg_to_include_orignal_index], -num_to_include)[:num_to_include]
+    arg_to_include = arg_to_include_orignal_index[arg_to_include_top_index]
+
+    create_dir_remove(aug_plot_dir)
+
+
+    for ind in arg_to_include:
+        neuron_coord = max_over_neurons_concat[ind][-2:]
+        mic =  max_over_neurons_concat[ind][0]
+        if ind < num_tri_M:
+            lagrangian_key = "M"
+            #ind is actually tri_M_index
+            M_ind = flattened_ind[ind]
+            lagrangian_index = M_ind
+
+
+        elif ind < num_C + num_tri_M:
+            lagrangian_key = "Coriolis"
+
+            C_ind = ind - num_tri_M
+            lagrangian_index = C_ind
+
+
+        elif ind < num_tri_M + num_C + num_COM:
+            lagrangian_key = "COM"
+
+            COM_ind = ind - (num_tri_M + num_C)
+            lagrangian_index = COM_ind
+
+
+        else:
+            raise Exception(f"WHAT? ind{ ind }")
+
+        result[lagrangian_key].append(lagrangian_index)
+
+        lagrangian_l = lagrangian_values[lagrangian_key][lagrangian_index]
+        # check_linear_co = np.max(np.abs(np.array(linear_global_dict[lagrangian_key][lagrangian_index])[:,LinearGlobalDictRow.reg["co"]]))
+        # if check_linear_co != mic:
+        #     print("s")
+        # assert  check_linear_co == mic, f"check_linear_co {check_linear_co} VS mic{mic}"
+
+
+        neuron_l = layers_values[int(neuron_coord[0]), int(neuron_coord[1]), :]
+        fig_name = f"{lagrangian_key}_{lagrangian_index}_VS_layer{neuron_coord[0]}" \
+                   f"_neuron_{neuron_coord[1]}_mic_{mic}.jpg"
+
+
+        plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir)
+
+
+    return result
+
 class DartWalker2dEnv_aug_input(dart_env.DartEnv, utils.EzPickle):
     def __init__(self, linear_global_dict, non_linear_global_dict, top_to_include_slice,
                  aug_plot_dir, lagrangian_values, layers_values):
@@ -166,10 +256,14 @@ class DartWalker2dEnv_aug_input(dart_env.DartEnv, utils.EzPickle):
         self.robot_skeleton = self.dart_world.skeletons[-1] # assume that the skeleton of interest is always the last one
 
 
-        self.lagrangian_inds_to_include = lagrangian_to_include_in_state(linear_global_dict,
+        self.lagrangian_inds_to_include = lagrangian_to_include_in_state_non_linear(linear_global_dict,
                                                                          non_linear_global_dict,
                                                                          top_to_include_slice, aug_plot_dir,
                                                                          lagrangian_values, layers_values)
+        # self.lagrangian_inds_to_include = lagrangian_to_include_in_state(linear_global_dict,
+        #                                                                  non_linear_global_dict,
+        #                                                                  top_to_include_slice, aug_plot_dir,
+        #                                                                  lagrangian_values, layers_values)
 
 
         num_inds_to_add = sum(map(len, self.lagrangian_inds_to_include.values()))

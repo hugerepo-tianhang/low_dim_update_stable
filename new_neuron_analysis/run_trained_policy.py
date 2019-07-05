@@ -221,7 +221,7 @@ def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, po
     ep_infos = []
     steps_to_first_done = 0
     first_done = False
-    for _ in range(3000):
+    for _ in range(30000):
         actions = model.step(obs)[0]
 
         # yield neuron_values

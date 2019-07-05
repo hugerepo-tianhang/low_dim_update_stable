@@ -20,6 +20,13 @@ import json
 from new_neuron_analysis.analyse_data import read_data
 from new_neuron_analysis.util import comp_dict
 import multiprocessing
+
+
+import logging
+
+
+
+
 def safe_mean(arr):
     """
     Compute the mean of an array if there is at least one element.
@@ -61,14 +68,51 @@ def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
     with open(linear_global_dict_path, 'r') as fp:
         linear_global_dict = json.load(fp)
 
-    # with open(non_linear_global_dict_path, 'r') as fp:
-    #     non_linear_global_dict = json.load(fp)
+    with open(non_linear_global_dict_path, 'r') as fp:
+        non_linear_global_dict = json.load(fp)
     # non_linear_global_dict
-    return linear_global_dict , lagrangian_values, input_values, layers_values, all_weights
+    return linear_global_dict , non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights
+
 
 def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
-                   policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate, test=False):
+               policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
+               additional_note, test=False):
+    if not test:
+        result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
+    else:
+        result_dir = get_test_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, augment_seed, additional_note)
 
+    current_process_id = multiprocessing.current_process()._identity
+    if current_process_id == (1,) or multiprocessing.current_process().name == "MainProcess":
+        create_dir_if_not(result_dir)
+
+
+    exception_logger = logging.getLogger()
+    handler = logging.FileHandler(f'{result_dir}/error.log')
+    handler.setLevel(logging.ERROR)
+    # # create a logging format
+    # formatter = logging.Formatter(f'top_num_to_include_slice_{top_num_to_include_slice}'
+    #                               f'_augment_seed_{augment_seed}_augment_run_num_{augment_run_num}'
+    #                               f'_network_size_{network_size}_learning_rate_{learning_rate}_{additional_note}\n%(message)s')
+    # handler.setFormatter(formatter)
+    #
+    # # add the handlers to the logger
+    exception_logger.addHandler(handler)
+
+    try:
+        _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
+                   policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num,
+                   learning_rate, additional_note, test=False)
+    except Exception as e:
+        exception_logger.error(f'########top_num_to_include_slice_{top_num_to_include_slice}'
+                                  f'_augment_seed_{augment_seed}_augment_run_num_{augment_run_num}'
+                                  f'_network_size_{network_size}_learning_rate_{learning_rate}_{additional_note}'
+                      , exc_info=e)
+
+
+def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
+                   policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate, additional_note, test=False):
+    asdsad
     args = AttributeDict()
 
     args.normalize = True
@@ -79,20 +123,20 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
 
     logger.log(f"#######TRAIN: {args}")
     # non_linear_global_dict
-    linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = read_all_data(
+    linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = read_all_data(
         policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
     timestamp = get_time_stamp('%Y_%m_%d_%H_%M_%S')
     experiment_label = f"learning_rate_{learning_rate}timestamp_{timestamp}_augment_num_timesteps{augment_num_timesteps}" \
                        f"_top_num_to_include{top_num_to_include_slice.start}_{top_num_to_include_slice.stop}" \
                        f"_augment_seed{augment_seed}_augment_run_num{augment_run_num}_network_size{network_size}" \
                        f"_policy_num_timesteps{policy_num_timesteps}_policy_run_num{policy_run_num}_policy_seed{policy_seed}" \
-                       f"_eval_seed{eval_seed}_eval_run_num{eval_run_num}"
+                       f"_eval_seed{eval_seed}_eval_run_num{eval_run_num}_additional_note_{additional_note}"
 
     entry_point = 'gym.envs.dart:DartWalker2dEnv_aug_input'
     if not test:
-        result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
+        result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
     else:
-        result_dir = get_test_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, augment_seed)
+        result_dir = get_test_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, augment_seed, additional_note)
 
 
     this_run_dir = get_experiment_path_for_this_run(entry_point, args.num_timesteps, args.run_num,
@@ -103,9 +147,7 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
     save_dir = get_save_dir(this_run_dir)
     aug_plot_dir = get_aug_plot_dir(this_run_dir)
 
-    current_process_id = multiprocessing.current_process()._identity
-    if current_process_id == (1,):
-        create_dir_if_not(result_dir)
+
     create_dir_remove(this_run_dir)
     create_dir_remove(full_param_traj_dir_path)
     create_dir_remove(save_dir)
@@ -119,7 +161,7 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
         entry_point=entry_point,
         max_episode_steps=1000,
         kwargs={'linear_global_dict':linear_global_dict,
-                'non_linear_global_dict':None,
+                'non_linear_global_dict':non_linear_global_dict,
                 'top_to_include_slice':top_num_to_include_slice,
                 'aug_plot_dir': aug_plot_dir,
                 "lagrangian_values":lagrangian_values,
@@ -140,7 +182,7 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
     walker_env.disableViewer = True
 
     assert comp_dict(walker_env.linear_global_dict, linear_global_dict)
-    assert walker_env.non_linear_global_dict == None
+    assert comp_dict(walker_env.non_linear_global_dict, non_linear_global_dict)
     assert walker_env.top_to_include_slice == top_num_to_include_slice
     assert walker_env.aug_plot_dir == aug_plot_dir
     assert comp_dict(walker_env.lagrangian_values, lagrangian_values)
@@ -288,7 +330,7 @@ if __name__ == "__main__":
 
 
     augment_num_timesteps = 5000
-
+    additional_note = ""
     #     for total_num_to_include in total_num_to_includes:
     #     for trained_policy_run_num in trained_policy_run_nums:
     #         for trained_policy_seed in trained_policy_seeds:
@@ -306,7 +348,7 @@ if __name__ == "__main__":
                                                        augment_run_num=augment_run_num, network_size=network_size,
                                                        policy_env=policy_env, policy_num_timesteps=policy_num_timesteps,
                                                        policy_run_num=policy_run_num, policy_seed=policy_seed, eval_seed=eval_seed,
-                                                       eval_run_num=eval_run_num, learning_rate=learning_rate, test=False)
+                                                       eval_run_num=eval_run_num, learning_rate=learning_rate, additional_note=additional_note, test=False)
     # run_check_experiment(augment_num_timesteps, augment_seed=0,
     #                      augment_run_num=0, network_size=64,
     #                      policy_env=policy_env, learning_rate=0.0001)    # from joblib import Parallel, delayed

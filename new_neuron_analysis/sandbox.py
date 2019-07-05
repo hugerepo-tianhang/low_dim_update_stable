@@ -1,4 +1,7 @@
-a = 10
-b = slice(0,0)
-
-print(b.start, b.stop)
+import sys
+import traceback
+import logging
+try:
+    asdf
+except Exception as e:
+    logging.error("Error:======", exc_info=e)
