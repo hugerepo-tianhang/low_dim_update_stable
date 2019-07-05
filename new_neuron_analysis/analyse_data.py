@@ -255,8 +255,8 @@ def plot_everything(lagrangian_values, layer_values_list, out_dir, PLOT_CUTOFF):
             plt.savefig(name)
             plt.close()
 
-def read_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, num_layers=2):
-    data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
+def read_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, num_layers=2):
+    data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
     lagrangian_values_fn = f"{data_dir}/lagrangian.pickle"
 
     with open(lagrangian_values_fn, 'rb') as handle:
@@ -276,14 +276,14 @@ def read_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eva
         all_weights[layer_ind] = weights
     return lagrangian_values, input_values, layers_values, all_weights
 
-def crunch_and_plot_data(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num):
+def crunch_and_plot_data(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note):
     lagrangian_values, input_values, layers_values_list, all_weights = read_data(trained_policy_env,
                                                                                  trained_policy_num_timesteps,
                                                                                  policy_run_num, policy_seed,
-                                                                                 eval_seed, eval_run_num)
+                                                                                 eval_seed, eval_run_num, additional_note=additional_note)
 
     data_dir = get_data_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                            eval_run_num)
+                            eval_run_num, additional_note=additional_note)
     # plot_dir = get_plot_dir(env=env, num_timesteps=num_timesteps, seed=seed, run_num=run_num)
     #
     # if os.path.exists(plot_dir):
@@ -426,6 +426,8 @@ if __name__ == "__main__":
     eval_seed = 3
     eval_run_num = 3
     aug_num_timesteps=1500000
+
+    additional_note="nonlin"
     for policy_run_num in policy_run_nums:
         for policy_seed in policy_seeds:
             lagrangian_values, input_values, layers_values_list, all_weights = read_data(trained_policy_env,
@@ -434,7 +436,7 @@ if __name__ == "__main__":
                                                                                          eval_seed, eval_run_num)
 
             data_dir = get_data_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                                    eval_run_num)
+                                    eval_run_num, additional_note=additional_note)
             # plot_dir = get_plot_dir(env=env, num_timesteps=num_timesteps, seed=seed, run_num=run_num)
             #
             # if os.path.exists(plot_dir):

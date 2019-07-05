@@ -149,7 +149,7 @@ def plot_everything(lagrangian_values, layer_values_list, out_dir, PLOT_CUTOFF):
             plt.close()
 
 
-def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, policy_num_timesteps, policy_seed, policy_run_num):
+def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, policy_num_timesteps, policy_seed, policy_run_num, additional_note):
 
 
     logger.log(sys.argv)
@@ -282,7 +282,7 @@ def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, po
 
 
     data_dir = get_data_dir(policy_env=args.env, policy_num_timesteps=policy_num_timesteps, policy_run_num=policy_run_num
-                            , policy_seed=policy_seed, eval_seed=eval_seed, eval_run_num=eval_run_num)
+                            , policy_seed=policy_seed, eval_seed=eval_seed, eval_run_num=eval_run_num, additional_note=additional_note)
     if os.path.exists(data_dir):
         shutil.rmtree(data_dir)
     os.makedirs(data_dir)

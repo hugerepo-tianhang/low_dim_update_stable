@@ -20,7 +20,7 @@ import json
 from new_neuron_analysis.analyse_data import read_data
 from new_neuron_analysis.util import comp_dict
 import multiprocessing
-
+import time
 
 import logging
 
@@ -57,10 +57,15 @@ class AttributeDict(dict):
     __setattr__ = dict.__setitem__
 
 
-def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, num_layers=2):
-    lagrangian_values, input_values, layers_values, all_weights = read_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, num_layers)
+def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note,
+                  num_layers=2):
+    lagrangian_values, input_values, layers_values, all_weights = read_data(policy_env, policy_num_timesteps,
+                                                                            policy_run_num, policy_seed, eval_seed,
+                                                                            eval_run_num, additional_note=additional_note,
+                                                                            num_layers=num_layers)
 
-    trained_policy_data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
+    trained_policy_data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                                           eval_run_num, additional_note=additional_note)
 
     linear_global_dict_path = f"{trained_policy_data_dir}/linear_global_dict.json"
     non_linear_global_dict_path = f"{trained_policy_data_dir}/non_linear_global_dict.json"
@@ -76,17 +81,10 @@ def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
 
 def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
                policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
-               additional_note, test=False):
-    if not test:
-        result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
-    else:
-        result_dir = get_test_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, augment_seed, additional_note)
-
-    current_process_id = multiprocessing.current_process()._identity
-    if current_process_id == (1,) or multiprocessing.current_process().name == "MainProcess":
-        create_dir_if_not(result_dir)
+               additional_note, result_dir, test):
 
 
+    time.sleep(2)
     exception_logger = logging.getLogger()
     handler = logging.FileHandler(f'{result_dir}/error.log')
     handler.setLevel(logging.ERROR)
@@ -102,7 +100,7 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
     try:
         _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
                    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num,
-                   learning_rate, additional_note, test=False)
+                   learning_rate, additional_note, result_dir, test=False)
     except Exception as e:
         exception_logger.error(f'########top_num_to_include_slice_{top_num_to_include_slice}'
                                   f'_augment_seed_{augment_seed}_augment_run_num_{augment_run_num}'
@@ -111,8 +109,9 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
 
 
 def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
-                   policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate, additional_note, test=False):
-    asdsad
+                   policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
+                    additional_note, result_dir, test=False):
+
     args = AttributeDict()
 
     args.normalize = True
@@ -124,7 +123,7 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
     logger.log(f"#######TRAIN: {args}")
     # non_linear_global_dict
     linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = read_all_data(
-        policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
+        policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note=additional_note)
     timestamp = get_time_stamp('%Y_%m_%d_%H_%M_%S')
     experiment_label = f"learning_rate_{learning_rate}timestamp_{timestamp}_augment_num_timesteps{augment_num_timesteps}" \
                        f"_top_num_to_include{top_num_to_include_slice.start}_{top_num_to_include_slice.stop}" \
@@ -133,11 +132,6 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
                        f"_eval_seed{eval_seed}_eval_run_num{eval_run_num}_additional_note_{additional_note}"
 
     entry_point = 'gym.envs.dart:DartWalker2dEnv_aug_input'
-    if not test:
-        result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
-    else:
-        result_dir = get_test_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, augment_seed, additional_note)
-
 
     this_run_dir = get_experiment_path_for_this_run(entry_point, args.num_timesteps, args.run_num,
                                                     args.seed, learning_rate=learning_rate, top_num_to_include=top_num_to_include_slice,
