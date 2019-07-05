@@ -98,13 +98,13 @@ def main():
         #
         #
         #============================================================
-        # correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
-        #                         for policy_seed in policy_seeds
-        #                         for policy_run_num in policy_run_nums
-        #                         for eval_seed in eval_seeds
-        #                         for eval_run_num in eval_run_nums]
-        #
-        # pool.starmap(crunch_correlation_data, correlation_data_args)
+        correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
+                                for policy_seed in policy_seeds
+                                for policy_run_num in policy_run_nums
+                                for eval_seed in eval_seeds
+                                for eval_run_num in eval_run_nums]
+
+        pool.starmap(crunch_correlation_data, correlation_data_args)
 
         #============================================================
 
@@ -139,6 +139,8 @@ def main():
                         pool.starmap(run_experiment, run_experiment_args)
 
 
+#################################################################
+
         policy_num_timesteps = 2000000
         policy_env = "DartWalker2d-v1"
         policy_seeds = [0]
@@ -154,6 +156,16 @@ def main():
         network_sizes = [16, 64]
         additional_note = "MIC_correlation"
         test = False
+
+        #===================================
+        correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
+                                for policy_seed in policy_seeds
+                                for policy_run_num in policy_run_nums
+                                for eval_seed in eval_seeds
+                                for eval_run_num in eval_run_nums]
+
+        pool.starmap(crunch_correlation_data, correlation_data_args)
+        #=====================================
 
         for policy_seed in policy_seeds:
             for policy_run_num in policy_run_nums:
