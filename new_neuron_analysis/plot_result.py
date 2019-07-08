@@ -20,7 +20,7 @@ def get_results(result_dir):
     return labels, log_dirs
 
 def extra(label):
-    top_num_to_include = int(label.split("top_num_to_include_")[1].split("_")[0])
+    top_num_to_include = label.split("top_num_to_include_")[1].split("_")[0]
     lr = float(label.split("learning_rate_")[1].split("_")[0])
     network_size = int(label.split("network_size_")[1])
     return top_num_to_include, network_size, lr
@@ -141,7 +141,7 @@ def plot_results_group_by_run_and_seed(dirs, num_timesteps, xaxis, task_name, la
 def _plot(labels, total_log_dirs, aug_num_timesteps, result_dir, title):
     task_name = "augmented_input"
 
-    fig, figlegend = plot_results_group_by_run_and_seed(dirs=total_log_dirs, num_timesteps=aug_num_timesteps, xaxis=X_TIMESTEPS, task_name=task_name, labels=labels, include_details=True)
+    fig, figlegend = plot_results_group_by_run_and_seed(dirs=total_log_dirs, num_timesteps=aug_num_timesteps, xaxis=X_TIMESTEPS, task_name=task_name, labels=labels, include_details=False)
     fig.savefig(f"{result_dir}/{title}.png")
     # figlegend.savefig(f"{result_dir}/{title}_legend.png")
 
@@ -157,8 +157,9 @@ if __name__ =="__main__":
     eval_seed = 3
     eval_run_num = 3
     aug_num_timesteps=1500000
+    additional_note = ""
     for policy_run_num in policy_run_nums:
         for policy_seed in policy_seeds:
-            result_dir = get_result_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)
+            result_dir = get_result_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note=additional_note)
 
             plot(result_dir)
