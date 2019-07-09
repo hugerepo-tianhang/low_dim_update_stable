@@ -27,7 +27,7 @@ def extra(label):
 
 
 
-def plot(result_dir):
+def significance_analysis(result_dir):
     top_num_to_include_plot_data = {}
     network_size_plot_data = {}
     lr_plot_data = {}
@@ -61,11 +61,6 @@ def plot(result_dir):
             lr_plot_data[lr]["log_dirs"].append(log_dir)
             lr_plot_data[lr]["labels"].append(label)
 
-    for top_num_to_include, data in top_num_to_include_plot_data.items():
-        title = f"fix top_num_to_include {top_num_to_include}"
-        print(f"top_num_to_include num of runs: {len(data['labels'])}")
-
-        _plot(data["labels"], data["log_dirs"], aug_num_timesteps, result_dir, title)
 
     for network_size, data in network_size_plot_data.items():
         for lr, data_lr in lr_plot_data.items():
@@ -85,13 +80,6 @@ def plot(result_dir):
             final_data["labels"], final_data["log_dirs"] = zip(*final_all_data)
 
             _plot(final_data["labels"], final_data["log_dirs"], aug_num_timesteps, result_dir, title)
-
-    for lr, data in lr_plot_data.items():
-        title = f"fix lr {lr}"
-        print(f"lr num of runs: {len(data['labels'])}")
-
-        _plot(data["labels"], data["log_dirs"], aug_num_timesteps, result_dir, title)
-
 
 
 def plot_results_group_by_run_and_seed(dirs, num_timesteps, xaxis, task_name, labels, include_details=False):
@@ -162,4 +150,4 @@ if __name__ =="__main__":
         for policy_seed in policy_seeds:
             result_dir = get_result_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note=additional_note)
 
-            plot(result_dir)
+            significance_analysis(result_dir)
