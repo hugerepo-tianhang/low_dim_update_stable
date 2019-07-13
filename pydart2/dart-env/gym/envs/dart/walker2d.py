@@ -78,8 +78,8 @@ def lagrangian_to_include_in_state(linear_global_dict, non_linear_global_dict, t
     arg_to_include_top_index = np.argpartition(max_for_each_lagrange[arg_to_include_orignal_index], -num_to_include)[:num_to_include]
     arg_to_include = arg_to_include_orignal_index[arg_to_include_top_index]
 
-    create_dir_remove(aug_plot_dir)
-
+    if aug_plot_dir is not None:
+        create_dir_remove(aug_plot_dir)
 
     for ind in arg_to_include:
         neuron_coord = max_over_neurons_concat[ind][-2:]
@@ -122,8 +122,8 @@ def lagrangian_to_include_in_state(linear_global_dict, non_linear_global_dict, t
         fig_name = f"{lagrangian_key}_{lagrangian_index}_VS_layer{neuron_coord[0]}" \
                    f"_neuron_{neuron_coord[1]}_linear_co_{linear_co} normalized_SSE{normalized_SSE}.jpg"
 
-
-        plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir)
+        if aug_plot_dir is not None:
+            plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir)
 
 
     return result

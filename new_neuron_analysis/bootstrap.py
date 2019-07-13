@@ -1,7 +1,15 @@
 from stable_baselines.results_plotter import *
 from new_neuron_analysis.experiment_augment_input import get_experiment_path_for_this_run, \
      get_log_dir, get_result_dir, AttributeDict, os, get_project_dir, get_save_dir
-
+import scipy.stats as stats
+import random
+import pandas as pd
+import numpy as np
+import bootstrapped.bootstrap as bas
+import bootstrapped.stats_functions as bs_stats
+import bootstrapped.compare_functions as bs_compare
+import bootstrapped.power as bs_power
+from scipy.stats import ks_2samp
 
 
 def get_results(result_dir):
@@ -79,10 +87,20 @@ def significance_analysis(result_dir):
 
             final_data["labels"], final_data["log_dirs"] = zip(*final_all_data)
 
-            _plot(final_data["labels"], final_data["log_dirs"], aug_num_timesteps, result_dir, title)
+            _sig_analysis(final_data["labels"], final_data["log_dirs"], aug_num_timesteps, result_dir, title)
 
 
-def plot_results_group_by_run_and_seed(dirs, num_timesteps, xaxis, task_name, labels, include_details=False):
+def lift_bootstrap(data):
+    lift = 1.25
+    results = []
+    for i in range(3000):
+        random.shuffle(data)
+        test = data[:len(data) // 2] * lift
+        ctrl = data[len(data) // 2:]
+        results.append(bas.bootstrap_ab(test, ctrl, bs_stats.mean, bs_compare.percent_change))
+    return results
+
+def power_analysis_group_by_run_and_seed(dirs, num_timesteps, xaxis, task_name, labels, include_details=False):
     """
     plot the results
 
@@ -107,30 +125,25 @@ def plot_results_group_by_run_and_seed(dirs, num_timesteps, xaxis, task_name, la
         else:
             xy_dict[new_label].append(ts2xy(timesteps, xaxis))
 
-    xy_list = []
-    new_labels = []
-    xy_list_detail = []
+
+
     for label, xy_sublist in xy_dict.items():
-        new_labels.append(label)
-        lens = np.array([len(xy[1]) for xy in xy_sublist])
-        amin = np.argmin(lens)
-        min_len = np.min(lens)
-        new_x = xy_sublist[amin][0]
-
-        new_y = np.mean([xy_item[1][:min_len] for xy_item in xy_sublist], axis=0)
-        xy_list.append((new_x, new_y))
-        xy_list_detail.append(xy_sublist)
-    if include_details:
-        return plot_curves(xy_list, new_labels, xaxis, task_name, xy_list_detail)
-    else:
-        return plot_curves(xy_list, new_labels, xaxis, task_name, None)
+        final_average_return = np.array([window_func(xy[0], xy[1], EPISODES_WINDOW, np.mean)[1][-1] for xy in xy_sublist])[:30]
+        sim = bas.bootstrap(final_average_return, stat_func=bs_stats.mean)
+        print(f"bootstrap interval {label}%.2f (%.2f, %.2f)" % (sim.value, sim.lower_bound, sim.upper_bound))
 
 
-def _plot(labels, total_log_dirs, aug_num_timesteps, result_dir, title):
+        sim = lift_bootstrap(final_average_return)
+        sim = bs_power.power_stats(sim)
+        print(sim)
+        print(f"power of {label} {sim.transpose()['Insignificant']}, {sim.transpose()['Positive Significant']},{sim.transpose()['Negative Significant']}")
+
+
+
+def _sig_analysis(labels, total_log_dirs, aug_num_timesteps, result_dir, title):
     task_name = "augmented_input"
 
-    fig, figlegend = plot_results_group_by_run_and_seed(dirs=total_log_dirs, num_timesteps=aug_num_timesteps, xaxis=X_TIMESTEPS, task_name=task_name, labels=labels, include_details=False)
-    fig.savefig(f"{result_dir}/{title}.png")
+    power_analysis_group_by_run_and_seed(dirs=total_log_dirs, num_timesteps=aug_num_timesteps, xaxis=X_TIMESTEPS, task_name=task_name, labels=labels, include_details=False)
     # figlegend.savefig(f"{result_dir}/{title}_legend.png")
 
 

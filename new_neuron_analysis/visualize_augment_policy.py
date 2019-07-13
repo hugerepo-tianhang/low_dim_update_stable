@@ -1,27 +1,26 @@
-from low_dim_update_stable.new_neuron_analysis.dir_tree_util import *
-import pandas as pd
 from sklearn import linear_model
 
 from stable_baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
 
-from stable_baselines.low_dim_analysis.common_parser import get_common_parser
+from stable_baselines.low_dim_analysis.eval_util import get_full_param_traj_file_path, get_aug_plot_dir, get_full_params_dir, get_save_dir
+
+
+import minepy
+from matplotlib import pyplot as plt
 import numpy as np
 import gym
-
+from low_dim_update_stable.new_neuron_analysis.dir_tree_util import *
 from stable_baselines import bench, logger
+from stable_baselines.common import set_global_seeds
 from stable_baselines.common.vec_env.vec_normalize import VecNormalize
 from stable_baselines.ppo2 import PPO2
 from stable_baselines.common.vec_env.dummy_vec_env import DummyVecEnv
-from stable_baselines.low_dim_analysis.eval_util import get_full_param_traj_file_path, get_full_params_dir, get_dir_path_for_this_run, get_log_dir, get_save_dir
-import shutil
 import os
 
-from matplotlib import pyplot as plt
-import sys
+import pandas as pd
+from gym.envs.registration import register
 
-import minepy
-import pickle
-from matplotlib import pyplot as plt
+from new_neuron_analysis.experiment_augment_input import read_all_data, get_experiment_path_for_this_run, AttributeDict
 
 
 def safe_mean(arr):
@@ -148,40 +147,79 @@ def plot_everything(lagrangian_values, layer_values_list, out_dir, PLOT_CUTOFF):
             plt.close()
 
 
-def visualize_policy_and_collect_COM(seed, run_num, policy_env, policy_num_timesteps, policy_seed, policy_run_num):
+def visualize_policy_and_collect_COM(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
+               policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
+               additional_note):
+    result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
+                                policy_seed, eval_seed, eval_run_num, additional_note)
+    args = AttributeDict()
 
+    args.normalize = True
+    args.num_timesteps = augment_num_timesteps
+    args.run_num = augment_run_num
+    args.alg = "ppo2"
+    args.seed = augment_seed
 
-    logger.log(sys.argv)
-    common_arg_parser = get_common_parser()
-    args, cma_unknown_args = common_arg_parser.parse_known_args()
-    args.env = policy_env
-    args.seed = policy_seed
-    args.num_timesteps = policy_num_timesteps
-    args.run_num = policy_run_num
-    this_run_dir = get_dir_path_for_this_run(args)
+    logger.log(f"#######VISUALIZE: {args}")
+    # non_linear_global_dict
+    linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = read_all_data(
+        policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note=additional_note)
+    timestamp = get_time_stamp('%Y_%m_%d_%H_%M_%S')
+    experiment_label = f"learning_rate_{learning_rate}timestamp_{timestamp}_augment_num_timesteps{augment_num_timesteps}" \
+                       f"_top_num_to_include{top_num_to_include_slice.start}_{top_num_to_include_slice.stop}" \
+                       f"_augment_seed{augment_seed}_augment_run_num{augment_run_num}_network_size{network_size}" \
+                       f"_policy_num_timesteps{policy_num_timesteps}_policy_run_num{policy_run_num}_policy_seed{policy_seed}" \
+                       f"_eval_seed{eval_seed}_eval_run_num{eval_run_num}_additional_note_{additional_note}"
+
+    entry_point = 'gym.envs.dart:DartWalker2dEnv_aug_input'
+
+    this_run_dir = get_experiment_path_for_this_run(entry_point, args.num_timesteps, args.run_num,
+                                                    args.seed, learning_rate=learning_rate, top_num_to_include=top_num_to_include_slice,
+                                                    result_dir=result_dir, network_size=network_size)
     traj_params_dir_name = get_full_params_dir(this_run_dir)
     save_dir = get_save_dir( this_run_dir)
 
+    aug_plot_dir = get_aug_plot_dir(this_run_dir) + "_vis"
 
 
     final_file = get_full_param_traj_file_path(traj_params_dir_name, "pi_final")
     final_params = pd.read_csv(final_file, header=None).values[0]
 
+    args.env = f'{experiment_label}_{entry_point}-v1'
+    register(
+        id=args.env,
+        entry_point=entry_point,
+        max_episode_steps=1000,
+        kwargs={'linear_global_dict':linear_global_dict,
+                'non_linear_global_dict':non_linear_global_dict,
+                'top_to_include_slice':top_num_to_include_slice,
+                'aug_plot_dir': aug_plot_dir,
+                "lagrangian_values":lagrangian_values,
+                "layers_values":layers_values}
+    )
+
 
     def make_env():
         env_out = gym.make(args.env)
-        env_out.env.disableViewer = False
 
         env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
-        env_out.seed(seed)
         return env_out
-    env = DummyVecEnv([make_env])
 
+    env = DummyVecEnv([make_env])
+    walker_env = env.envs[0].env.env
+
+
+    walker_env.disableViewer = False
 
     if args.normalize:
         env = VecNormalize(env)
 
-    model = PPO2.load(f"{save_dir}/ppo2", seed=seed)
+    set_global_seeds(args.seed)
+    walker_env.seed(args.seed)
+
+
+
+    model = PPO2.load(f"{save_dir}/ppo2", seed=augment_seed)
     model.set_pi_from_flat(final_params)
     if args.normalize:
         env.load_running_average(save_dir)
@@ -194,12 +232,8 @@ def visualize_policy_and_collect_COM(seed, run_num, policy_env, policy_num_times
     obs = np.zeros((env.num_envs,) + env.observation_space.shape)
 
     obs[:] = env.reset()
-    plot_dir = get_plot_dir(policy_env=args.env, policy_num_timesteps=policy_num_timesteps, policy_run_num=policy_run_num
-                            , policy_seed=policy_seed, eval_seed=seed, eval_run_num=run_num, additional_note="")
-    if os.path.exists(plot_dir):
-        shutil.rmtree(plot_dir)
-    os.makedirs(plot_dir)
-    env = VecVideoRecorder(env, plot_dir, record_video_trigger=lambda x: x == 0, video_length=3000, name_prefix="3000000agent-{}".format(args.env))
+
+    env = VecVideoRecorder(env, aug_plot_dir, record_video_trigger=lambda x: x == 0, video_length=3000, name_prefix="vis_this_policy")
 
     lagrangian_values["M"] = [sk.M.reshape((-1,1))]
     lagrangian_values["COM"] = [sk.C.reshape((-1,1))]
@@ -290,7 +324,7 @@ def visualize_policy_and_collect_COM(seed, run_num, policy_env, policy_num_times
         plt.xlabel("time")
         plt.ylabel(f"COM{i}")
 
-        plt.savefig(f"{plot_dir}/COM{i}.jpg")
+        plt.savefig(f"{aug_plot_dir}/COM{i}.jpg")
         plt.close()
 
 
@@ -299,9 +333,28 @@ if __name__ == '__main__':
     # visualize_policy_and_collect_COM(seed=0, run_num=0, policy_num_timesteps=3000000, policy_run_num=0, policy_seed=0)
 
     policy_env = "DartWalker2d-v1"
+    policy_seed = 3
+    policy_run_num = 1
+    policy_num_timesteps = 5000000
+    policy_env = "DartWalker2d-v1"
 
-    visualize_policy_and_collect_COM(seed=3, run_num=3, policy_env=policy_env, policy_num_timesteps=2000000,
-                                     policy_seed=0, policy_run_num=0)
+    eval_seed = 4
+    eval_run_num = 4
+
+    augment_seed = 2
+    augment_run_num = 0
+    augment_num_timesteps = 1500000
+    top_num_to_include = slice(0,0)
+    network_size = 64
+
+    additional_note = ""
+    learning_rate = 64 / network_size * 3e-4
+
+    visualize_policy_and_collect_COM(augment_num_timesteps, top_num_to_include_slice=top_num_to_include, augment_seed=augment_seed,
+                                                       augment_run_num=augment_run_num, network_size=network_size,
+                                                       policy_env=policy_env, policy_num_timesteps=policy_num_timesteps,
+                                                       policy_run_num=policy_run_num, policy_seed=policy_seed, eval_seed=eval_seed,
+                                                       eval_run_num=eval_run_num, learning_rate=learning_rate, additional_note=additional_note)
     # visualize_policy_and_collect_COM(seed=3, run_num=3, policy_env=policy_env, policy_num_timesteps=2000000,
     #                              policy_seed=1, policy_run_num=0)
 # seeds = [0, 1, 2]
