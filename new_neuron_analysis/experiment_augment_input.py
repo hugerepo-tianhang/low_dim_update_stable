@@ -308,23 +308,40 @@ if __name__ == "__main__":
     # trained_policy_seeds = [0,1,2]
     # trained_policy_run_nums = [0,1,2]
     # network_sizes = [16, 32, 64, 128]
-    policy_seeds = [3]
-    policy_run_nums = [0]
-    policy_num_timesteps = 5000
+    # policy_seeds = [3]
+    # policy_run_nums = [0]
+    # policy_num_timesteps = 5000
+    # policy_env = "DartWalker2d-v1"
+    #
+    # eval_seeds = [4]
+    # eval_run_nums = [4]
+    #
+    # augment_seeds = [0]
+    # augment_run_nums = range(2)
+    # augment_num_timesteps = 5000
+    # top_num_to_includes = [slice(0,0)]
+    # network_sizes = [16]
+    #
+    #
+    # augment_num_timesteps = 5000
+    # additional_note = ""
+
+
+
+    policy_num_timesteps = 5000000
     policy_env = "DartWalker2d-v1"
+    policy_seeds = [4, 5]
+    policy_run_nums = [0, 1]
 
     eval_seeds = [4]
     eval_run_nums = [4]
 
-    augment_seeds = [0]
-    augment_run_nums = range(2)
-    augment_num_timesteps = 5000
-    top_num_to_includes = [slice(0,0)]
-    network_sizes = [16]
-
-
-    augment_num_timesteps = 5000
-    additional_note = ""
+    augment_seeds = range(30)
+    augment_run_nums = [0]
+    augment_num_timesteps = 1500000
+    top_num_to_includes = [slice(0,20),slice(10,20)]
+    network_sizes = [64]
+    additional_note = "largebatchlineartestforotherruns"
     #     for total_num_to_include in total_num_to_includes:
     #     for trained_policy_run_num in trained_policy_run_nums:
     #         for trained_policy_seed in trained_policy_seeds:
@@ -337,12 +354,21 @@ if __name__ == "__main__":
                            for top_num_to_include in top_num_to_includes:
                                 for network_size in network_sizes:
                                     for learning_rate in [64 / network_size * 3e-4, (64 / network_size + 64 / network_size) * 3e-4]:
+                                        # if not test:
+                                        result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
+                                                                    policy_seed, eval_seed, eval_run_num,
+                                                                    additional_note)
+                                        # else:
+                                        #     result_dir = get_test_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
+                                        #                               eval_seed, eval_run_num, augment_seed, additional_note)
 
-                                        run_experiment(augment_num_timesteps, top_num_to_include_slice=top_num_to_include, augment_seed=augment_seed,
+                                        create_dir_if_not(result_dir)
+
+                                        _run_experiment(augment_num_timesteps, top_num_to_include_slice=top_num_to_include, augment_seed=augment_seed,
                                                        augment_run_num=augment_run_num, network_size=network_size,
                                                        policy_env=policy_env, policy_num_timesteps=policy_num_timesteps,
                                                        policy_run_num=policy_run_num, policy_seed=policy_seed, eval_seed=eval_seed,
-                                                       eval_run_num=eval_run_num, learning_rate=learning_rate, additional_note=additional_note, test=False)
+                                                       eval_run_num=eval_run_num, learning_rate=learning_rate, additional_note=additional_note, test=False, result_dir=result_dir)
     # run_check_experiment(augment_num_timesteps, augment_seed=0,
     #                      augment_run_num=0, network_size=64,
     #                      policy_env=policy_env, learning_rate=0.0001)    # from joblib import Parallel, delayed

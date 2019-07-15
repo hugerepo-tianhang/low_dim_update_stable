@@ -44,15 +44,30 @@ def main():
     policy_seeds = [4, 5]
     policy_run_nums = [0, 1]
 
-    eval_seeds = [4]
-    eval_run_nums = [4]
+    eval_seeds = [5]
+    eval_run_nums = [5]
 
     augment_seeds = range(30)
     augment_run_nums = [0]
     augment_num_timesteps = 1500000
-    top_num_to_includes = [slice(0,0),slice(0,10),slice(0,20),slice(10,20)]
+    top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
     network_sizes = [64]
-    additional_note = "largebatchlineartestforotherruns"
+    additional_note = "testingnewmetricweightedifnotmight_need_to_revert_back"
+
+    # policy_num_timesteps = 5000000
+    # policy_env = "DartWalker2d-v1"
+    # policy_seeds = [4]
+    # policy_run_nums = [0]
+    #
+    # eval_seeds = [4]
+    # eval_run_nums = [4]
+    #
+    # augment_seeds = range(1)
+    # augment_run_nums = [0]
+    # augment_num_timesteps = 1500000
+    # top_num_to_includes = [slice(0,20)]
+    # network_sizes = [64]
+    # additional_note = "tee"
 
     # policy_seeds = [3, 4]
     # policy_run_nums = [0]
@@ -97,7 +112,7 @@ def main():
         # pool.map(train, train_policy_args)
         #
         #
-        #============================================================
+        # #============================================================
         correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
                                 for policy_seed in policy_seeds
                                 for policy_run_num in policy_run_nums

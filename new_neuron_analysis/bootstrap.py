@@ -90,6 +90,7 @@ def significance_analysis(result_dir):
             _sig_analysis(final_data["labels"], final_data["log_dirs"], aug_num_timesteps, result_dir, title)
 
 
+# 60 data, shuffle 3000 times, split and lift, then
 def lift_bootstrap(data):
     lift = 1.25
     results = []

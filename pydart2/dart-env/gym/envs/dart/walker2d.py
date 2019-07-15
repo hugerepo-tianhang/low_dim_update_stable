@@ -59,7 +59,9 @@ def lagrangian_to_include_in_state(linear_global_dict, non_linear_global_dict, t
 
     linear_cos = np.abs(concat[:,:,0])
     normalized_SSE = concat[:,:,1]
-    max_normalized_SSE = 150 #hard code since > 150 will be made 0
+    max_normalized_SSE = 1000 #hard code since > 150 will be made 0
+    normalized_SSE[normalized_SSE>max_normalized_SSE] = max_normalized_SSE
+
     new_metric_matrix = 0.5*linear_cos + (1 - normalized_SSE/max_normalized_SSE) * 0.5
     argmax_for_each = np.argmax(new_metric_matrix, axis=1)
 

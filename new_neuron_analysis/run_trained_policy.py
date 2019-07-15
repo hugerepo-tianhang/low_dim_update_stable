@@ -203,8 +203,6 @@ def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, po
     #                            name_prefix="3000000agent-{}".format(args.env))
 
     lagrangian_values["M"] = [sk.M.reshape((-1,1))]
-
-
     lagrangian_values["COM"] = [sk.C.reshape((-1,1))]
     lagrangian_values["Coriolis"] = [sk.c.reshape((-1,1))]
     lagrangian_values["q"] = [sk.q.reshape((-1, 1))]
@@ -221,7 +219,7 @@ def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, po
     ep_infos = []
     steps_to_first_done = 0
     first_done = False
-    for _ in range(30000):
+    for _ in range(3000):
         actions = model.step(obs)[0]
 
         # yield neuron_values
