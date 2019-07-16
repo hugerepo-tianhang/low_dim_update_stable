@@ -1,5 +1,7 @@
 import numpy as np
 def comp_dict(a,b):
+    if a is None and b is None:
+        return True
     if a.keys() != b.keys():
         return False
     keys = a.keys()

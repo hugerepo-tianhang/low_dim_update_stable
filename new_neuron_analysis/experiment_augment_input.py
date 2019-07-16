@@ -81,7 +81,7 @@ def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
 
 def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
                policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
-               additional_note, result_dir, test):
+               additional_note, result_dir, test, lagrangian_inds_to_include):
 
 
     time.sleep(2)
@@ -100,7 +100,7 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
     try:
         _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
                    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num,
-                   learning_rate, additional_note, result_dir, test=False)
+                   learning_rate, additional_note, result_dir, test=False, lagrangian_inds_to_include=lagrangian_inds_to_include)
     except Exception as e:
         exception_logger.error(f'########top_num_to_include_slice_{top_num_to_include_slice}'
                                   f'_augment_seed_{augment_seed}_augment_run_num_{augment_run_num}'
@@ -110,7 +110,7 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
 
 def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
                    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
-                    additional_note, result_dir, test=False):
+                    additional_note, result_dir, test=False, lagrangian_inds_to_include=None):
 
     args = AttributeDict()
 
@@ -122,8 +122,6 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
 
     logger.log(f"#######TRAIN: {args}")
     # non_linear_global_dict
-    linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = read_all_data(
-        policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note=additional_note)
     timestamp = get_time_stamp('%Y_%m_%d_%H_%M_%S')
     experiment_label = f"learning_rate_{learning_rate}timestamp_{timestamp}_augment_num_timesteps{augment_num_timesteps}" \
                        f"_top_num_to_include{top_num_to_include_slice.start}_{top_num_to_include_slice.stop}" \
@@ -148,6 +146,14 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
     create_dir_remove(log_dir)
     logger.configure(log_dir)
 
+    if lagrangian_inds_to_include is not None:
+        linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = \
+        (None, None, None, None, None, None)
+
+    else:
+        linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = read_all_data(
+            policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num,
+            additional_note=additional_note)
 
     args.env = f'{experiment_label}_{entry_point}-v1'
     register(
@@ -159,7 +165,8 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
                 'top_to_include_slice':top_num_to_include_slice,
                 'aug_plot_dir': aug_plot_dir,
                 "lagrangian_values":lagrangian_values,
-                "layers_values":layers_values}
+                "layers_values":layers_values,
+                "lagrangian_inds_to_include": lagrangian_inds_to_include}
     )
 
 
@@ -180,7 +187,7 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
     assert walker_env.top_to_include_slice == top_num_to_include_slice
     assert walker_env.aug_plot_dir == aug_plot_dir
     assert comp_dict(walker_env.lagrangian_values, lagrangian_values)
-    assert (walker_env.layers_values == layers_values).all()
+    # assert (walker_env.layers_values == layers_values).all()
 
 
 

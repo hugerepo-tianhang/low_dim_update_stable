@@ -152,12 +152,12 @@ if __name__ =="__main__":
 
     trained_policy_env = "DartWalker2d-v1"
     trained_policy_num_timesteps = 5000000
-    policy_run_nums = [0,1]
-    policy_seeds = [4,5]
-    eval_seed = 4
-    eval_run_num = 4
+    policy_run_nums = [0]
+    policy_seeds = [4]
+    eval_seed = 5
+    eval_run_num = 5
     aug_num_timesteps=1500000
-    additional_note = "largebatchlineartestforotherruns"
+    additional_note = "testingnewmetricweightedifnotmight_need_to_revert_back"
     for policy_run_num in policy_run_nums:
         for policy_seed in policy_seeds:
             result_dir = get_result_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note=additional_note)

@@ -222,13 +222,11 @@ def lagrangian_to_include_in_state_non_linear(linear_global_dict, non_linear_glo
 
 class DartWalker2dEnv_aug_input(dart_env.DartEnv, utils.EzPickle):
     def __init__(self, linear_global_dict, non_linear_global_dict, top_to_include_slice,
-                 aug_plot_dir, lagrangian_values, layers_values):
-
-        self.linear_global_dict, self.non_linear_global_dict, \
-        self.top_to_include_slice, self.aug_plot_dir, self.lagrangian_values, self.layers_values\
-            = linear_global_dict, non_linear_global_dict, \
-              top_to_include_slice, aug_plot_dir, lagrangian_values, layers_values
-
+                 aug_plot_dir, lagrangian_values, layers_values, lagrangian_inds_to_include=None):
+        self.linear_global_dict, self.non_linear_global_dict, self.top_to_include_slice, \
+        self.aug_plot_dir, self.lagrangian_values, self.layers_values = \
+            linear_global_dict, non_linear_global_dict, top_to_include_slice, aug_plot_dir, \
+        lagrangian_values, layers_values
 
         self.control_bounds = np.array([[1.0]*6,[-1.0]*6])
         self.action_scale = np.array([100, 100, 20, 100, 100, 20])
@@ -262,14 +260,18 @@ class DartWalker2dEnv_aug_input(dart_env.DartEnv, utils.EzPickle):
         #                                                                  non_linear_global_dict,
         #                                                                  top_to_include_slice, aug_plot_dir,
         #                                                                  lagrangian_values, layers_values)
-        self.lagrangian_inds_to_include = lagrangian_to_include_in_state(linear_global_dict,
+
+        if lagrangian_inds_to_include is not None:
+            self.lagrangian_inds_to_include = lagrangian_inds_to_include
+
+        else:
+            self.lagrangian_inds_to_include = lagrangian_to_include_in_state(linear_global_dict,
                                                                          non_linear_global_dict,
                                                                          top_to_include_slice, aug_plot_dir,
                                                                          lagrangian_values, layers_values)
 
 
         num_inds_to_add = sum(map(len, self.lagrangian_inds_to_include.values()))
-
 
         assert num_inds_to_add == top_to_include_slice.stop - top_to_include_slice.start
         if num_inds_to_add == 0:
