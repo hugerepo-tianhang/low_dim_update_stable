@@ -47,7 +47,7 @@ def main():
     eval_seeds = [4]
     eval_run_nums = [4]
 
-    augment_seeds = range(2)
+    augment_seeds = range(30)
     augment_run_nums = [0]
     augment_num_timesteps = 1500000
     network_sizes = [64]
