@@ -39,20 +39,20 @@ def crunch_correlation_data(policy_env, policy_num_timesteps, policy_run_num, po
 def main():
     import multiprocessing as mp
 
-    policy_num_timesteps = 5000000
+    policy_num_timesteps = 4000000
     policy_env = "DartWalker2d-v1"
-    policy_seeds = [3]
-    policy_run_nums = [1]
+    policy_seeds = [6,7,8]
+    policy_run_nums = [0]
 
-    eval_seeds = [4]
-    eval_run_nums = [4]
+    eval_seeds = [0]
+    eval_run_nums = [0]
 
-    augment_seeds = range(15)
+    augment_seeds = range(30)
     augment_run_nums = [0]
     augment_num_timesteps = 1500000
     top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
     network_sizes = [64]
-    additional_note = "confirm_3_1_44_still_works_or_there_is_a_bug"
+    additional_note = "test_runs_complete_fresh"
 
     # policy_num_timesteps = 5000000
     # policy_env = "DartWalker2d-v1"
@@ -105,13 +105,13 @@ def main():
     with mp.Pool(mp.cpu_count()) as pool:
 
         # # ============================================================
-        #
-        # train_policy_args = [(["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
-        #             str(policy_seed)]) for policy_seed in policy_seeds for policy_run_num in policy_run_nums]
-        #
-        # pool.map(train, train_policy_args)
-        #
-        #
+
+        train_policy_args = [(["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
+                    str(policy_seed)]) for policy_seed in policy_seeds for policy_run_num in policy_run_nums]
+
+        pool.map(train, train_policy_args)
+
+
         # #============================================================
         correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
                                 for policy_seed in policy_seeds
@@ -157,64 +157,64 @@ def main():
                             plot(result_dir)
                         except Exception as e:
                             print(e)
-#################################################################
-        #
-        # policy_num_timesteps = 2000000
-        # policy_env = "DartWalker2d-v1"
-        # policy_seeds = [0]
-        # policy_run_nums = [0]
-        #
-        # eval_seeds = [3]
-        # eval_run_nums = [3]
-        #
-        # augment_seeds = range(30)
-        # augment_run_nums = [0]
-        # augment_num_timesteps = 1500000
-        # top_num_to_includes = [slice(0, 30)]
-        # network_sizes = [64]
-        # additional_note = "testtop30linearshouldoutperformsinceitsadditive"
-        # test = False
-        #
-        # #===================================
-        # correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
-        #                         for policy_seed in policy_seeds
-        #                         for policy_run_num in policy_run_nums
-        #                         for eval_seed in eval_seeds
-        #                         for eval_run_num in eval_run_nums]
-        #
-        # pool.starmap(crunch_correlation_data, correlation_data_args)
-        # #=====================================
-        #
-        # for policy_seed in policy_seeds:
-        #     for policy_run_num in policy_run_nums:
-        #         for eval_seed in eval_seeds:
-        #             for eval_run_num in eval_run_nums:
-        #                 # if not test:
-        #                 result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
-        #                                                 policy_seed, eval_seed, eval_run_num, additional_note)
-        #                 # else:
-        #                 #     result_dir = get_test_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
-        #                 #                               eval_seed, eval_run_num, augment_seed, additional_note)
-        #
-        #                 create_dir_if_not(result_dir)
-        #                 run_experiment_args = [(augment_num_timesteps, top_num_to_include, augment_seed,
-        #                         augment_run_num, network_size,
-        #                         policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-        #                         eval_run_num, learning_rate, additional_note, result_dir, test)
-        #
-        #
-        #                         for augment_seed in augment_seeds
-        #                         for augment_run_num in augment_run_nums
-        #                         for top_num_to_include in top_num_to_includes
-        #                         for network_size in network_sizes
-        #                         for learning_rate in
-        #                         [64 / network_size * 3e-4]]
-        #
-        #                 pool.starmap(run_experiment, run_experiment_args)
-        #
-        #
-        #
-
+# #################################################################
+#
+#         policy_num_timesteps = 2000000
+#         policy_env = "DartWalker2d-v1"
+#         policy_seeds = [0]
+#         policy_run_nums = [0]
+#
+#         eval_seeds = [3]
+#         eval_run_nums = [3]
+#
+#         augment_seeds = range(30)
+#         augment_run_nums = [0]
+#         augment_num_timesteps = 1500000
+#         top_num_to_includes = [slice(0, 0), slice(0, 10), slice(0, 20)]
+#         network_sizes = [64]
+#         additional_note = "3_1_44_old_vars_works_test_if_its_robust_for_evaluation_run"
+#         test = False
+#
+#         #===================================
+#         correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
+#                                 for policy_seed in policy_seeds
+#                                 for policy_run_num in policy_run_nums
+#                                 for eval_seed in eval_seeds
+#                                 for eval_run_num in eval_run_nums]
+#
+#         pool.starmap(crunch_correlation_data, correlation_data_args)
+#         #=====================================
+#
+#         for policy_seed in policy_seeds:
+#             for policy_run_num in policy_run_nums:
+#                 for eval_seed in eval_seeds:
+#                     for eval_run_num in eval_run_nums:
+#                         # if not test:
+#                         result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
+#                                                         policy_seed, eval_seed, eval_run_num, additional_note)
+#                         # else:
+#                         #     result_dir = get_test_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
+#                         #                               eval_seed, eval_run_num, augment_seed, additional_note)
+#
+#                         create_dir_if_not(result_dir)
+#                         run_experiment_args = [(augment_num_timesteps, top_num_to_include, augment_seed,
+#                                 augment_run_num, network_size,
+#                                 policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+#                                 eval_run_num, learning_rate, additional_note, result_dir, test)
+#
+#
+#                                 for augment_seed in augment_seeds
+#                                 for augment_run_num in augment_run_nums
+#                                 for top_num_to_include in top_num_to_includes
+#                                 for network_size in network_sizes
+#                                 for learning_rate in
+#                                 [64 / network_size * 3e-4]]
+#
+#                         pool.starmap(run_experiment, run_experiment_args)
+#
+#
+#
+#
 
 
 

@@ -53,6 +53,19 @@ def main():
     network_sizes = [64]
     additional_note = "confirm_3_1_44_still_works_or_there_is_a_bug"
 
+    policy_num_timesteps = 2000000
+    policy_env = "DartWalker2d-v1"
+    policy_seeds = [0]
+    policy_run_nums = [0]
+
+    eval_seeds = [3]
+    eval_run_nums = [3]
+
+    augment_seeds = range(30)
+    augment_run_nums = [0]
+    augment_num_timesteps = 1500000
+    network_sizes = [64]
+    additional_note = "confirm_3_1_44_still_works_or_there_is_a_bug"
 
     # policy_num_timesteps = 5000000
     # policy_env = "DartWalker2d-v1"
@@ -122,10 +135,11 @@ def main():
         # pool.starmap(crunch_correlation_data, correlation_data_args)
 
         #============================================================
-        checks = [(slice(0,10), {"M": [2, 3, 5, 15, 17, 20, 40, 41, 70, 71], "Coriolis": [],
-                                                      "COM": []}),
-                 (slice(0,20), {"M": [2,3,4,5,7,12,13,14,15,16,17,20,23,26,40,41,62,70,71], "Coriolis": [6],
-                                                      "COM": []})]
+        checks = [(slice(0,0), {"M": [], "Coriolis": [], "COM": []}),
+                  (slice(0,10), {"M": [6, 7, 8, 12, 16, 20, 24, 25, 26], "Coriolis": [],
+                                                      "COM": [1]}),
+                 (slice(0,20), {"M": [2,3,6,7,8,11,12,15,16,20,21,22,24,25,26,30,31,40,41], "Coriolis": [],
+                                                      "COM": [1]})]
         for policy_seed in policy_seeds:
             for policy_run_num in policy_run_nums:
                 for eval_seed in eval_seeds:
