@@ -1,0 +1,6 @@
+1. put get top variable function to analyse data to write to file and agent file just read the file
+2. get linear jacobian of toe and put contact force to see if there is a neuron learns contact force, just make it 0 when it's not present
+3. Get all other envs running
+
+1. in data dir, put int [[linear_co, SSE, new_metric] sorted by new metric].. so you know what you augmented
+2. for linear_best, use new_metric

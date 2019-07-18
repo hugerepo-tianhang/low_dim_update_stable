@@ -24,6 +24,8 @@ import pickle
 from matplotlib import pyplot as plt
 from stable_baselines.common import set_global_seeds
 
+lagrangian_keys = ["M", "q", "dq", "COM", "Coriolis", "total_contact_forces_left_foot", "com_jacobian", "left_foot_jacobian"]
+
 
 def safe_mean(arr):
     """
@@ -148,6 +150,53 @@ def plot_everything(lagrangian_values, layer_values_list, out_dir, PLOT_CUTOFF):
             plt.savefig(name)
             plt.close()
 
+def find_dxdq(sk):
+    # x = m1x1 + m2x2/(m1+m2), dxdq = m1 dx1dq + .../m1+m2
+    # TODO is this correct?
+    result = sk.bodynodes[0].linear_jacobian() * sk.bodynodes[0].m
+    total_mass = sk.bodynodes[0].m
+    for bodynode in sk.bodynodes[1:]:
+        result += bodynode.linear_jacobian() * bodynode.m
+        total_mass += bodynode.m
+
+    result = result/total_mass
+    return result
+
+def find_total_contact_forces_left_foot(walker_env):
+    contacts = walker_env.dart_world.collision_result.contacts
+    total_contact_forces_left_foot = np.zeros(3)
+
+    for contact in contacts:
+        if contact.bodynode1 == walker_env.robot_skeleton.bodynodes[8]:
+            total_contact_forces_left_foot += contact.force
+
+    return total_contact_forces_left_foot
+
+def get_lagrangian_flat_array(key, walker_env):
+    sk = walker_env.robot_skeleton
+    if key == "M":
+        return sk.M.reshape((-1, 1))
+    elif key == "q":
+        return sk.q.reshape((-1, 1))
+    elif key == "dq":
+        return sk.dq.reshape((-1, 1))
+    elif key == "COM":
+        return sk.C.reshape((-1, 1))
+    elif key == "Coriolis":
+        return sk.c.reshape((-1, 1))
+    elif key == "total_contact_forces_left_foot":
+        total_contact_forces_left_foot = find_total_contact_forces_left_foot(walker_env)
+        return total_contact_forces_left_foot.reshape((-1, 1))
+
+    elif key == "com_jacobian":
+        dxdq = find_dxdq(sk)
+        return dxdq.reshape((-1, 1))
+    elif key == "left_foot_jacobian":
+
+        return sk.body("h_foot_left").J.reshape((-1, 1))
+    else:
+        raise Exception("no such key in linear_global_dict")
+
 
 def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, policy_num_timesteps, policy_seed, policy_run_num, additional_note):
 
@@ -190,8 +239,10 @@ def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, po
         env.load_running_average(save_dir)
 
 
+    walker_env = env.venv.envs[0].env.env
+    sk = walker_env.robot_skeleton
 
-    sk = env.venv.envs[0].env.env.robot_skeleton
+
     lagrangian_values = {}
 
     obs = np.zeros((env.num_envs,) + env.observation_space.shape)
@@ -202,14 +253,13 @@ def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, po
     #                            record_video_trigger=lambda x: x == 0, video_length=3000,
     #                            name_prefix="3000000agent-{}".format(args.env))
 
-    lagrangian_values["M"] = [sk.M.reshape((-1,1))]
-    lagrangian_values["COM"] = [sk.C.reshape((-1,1))]
-    lagrangian_values["Coriolis"] = [sk.c.reshape((-1,1))]
-    lagrangian_values["q"] = [sk.q.reshape((-1, 1))]
-    lagrangian_values["dq"] = [sk.dq.reshape((-1, 1))]
+    #init lagrangian values
+    for lagrangian_key in lagrangian_keys:
+        flat_array = get_lagrangian_flat_array(lagrangian_key, walker_env)
+        lagrangian_values[lagrangian_key] = [flat_array]
 
 
-    contact_values = {}
+
 
 
     neuron_values = model.give_neuron_values(obs)
@@ -239,13 +289,10 @@ def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, po
 
         # fill_contacts_jac_dict(infos[0]["contacts"], contact_dict=contact_values, neuron_values=neuron_values)
 
-
-
-        lagrangian_values["M"].append(sk.M.reshape((-1, 1)))
-        lagrangian_values["q"].append(sk.q.reshape((-1, 1)))
-        lagrangian_values["dq"].append(sk.dq.reshape((-1, 1)))
-        lagrangian_values["COM"].append(sk.C.reshape((-1, 1)))
-        lagrangian_values["Coriolis"].append(sk.c.reshape((-1, 1)))
+        # filling lagrangian values
+        for lagrangian_key in lagrangian_keys:
+            flat_array = get_lagrangian_flat_array(lagrangian_key, walker_env)
+            lagrangian_values[lagrangian_key].append(flat_array)
 
         # env.render()
 
@@ -264,11 +311,8 @@ def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, po
 
 
     #Hstack into a big matrix
-    lagrangian_values["M"] = np.hstack(lagrangian_values["M"])
-    lagrangian_values["COM"] = np.hstack(lagrangian_values["COM"])
-    lagrangian_values["Coriolis"] = np.hstack(lagrangian_values["Coriolis"])
-    lagrangian_values["q"] = np.hstack(lagrangian_values["q"])
-    lagrangian_values["dq"] = np.hstack(lagrangian_values["dq"])
+    for lagrangian_key in lagrangian_keys:
+        lagrangian_values[lagrangian_key] = np.hstack(lagrangian_values[lagrangian_key])
 
     # for contact_body_name, l in contact_values.items():
     #     body_contact_dict = contact_values[contact_body_name]
@@ -311,9 +355,9 @@ if __name__ == '__main__':
 
     policy_env = "DartWalker2d-v1"
 
-    eval_trained_policy_and_collect_data(eval_seed=0, eval_run_num=0, policy_env=policy_env,
-                                         policy_num_timesteps=2000000, policy_seed=0,
-                                         policy_run_num=0)
+    eval_trained_policy_and_collect_data(eval_seed=4, eval_run_num=4, policy_env=policy_env,
+                                         policy_num_timesteps=5000000, policy_seed=3,
+                                         policy_run_num=1, additional_note="sandbox")
     # visualize_policy_and_collect_COM(seed=3, run_num=3, policy_env=policy_env, policy_num_timesteps=2000000,
     #                              policy_seed=1, policy_run_num=0)
 # seeds = [0, 1, 2]

@@ -56,6 +56,15 @@ class AttributeDict(dict):
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
 
+def read_linear_top_var(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                                           eval_run_num, additional_note):
+    trained_policy_data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                                           eval_run_num, additional_note=additional_note)
+
+    linear_top_vars_list_path = f"{trained_policy_data_dir}/linear_top_vars_list.json"
+    with open(linear_top_vars_list_path, 'r') as fp:
+        linear_top_vars_list = json.load(fp)
+    return linear_top_vars_list
 
 def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note,
                   num_layers=2):
@@ -68,13 +77,19 @@ def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
                                            eval_run_num, additional_note=additional_note)
 
     linear_global_dict_path = f"{trained_policy_data_dir}/linear_global_dict.json"
+
+
     non_linear_global_dict_path = f"{trained_policy_data_dir}/non_linear_global_dict.json"
+
 
     with open(linear_global_dict_path, 'r') as fp:
         linear_global_dict = json.load(fp)
 
-    with open(non_linear_global_dict_path, 'r') as fp:
-        non_linear_global_dict = json.load(fp)
+    if os.path.exists(non_linear_global_dict_path):
+        with open(non_linear_global_dict_path, 'r') as fp:
+            non_linear_global_dict = json.load(fp)
+    else:
+        non_linear_global_dict = None
     # non_linear_global_dict
     return linear_global_dict , non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights
 
@@ -137,7 +152,6 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
     full_param_traj_dir_path = get_full_params_dir(this_run_dir)
     log_dir = get_log_dir(this_run_dir)
     save_dir = get_save_dir(this_run_dir)
-    aug_plot_dir = get_aug_plot_dir(this_run_dir)
 
 
     create_dir_remove(this_run_dir)
@@ -146,27 +160,21 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
     create_dir_remove(log_dir)
     logger.configure(log_dir)
 
-    if lagrangian_inds_to_include is not None:
-        linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = \
-        (None, None, None, None, None, None)
+    # note this is only linear
+    if lagrangian_inds_to_include is None:
+        linear_top_vars_list = read_linear_top_var(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                                           eval_run_num, additional_note)
 
-    else:
-        linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = read_all_data(
-            policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num,
-            additional_note=additional_note)
+
+        lagrangian_inds_to_include = linear_top_vars_list[top_num_to_include_slice]
+
 
     args.env = f'{experiment_label}_{entry_point}-v1'
     register(
         id=args.env,
         entry_point=entry_point,
         max_episode_steps=1000,
-        kwargs={'linear_global_dict':linear_global_dict,
-                'non_linear_global_dict':non_linear_global_dict,
-                'top_to_include_slice':top_num_to_include_slice,
-                'aug_plot_dir': aug_plot_dir,
-                "lagrangian_values":lagrangian_values,
-                "layers_values":layers_values,
-                "lagrangian_inds_to_include": lagrangian_inds_to_include}
+        kwargs={"lagrangian_inds_to_include": lagrangian_inds_to_include}
     )
 
 
@@ -178,17 +186,7 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
 
     env = DummyVecEnv([make_env])
     walker_env = env.envs[0].env.env
-
-
     walker_env.disableViewer = True
-
-    assert comp_dict(walker_env.linear_global_dict, linear_global_dict)
-    assert comp_dict(walker_env.non_linear_global_dict, non_linear_global_dict)
-    assert walker_env.top_to_include_slice == top_num_to_include_slice
-    assert walker_env.aug_plot_dir == aug_plot_dir
-    assert comp_dict(walker_env.lagrangian_values, lagrangian_values)
-    # assert (walker_env.layers_values == layers_values).all()
-
 
 
     if args.normalize:
@@ -197,8 +195,6 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
 
 
     # extra run info I added for my purposes
-
-
     run_info = {"run_num": args.run_num,
                 "env_id": args.env,
                 "full_param_traj_dir_path": full_param_traj_dir_path}
@@ -346,9 +342,9 @@ if __name__ == "__main__":
     augment_seeds = range(30)
     augment_run_nums = [0]
     augment_num_timesteps = 1500000
-    top_num_to_includes = [slice(0,20),slice(10,20)]
+    top_num_to_includes = [slice(0,20)]
     network_sizes = [64]
-    additional_note = "back"
+    additional_note = "sandbox"
     #     for total_num_to_include in total_num_to_includes:
     #     for trained_policy_run_num in trained_policy_run_nums:
     #         for trained_policy_seed in trained_policy_seeds:
