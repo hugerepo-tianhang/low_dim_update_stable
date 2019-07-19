@@ -327,16 +327,27 @@ def get_key_and_ind(ind, num_ind_in_stack, M_flattened_ind):
         raise Exception(f"wtf ind out of bound to lookup ind{ind}")
     return lagrangian_key, int(lagrangian_index)
 
-
-def linear_lagrangian_to_include_in_state(linear_global_dict, aug_plot_dir,
+from new_neuron_analysis.run_trained_policy import lagrangian_keys as lagrangian_keys_in_run_policy
+def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
                                           lagrangian_values, layers_values):
+    aug_plot_dir = f"{data_dir}/top_vars_plots"
+
     def get_concat_data(linear_global_dict):
 
         concat = None
         num_ind_in_stack = []
 
-        for key, values in linear_global_dict.items():
-            nd = np.array(values)
+        keys_to_include = ["M", "Coriolis", "COM" , "total_contact_forces_left_foot",
+                           "com_jacobian", "left_foot_jacobian"]
+
+
+
+        for key in keys_to_include:
+
+            if key not in lagrangian_keys_in_run_policy:
+                raise Exception(f"this key {key} in not in lagrangian_keys")
+
+            nd = np.array(linear_global_dict[key])
 
             if key == "M":
                 nd, M_flattened_ind = get_upper_tri(nd)
@@ -417,7 +428,6 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, aug_plot_dir,
         #====================================
     assert max(np.abs(np.array(test_list) - max_over_new_metric_for_each_lagrange[arg_sorted])) < 0.0000001
 
-
     fn = f"{data_dir}/linear_top_vars_list.json"
     with open(fn, 'w') as fp:
         json.dump(result, fp)
@@ -444,9 +454,8 @@ def crunch_and_plot_data(trained_policy_env, trained_policy_num_timesteps, polic
     # scatter_the_non_linear_significant_ones(non_linear_global_dict, BEST_TO_TAKE, layers_values_list,
     #                                         lagrangian_values, data_dir)
 
-    aug_plot_dir = f"{data_dir}/top_vars_plots"
     linear_lagrangian_to_include_in_state(linear_global_dict,
-                                          aug_plot_dir,
+                                          data_dir,
                                           lagrangian_values, layers_values_list)
 
 
@@ -559,13 +568,13 @@ if __name__ == "__main__":
     additional_note="sandbox"
     for policy_run_num in policy_run_nums:
         for policy_seed in policy_seeds:
-            lagrangian_values, input_values, layers_values_list, all_weights = read_data(policy_env,
-                                                                                         policy_num_timesteps,
-                                                                                         policy_run_num, policy_seed,
-                                                                                         eval_seed, eval_run_num, additional_note)
-
-            data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                                    eval_run_num, additional_note=additional_note)
+            # lagrangian_values, input_values, layers_values_list, all_weights = read_data(policy_env,
+            #                                                                              policy_num_timesteps,
+            #                                                                              policy_run_num, policy_seed,
+            #                                                                              eval_seed, eval_run_num, additional_note)
+            #
+            # data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+            #                         eval_run_num, additional_note=additional_note)
             crunch_and_plot_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
 
             # plot_dir = get_plot_dir(env=env, num_timesteps=num_timesteps, seed=seed, run_num=run_num)

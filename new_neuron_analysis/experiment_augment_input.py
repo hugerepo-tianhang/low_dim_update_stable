@@ -96,7 +96,7 @@ def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
 
 def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
                policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
-               additional_note, result_dir, test, lagrangian_inds_to_include):
+               additional_note, result_dir, lagrangian_inds_to_include=None):
 
 
     time.sleep(2)
@@ -115,7 +115,7 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
     try:
         _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
                    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num,
-                   learning_rate, additional_note, result_dir, test=False, lagrangian_inds_to_include=lagrangian_inds_to_include)
+                   learning_rate, additional_note, result_dir, lagrangian_inds_to_include=lagrangian_inds_to_include)
     except Exception as e:
         exception_logger.error(f'########top_num_to_include_slice_{top_num_to_include_slice}'
                                   f'_augment_seed_{augment_seed}_augment_run_num_{augment_run_num}'
@@ -125,7 +125,7 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
 
 def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
                    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
-                    additional_note, result_dir, test=False, lagrangian_inds_to_include=None):
+                    additional_note, result_dir, lagrangian_inds_to_include=None):
 
     args = AttributeDict()
 

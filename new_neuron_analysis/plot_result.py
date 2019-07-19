@@ -27,7 +27,7 @@ def extra(label):
 
 
 
-def plot(result_dir):
+def plot(result_dir, aug_num_timesteps):
     top_num_to_include_plot_data = {}
     network_size_plot_data = {}
     lr_plot_data = {}
@@ -149,16 +149,17 @@ def _plot(labels, total_log_dirs, aug_num_timesteps, result_dir, title):
 
 
 if __name__ =="__main__":
-    trained_policy_env = "DartWalker2d-v1"
-    trained_policy_num_timesteps = 2000000
-    policy_run_nums = [0]
-    policy_seeds = [0]
-    eval_seed = 3
-    eval_run_num = 3
-    aug_num_timesteps=1500000
-    additional_note = "testtop30linearshouldoutperformsinceitsadditive"
-    for policy_run_num in policy_run_nums:
-        for policy_seed in policy_seeds:
-            result_dir = get_result_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note=additional_note)
+    def run():
+        trained_policy_env = "DartWalker2d-v1"
+        trained_policy_num_timesteps = 2000000
+        policy_run_nums = [0]
+        policy_seeds = [0]
+        eval_seed = 3
+        eval_run_num = 3
+        aug_num_timesteps=1500000
+        additional_note = "testtop30linearshouldoutperformsinceitsadditive"
+        for policy_run_num in policy_run_nums:
+            for policy_seed in policy_seeds:
+                result_dir = get_result_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note=additional_note)
 
-            plot(result_dir)
+                plot(result_dir, aug_num_timesteps)

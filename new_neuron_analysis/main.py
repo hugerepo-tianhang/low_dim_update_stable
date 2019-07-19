@@ -7,7 +7,7 @@ sys.path.append(od)
 
 from new_neuron_analysis.run_trained_policy import eval_trained_policy_and_collect_data
 from new_neuron_analysis.analyse_data import crunch_and_plot_data
-from new_neuron_analysis.experiment_augment_input import run_experiment, get_result_dir, get_test_dir
+from new_neuron_analysis.experiment_augment_input import run_experiment, _run_experiment, get_result_dir, get_test_dir
 from stable_baselines.ppo2.run_mujoco import train
 from new_neuron_analysis.plot_result import plot, get_results
 import warnings
@@ -39,20 +39,20 @@ def crunch_correlation_data(policy_env, policy_num_timesteps, policy_run_num, po
 def main():
     import multiprocessing as mp
 
-    policy_num_timesteps = 4000000
+    policy_num_timesteps = 5000000
     policy_env = "DartWalker2d-v1"
-    policy_seeds = [6,7,8]
-    policy_run_nums = [0]
+    policy_seeds = [3,4,5]
+    policy_run_nums = [1]
 
-    eval_seeds = [0]
-    eval_run_nums = [0]
+    eval_seeds = [4]
+    eval_run_nums = [4]
 
-    augment_seeds = range(30)
+    augment_seeds = range(15)
     augment_run_nums = [0]
     augment_num_timesteps = 1500000
     top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
     network_sizes = [64]
-    additional_note = "test_runs_complete_fresh"
+    additional_note = "run_with_new_vars_included_and_refactored"
 
     # policy_num_timesteps = 5000000
     # policy_env = "DartWalker2d-v1"
@@ -69,20 +69,20 @@ def main():
     # network_sizes = [64]
     # additional_note = "tee"
 
-    # policy_seeds = [3, 4]
-    # policy_run_nums = [0]
-    # policy_num_timesteps = 5000
-    # policy_env = "DartWalker2d-v1"
-    #
-    # eval_seeds = [4]
-    # eval_run_nums = [4]
-    #
-    # augment_seeds = [0]
-    # augment_run_nums = range(2)
-    # augment_num_timesteps = 5000
-    # top_num_to_includes = [slice(0,10)]
-    # network_sizes = [16]
-    # additional_note = "largebatchtestforotherruns"
+    policy_seeds = [3]
+    policy_run_nums = [0]
+    policy_num_timesteps = 5000
+    policy_env = "DartWalker2d-v1"
+
+    eval_seeds = [4]
+    eval_run_nums = [4]
+
+    augment_seeds = [0]
+    augment_run_nums = range(2)
+    augment_num_timesteps = 5000
+    top_num_to_includes = [slice(0,10)]
+    network_sizes = [64]
+    additional_note = "largebatchtestforotherruns"
 
     test=False
     # policy_num_timesteps = 2000000
@@ -106,20 +106,20 @@ def main():
 
         # # ============================================================
 
-        train_policy_args = [(["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
-                    str(policy_seed)]) for policy_seed in policy_seeds for policy_run_num in policy_run_nums]
-
-        pool.map(train, train_policy_args)
+        # train_policy_args = [(["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
+        #             str(policy_seed)]) for policy_seed in policy_seeds for policy_run_num in policy_run_nums]
+        #
+        # pool.map(train, train_policy_args)
 
 
         # #============================================================
-        correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
-                                for policy_seed in policy_seeds
-                                for policy_run_num in policy_run_nums
-                                for eval_seed in eval_seeds
-                                for eval_run_num in eval_run_nums]
-
-        pool.starmap(crunch_correlation_data, correlation_data_args)
+        # correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
+        #                         for policy_seed in policy_seeds
+        #                         for policy_run_num in policy_run_nums
+        #                         for eval_seed in eval_seeds
+        #                         for eval_run_num in eval_run_nums]
+        #
+        # pool.starmap(crunch_correlation_data, correlation_data_args)
 
         #============================================================
 
@@ -141,7 +141,7 @@ def main():
                         run_experiment_args = [(augment_num_timesteps, top_num_to_include, augment_seed,
                                 augment_run_num, network_size,
                                 policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                                eval_run_num, learning_rate, additional_note, result_dir, test)
+                                eval_run_num, learning_rate, additional_note, result_dir, None)
 
 
                                 for augment_seed in augment_seeds
@@ -151,10 +151,10 @@ def main():
                                 for learning_rate in
                                 [64 / network_size * 3e-4]]
 
-                        pool.starmap(run_experiment, run_experiment_args)
+                        pool.starmap(_run_experiment, run_experiment_args)
 
                         try:
-                            plot(result_dir)
+                            plot(result_dir, aug_num_timesteps=augment_num_timesteps)
                         except Exception as e:
                             print(e)
 # #################################################################
