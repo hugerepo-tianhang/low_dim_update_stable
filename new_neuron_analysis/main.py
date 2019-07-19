@@ -40,8 +40,9 @@ def main():
     import multiprocessing as mp
 
     policy_num_timesteps = 5000000
-    policy_envs = ["DartWalker2d-v1", "DartSnake7Link-v1", "DartHopper-v1", "DartHalfCheetah-v1"]
-    policy_envs = ["DartSnake7Link-v1"]
+    policy_envs = ["DartHalfCheetah-v1"]
+
+    policy_envs = ["DartWalker2d-v1", "DartSnake7Link-v1", "DartHopper-v1", ]
     policy_seeds = [3,4,5]
     policy_run_nums = [1]
 
