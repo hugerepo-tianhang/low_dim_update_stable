@@ -52,7 +52,7 @@ def main():
     augment_num_timesteps = 1500000
     top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
     network_sizes = [64]
-    additional_note = "run_with_new_vars_included_and_refactored"
+    additional_note = "run_with_new_vars_included_and_refactored_to_see_if_its_better_than_not_included"
 
     # policy_num_timesteps = 5000000
     # policy_env = "DartWalker2d-v1"
@@ -69,20 +69,20 @@ def main():
     # network_sizes = [64]
     # additional_note = "tee"
 
-    policy_seeds = [3]
-    policy_run_nums = [0]
-    policy_num_timesteps = 5000
-    policy_env = "DartWalker2d-v1"
-
-    eval_seeds = [4]
-    eval_run_nums = [4]
-
-    augment_seeds = [0]
-    augment_run_nums = range(2)
-    augment_num_timesteps = 5000
-    top_num_to_includes = [slice(0,10)]
-    network_sizes = [64]
-    additional_note = "largebatchtestforotherruns"
+    # policy_seeds = [3]
+    # policy_run_nums = [0]
+    # policy_num_timesteps = 5000
+    # policy_env = "DartWalker2d-v1"
+    #
+    # eval_seeds = [4]
+    # eval_run_nums = [4]
+    #
+    # augment_seeds = [0]
+    # augment_run_nums = range(2)
+    # augment_num_timesteps = 5000
+    # top_num_to_includes = [slice(0,10)]
+    # network_sizes = [64]
+    # additional_note = "largebatchtestforotherruns"
 
     test=False
     # policy_num_timesteps = 2000000
