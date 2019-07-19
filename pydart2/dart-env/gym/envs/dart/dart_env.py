@@ -163,10 +163,11 @@ class DartEnv(gym.Env):
 
             return self.get_contact_bodynode().J.reshape((-1, 1))
         else:
-            raise Exception(f" key{key}no such key in linear_global_dict")
+            raise Exception("no such key in linear_global_dict")
 
     def get_contact_bodynode(self):
-        raise NotImplemented()
+
+            raise NotImplemented()
 
 
     def seed(self, seed=None):
