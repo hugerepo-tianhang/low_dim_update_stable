@@ -40,7 +40,7 @@ def main():
     import multiprocessing as mp
 
     policy_num_timesteps = 5000000
-    policy_env = "DartWalker2d-v1"
+    policy_envs = ["DartWalker2d-v1", "DartSnake7Link-v1", "DartHopper-v1", "DartHalfCheetah-v1"]
     policy_seeds = [3,4,5]
     policy_run_nums = [1]
 
@@ -52,7 +52,7 @@ def main():
     augment_num_timesteps = 1500000
     top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
     network_sizes = [64]
-    additional_note = "run_with_new_vars_included_and_refactored_to_see_if_its_better_than_not_included"
+    additional_note = "include_extra_vars_and_across_4_envs"
 
     # policy_num_timesteps = 5000000
     # policy_env = "DartWalker2d-v1"
@@ -72,7 +72,8 @@ def main():
     # policy_seeds = [3]
     # policy_run_nums = [0]
     # policy_num_timesteps = 5000
-    # policy_env = "DartWalker2d-v1"
+    # policy_envs = ["DartWalker2d-v1", "DartSnake7Link-v1", "DartHopper-v1", "DartHalfCheetah-v1"]
+    # # policy_envs = ["DartHalfCheetah-v1"]
     #
     # eval_seeds = [4]
     # eval_run_nums = [4]
@@ -82,9 +83,8 @@ def main():
     # augment_num_timesteps = 5000
     # top_num_to_includes = [slice(0,10)]
     # network_sizes = [64]
-    # additional_note = "largebatchtestforotherruns"
+    # additional_note = "sandbox"
 
-    test=False
     # policy_num_timesteps = 2000000
     # policy_env = "DartWalker2d-v1"
     # policy_seeds = [0]
@@ -104,16 +104,20 @@ def main():
 
     with mp.Pool(mp.cpu_count()) as pool:
 
-        # # ============================================================
+        # ============================================================
 
-        train_policy_args = [(["--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
-                    str(policy_seed)]) for policy_seed in policy_seeds for policy_run_num in policy_run_nums]
+        train_policy_args = [(["--env", policy_env, "--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
+                    str(policy_seed)])
+                             for policy_env in policy_envs
+                             for policy_seed in policy_seeds
+                             for policy_run_num in policy_run_nums]
 
         pool.map(train, train_policy_args)
 
 
         # #============================================================
         correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
+                                for policy_env in policy_envs
                                 for policy_seed in policy_seeds
                                 for policy_run_num in policy_run_nums
                                 for eval_seed in eval_seeds
@@ -123,40 +127,41 @@ def main():
 
         #============================================================
 
-        for policy_seed in policy_seeds:
-            for policy_run_num in policy_run_nums:
-                for eval_seed in eval_seeds:
-                    for eval_run_num in eval_run_nums:
+        for policy_env in policy_envs:
+            for policy_seed in policy_seeds:
+                for policy_run_num in policy_run_nums:
+                    for eval_seed in eval_seeds:
+                        for eval_run_num in eval_run_nums:
 
-                        # if not test:
-                        result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
-                                                        policy_seed, eval_seed, eval_run_num, additional_note)
-                        # else:
-                        #     result_dir = get_test_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
-                        #                               eval_seed, eval_run_num, augment_seed, additional_note)
+                            # if not test:
+                            result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
+                                                            policy_seed, eval_seed, eval_run_num, additional_note)
+                            # else:
+                            #     result_dir = get_test_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
+                            #                               eval_seed, eval_run_num, augment_seed, additional_note)
 
-                        create_dir_if_not(result_dir)
-
-
-                        run_experiment_args = [(augment_num_timesteps, top_num_to_include, augment_seed,
-                                augment_run_num, network_size,
-                                policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                                eval_run_num, learning_rate, additional_note, result_dir, None)
+                            create_dir_if_not(result_dir)
 
 
-                                for augment_seed in augment_seeds
-                                for augment_run_num in augment_run_nums
-                                for top_num_to_include in top_num_to_includes
-                                for network_size in network_sizes
-                                for learning_rate in
-                                [64 / network_size * 3e-4]]
+                            run_experiment_args = [(augment_num_timesteps, top_num_to_include, augment_seed,
+                                    augment_run_num, network_size,
+                                    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                                    eval_run_num, learning_rate, additional_note, result_dir, None)
 
-                        pool.starmap(_run_experiment, run_experiment_args)
 
-                        try:
-                            plot(result_dir, aug_num_timesteps=augment_num_timesteps)
-                        except Exception as e:
-                            print(e)
+                                    for augment_seed in augment_seeds
+                                    for augment_run_num in augment_run_nums
+                                    for top_num_to_include in top_num_to_includes
+                                    for network_size in network_sizes
+                                    for learning_rate in
+                                    [64 / network_size * 3e-4]]
+
+                            pool.starmap(_run_experiment, run_experiment_args)
+
+                            try:
+                                plot(result_dir, aug_num_timesteps=augment_num_timesteps)
+                            except Exception as e:
+                                print(e)
 # #################################################################
 #
 #         policy_num_timesteps = 2000000

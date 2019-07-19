@@ -3,17 +3,17 @@ from gym import utils
 from gym.envs.dart import dart_env
 
 class DartHalfCheetahEnv(dart_env.DartEnv, utils.EzPickle):
-    def __init__(self):
+    def __init__(self,num_inds_to_add=0):
         self.control_bounds = np.array([[1.0]*6,[-1.0]*6])
         self.action_scale = np.array([120, 90, 60, 120, 60, 30]) * 1.0
-        obs_dim = 17
+
 
         self.velrew_weight = 1.0
 
         self.t = 0
 
         self.total_dist = []
-
+        obs_dim = 17 + num_inds_to_add
         dart_env.DartEnv.__init__(self, ['half_cheetah.skel'], 5, obs_dim, self.control_bounds, disableViewer=True, dt=0.01)
 
         self.initial_local_coms = [np.copy(bn.local_com()) for bn in self.robot_skeleton.bodynodes]
@@ -112,3 +112,29 @@ class DartHalfCheetahEnv(dart_env.DartEnv, utils.EzPickle):
         self.robot_skeleton.q = snew[0:len(self.robot_skeleton.q)]
         self.robot_skeleton.dq = snew[len(self.robot_skeleton.q):]
 
+    def get_contact_bodynode(self):
+        return self.robot_skeleton.body("b_foot")
+
+
+class DartHalfCheetahEnv_aug_input(DartHalfCheetahEnv):
+    def __init__(self, lagrangian_inds_to_include):
+
+        if lagrangian_inds_to_include is None:
+            raise Exception("don't give none, give empty list")
+        else:
+            self.lagrangian_inds_to_include = lagrangian_inds_to_include
+
+        num_inds_to_add = len(self.lagrangian_inds_to_include)
+
+        super().__init__(num_inds_to_add=num_inds_to_add)
+
+    def _get_obs(self):
+        state = super()._get_obs()
+
+        lagrangian_to_add = []
+        for (key, ind) in self.lagrangian_inds_to_include:
+            flat_array = self.get_lagrangian_flat_array(key)
+            lagrangian_to_add.append(flat_array.reshape(-1)[ind])
+
+        state = np.hstack((state, np.array(lagrangian_to_add)))
+        return state

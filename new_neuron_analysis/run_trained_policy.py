@@ -24,7 +24,7 @@ import pickle
 from matplotlib import pyplot as plt
 from stable_baselines.common import set_global_seeds
 
-lagrangian_keys = ["M", "q", "dq", "COM", "Coriolis", "total_contact_forces_left_foot", "com_jacobian", "left_foot_jacobian"]
+lagrangian_keys = ["M", "q", "dq", "COM", "Coriolis", "total_contact_forces_contact_bodynode", "com_jacobian", "contact_bodynode_jacobian"]
 
 
 def safe_mean(arr):
@@ -150,52 +150,10 @@ def plot_everything(lagrangian_values, layer_values_list, out_dir, PLOT_CUTOFF):
             plt.savefig(name)
             plt.close()
 
-def find_dxdq(sk):
-    # x = m1x1 + m2x2/(m1+m2), dxdq = m1 dx1dq + .../m1+m2
-    # TODO is this correct?
-    result = sk.bodynodes[0].linear_jacobian() * sk.bodynodes[0].m
-    total_mass = sk.bodynodes[0].m
-    for bodynode in sk.bodynodes[1:]:
-        result += bodynode.linear_jacobian() * bodynode.m
-        total_mass += bodynode.m
 
-    result = result/total_mass
-    return result
 
-def find_total_contact_forces_left_foot(walker_env):
-    contacts = walker_env.dart_world.collision_result.contacts
-    total_contact_forces_left_foot = np.zeros(3)
 
-    for contact in contacts:
-        if contact.bodynode1 == walker_env.robot_skeleton.bodynodes[8]:
-            total_contact_forces_left_foot += contact.force
 
-    return total_contact_forces_left_foot
-
-def get_lagrangian_flat_array(key, walker_env):
-    sk = walker_env.robot_skeleton
-    if key == "M":
-        return sk.M.reshape((-1, 1))
-    elif key == "q":
-        return sk.q.reshape((-1, 1))
-    elif key == "dq":
-        return sk.dq.reshape((-1, 1))
-    elif key == "COM":
-        return sk.C.reshape((-1, 1))
-    elif key == "Coriolis":
-        return sk.c.reshape((-1, 1))
-    elif key == "total_contact_forces_left_foot":
-        total_contact_forces_left_foot = find_total_contact_forces_left_foot(walker_env)
-        return total_contact_forces_left_foot.reshape((-1, 1))
-
-    elif key == "com_jacobian":
-        dxdq = find_dxdq(sk)
-        return dxdq.reshape((-1, 1))
-    elif key == "left_foot_jacobian":
-
-        return sk.body("h_foot_left").J.reshape((-1, 1))
-    else:
-        raise Exception("no such key in linear_global_dict")
 
 
 def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, policy_num_timesteps, policy_seed, policy_run_num, additional_note):
@@ -224,11 +182,11 @@ def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, po
         env_out.seed(eval_seed)
         return env_out
     env = DummyVecEnv([make_env])
-    walker_env = env.envs[0].env.env
+    running_env = env.envs[0].env.env
 
 
     set_global_seeds(eval_seed)
-    walker_env.seed(eval_seed)
+    running_env.seed(eval_seed)
 
     if args.normalize:
         env = VecNormalize(env)
@@ -238,9 +196,8 @@ def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, po
     if args.normalize:
         env.load_running_average(save_dir)
 
-
-    walker_env = env.venv.envs[0].env.env
-    sk = walker_env.robot_skeleton
+    # is it necessary?
+    running_env = env.venv.envs[0].env.env
 
 
     lagrangian_values = {}
@@ -255,11 +212,8 @@ def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, po
 
     #init lagrangian values
     for lagrangian_key in lagrangian_keys:
-        flat_array = get_lagrangian_flat_array(lagrangian_key, walker_env)
+        flat_array = running_env.get_lagrangian_flat_array(lagrangian_key)
         lagrangian_values[lagrangian_key] = [flat_array]
-
-
-
 
 
     neuron_values = model.give_neuron_values(obs)
@@ -291,7 +245,7 @@ def eval_trained_policy_and_collect_data(eval_seed, eval_run_num, policy_env, po
 
         # filling lagrangian values
         for lagrangian_key in lagrangian_keys:
-            flat_array = get_lagrangian_flat_array(lagrangian_key, walker_env)
+            flat_array = running_env.get_lagrangian_flat_array(lagrangian_key)
             lagrangian_values[lagrangian_key].append(flat_array)
 
         # env.render()

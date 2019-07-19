@@ -4,17 +4,19 @@ from gym.envs.dart import dart_env
 
 
 class DartSnake7LinkEnv(dart_env.DartEnv, utils.EzPickle):
-    def __init__(self):
+    def __init__(self,num_inds_to_add=0):
         self.control_bounds = np.array([[1.0, 1.0, 1.0, 1.0, 1.0, 1.0],[-1.0, -1.0, -1.0, -1.0, -1.0, -1.0]])
         self.action_scale = 200
         self.include_action_in_obs = False
         self.randomize_dynamics = False
-        obs_dim = 17
 
+        obs_dim = 17
         if self.include_action_in_obs:
             obs_dim += len(self.control_bounds[0])
             self.prev_a = np.zeros(len(self.control_bounds[0]))
 
+
+        obs_dim += num_inds_to_add
         dart_env.DartEnv.__init__(self, 'snake_7link.skel', 4, obs_dim, self.control_bounds, disableViewer=True)
 
         if self.randomize_dynamics:
@@ -123,3 +125,31 @@ class DartSnake7LinkEnv(dart_env.DartEnv, utils.EzPickle):
 
     def viewer_setup(self):
         self._get_viewer().scene.tb.trans[2] = -5.5
+
+    def get_contact_bodynode(self):
+
+
+        return self.robot_skeleton.body("h_head")
+
+class DartSnake7LinkEnv_aug_input(DartSnake7LinkEnv):
+    def __init__(self, lagrangian_inds_to_include):
+
+        if lagrangian_inds_to_include is None:
+            raise Exception("don't give none, give empty list")
+        else:
+            self.lagrangian_inds_to_include = lagrangian_inds_to_include
+
+        num_inds_to_add = len(self.lagrangian_inds_to_include)
+
+        super().__init__(num_inds_to_add=num_inds_to_add)
+
+    def _get_obs(self):
+        state = super()._get_obs()
+
+        lagrangian_to_add = []
+        for (key, ind) in self.lagrangian_inds_to_include:
+            flat_array = self.get_lagrangian_flat_array(key)
+            lagrangian_to_add.append(flat_array.reshape(-1)[ind])
+
+        state = np.hstack((state, np.array(lagrangian_to_add)))
+        return state

@@ -116,6 +116,58 @@ class DartEnv(gym.Env):
             'video.frames_per_second' : int(np.round(1.0 / self.dt))
         }
 
+    def find_dxdq(self):
+        # x = m1x1 + m2x2/(m1+m2), dxdq = m1 dx1dq + .../m1+m2
+        # TODO is this correct?
+        sk = self.robot_skeleton
+        result = sk.bodynodes[0].linear_jacobian() * sk.bodynodes[0].m
+        total_mass = sk.bodynodes[0].m
+        for bodynode in sk.bodynodes[1:]:
+            result += bodynode.linear_jacobian() * bodynode.m
+            total_mass += bodynode.m
+
+        result = result / total_mass
+        return result
+
+    def find_total_contact_forces_contact_bodynode(self):
+        contacts = self.dart_world.collision_result.contacts
+        total_contact_forces_contact_bodynode = np.zeros(3)
+
+        for contact in contacts:
+            if contact.bodynode1 == self.get_contact_bodynode():
+                total_contact_forces_contact_bodynode += contact.force
+
+        return total_contact_forces_contact_bodynode
+
+    def get_lagrangian_flat_array(self, key):
+        sk = self.robot_skeleton
+        if key == "M":
+            return sk.M.reshape((-1, 1))
+        elif key == "q":
+            return sk.q.reshape((-1, 1))
+        elif key == "dq":
+            return sk.dq.reshape((-1, 1))
+        elif key == "COM":
+            return sk.C.reshape((-1, 1))
+        elif key == "Coriolis":
+            return sk.c.reshape((-1, 1))
+
+        elif key == "total_contact_forces_contact_bodynode":
+            total_contact_forces_contact_bodynode = self.find_total_contact_forces_contact_bodynode()
+            return total_contact_forces_contact_bodynode.reshape((-1, 1))
+
+        elif key == "com_jacobian":
+            dxdq = self.find_dxdq()
+            return dxdq.reshape((-1, 1))
+        elif key == "contact_bodynode_jacobian":
+
+            return self.get_contact_bodynode().J.reshape((-1, 1))
+        else:
+            raise Exception(f" key{key}no such key in linear_global_dict")
+
+    def get_contact_bodynode(self):
+        raise NotImplemented()
+
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)

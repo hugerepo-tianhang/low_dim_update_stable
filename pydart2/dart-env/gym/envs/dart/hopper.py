@@ -4,11 +4,11 @@ from gym.envs.dart import dart_env
 
 
 class DartHopperEnv(dart_env.DartEnv, utils.EzPickle):
-    def __init__(self):
+    def __init__(self,num_inds_to_add=0):
         self.control_bounds = np.array([[1.0, 1.0, 1.0],[-1.0, -1.0, -1.0]])
         self.action_scale = 200
-        obs_dim = 11
 
+        obs_dim=11+num_inds_to_add
         dart_env.DartEnv.__init__(self, 'hopper_capsule.skel', 4, obs_dim, self.control_bounds, disableViewer=False)
 
         try:
@@ -20,6 +20,9 @@ class DartHopperEnv(dart_env.DartEnv, utils.EzPickle):
 
         utils.EzPickle.__init__(self)
 
+
+    def get_contact_bodynode(self):
+        return self.robot_skeleton.body("h_foot")
 
     def advance(self, a):
         clamped_control = np.array(a)
@@ -86,3 +89,27 @@ class DartHopperEnv(dart_env.DartEnv, utils.EzPickle):
 
     def viewer_setup(self):
         self._get_viewer().scene.tb.trans[2] = -5.5
+
+
+class DartHopperEnv_aug_input(DartHopperEnv):
+    def __init__(self, lagrangian_inds_to_include):
+
+        if lagrangian_inds_to_include is None:
+            raise Exception("don't give none, give empty list")
+        else:
+            self.lagrangian_inds_to_include = lagrangian_inds_to_include
+
+        num_inds_to_add = len(self.lagrangian_inds_to_include)
+
+        super().__init__(num_inds_to_add=num_inds_to_add)
+
+    def _get_obs(self):
+        state = super()._get_obs()
+
+        lagrangian_to_add = []
+        for (key, ind) in self.lagrangian_inds_to_include:
+            flat_array = self.get_lagrangian_flat_array(key)
+            lagrangian_to_add.append(flat_array.reshape(-1)[ind])
+
+        state = np.hstack((state, np.array(lagrangian_to_add)))
+        return state

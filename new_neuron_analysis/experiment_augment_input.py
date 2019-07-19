@@ -144,7 +144,17 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
                        f"_policy_num_timesteps{policy_num_timesteps}_policy_run_num{policy_run_num}_policy_seed{policy_seed}" \
                        f"_eval_seed{eval_seed}_eval_run_num{eval_run_num}_additional_note_{additional_note}"
 
-    entry_point = 'gym.envs.dart:DartWalker2dEnv_aug_input'
+    if policy_env == "DartWalker2d-v1":
+        entry_point = 'gym.envs.dart:DartWalker2dEnv_aug_input'
+    elif policy_env == "DartHopper-v1":
+        entry_point = 'gym.envs.dart:DartHopperEnv_aug_input'
+    elif policy_env == "DartHalfCheetah-v1":
+        entry_point = 'gym.envs.dart:DartHalfCheetahEnv_aug_input'
+    elif policy_env == "DartSnake7Link-v1":
+        entry_point = 'gym.envs.dart:DartSnake7LinkEnv_aug_input'
+    else:
+        raise NotImplemented()
+
 
     this_run_dir = get_experiment_path_for_this_run(entry_point, args.num_timesteps, args.run_num,
                                                     args.seed, learning_rate=learning_rate, top_num_to_include=top_num_to_include_slice,
@@ -332,7 +342,7 @@ if __name__ == "__main__":
 
 
     policy_num_timesteps = 5000000
-    policy_env = "DartWalker2d-v1"
+    policy_env = "DartHalfCheetah-v1"
     policy_seeds = [3]
     policy_run_nums = [1]
 
@@ -357,13 +367,9 @@ if __name__ == "__main__":
                            for top_num_to_include in top_num_to_includes:
                                 for network_size in network_sizes:
                                     for learning_rate in [64 / network_size * 3e-4, (64 / network_size + 64 / network_size) * 3e-4]:
-                                        # if not test:
                                         result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
                                                                     policy_seed, eval_seed, eval_run_num,
                                                                     additional_note)
-                                        # else:
-                                        #     result_dir = get_test_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
-                                        #                               eval_seed, eval_run_num, augment_seed, additional_note)
 
                                         create_dir_if_not(result_dir)
 
@@ -371,7 +377,7 @@ if __name__ == "__main__":
                                                        augment_run_num=augment_run_num, network_size=network_size,
                                                        policy_env=policy_env, policy_num_timesteps=policy_num_timesteps,
                                                        policy_run_num=policy_run_num, policy_seed=policy_seed, eval_seed=eval_seed,
-                                                       eval_run_num=eval_run_num, learning_rate=learning_rate, additional_note=additional_note, test=False, result_dir=result_dir)
+                                                       eval_run_num=eval_run_num, learning_rate=learning_rate, additional_note=additional_note, result_dir=result_dir)
     # run_check_experiment(augment_num_timesteps, augment_seed=0,
     #                      augment_run_num=0, network_size=64,
     #                      policy_env=policy_env, learning_rate=0.0001)    # from joblib import Parallel, delayed

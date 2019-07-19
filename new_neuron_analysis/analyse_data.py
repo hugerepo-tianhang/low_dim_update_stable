@@ -337,8 +337,8 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
         concat = None
         num_ind_in_stack = []
 
-        keys_to_include = ["M", "Coriolis", "COM" , "total_contact_forces_left_foot",
-                           "com_jacobian", "left_foot_jacobian"]
+        keys_to_include = ["M", "Coriolis", "COM" , "total_contact_forces_contact_bodynode",
+                           "com_jacobian", "contact_bodynode_jacobian"]
 
 
 
@@ -445,10 +445,10 @@ def crunch_and_plot_data(trained_policy_env, trained_policy_num_timesteps, polic
                             eval_run_num, additional_note=additional_note)
 
 
-    BEST_TO_TAKE = 5
     linear_global_dict = crunch_linear_correlation(lagrangian_values, layers_values_list, data_dir)
-    scatter_the_linear_significant_ones(linear_global_dict, BEST_TO_TAKE, layers_values_list, lagrangian_values,
-                                        data_dir)
+    # BEST_TO_TAKE = 5
+    # scatter_the_linear_significant_ones(linear_global_dict, BEST_TO_TAKE, layers_values_list, lagrangian_values,
+    #                                     data_dir)
 
     # non_linear_global_dict = crunch_non_linear_correlation(lagrangian_values, layers_values_list, data_dir)
     # scatter_the_non_linear_significant_ones(non_linear_global_dict, BEST_TO_TAKE, layers_values_list,
