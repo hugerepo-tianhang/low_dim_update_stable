@@ -279,11 +279,13 @@ def read_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eva
 #===================
 # give best correlated variables to use
 #====================
-def plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir):
+def plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir, regr):
 
     plt.figure()
 
     plt.scatter(lagrangian_l, neuron_l)
+    # plt.plot(lagrangian_l, regr.predict(lagrangian_l), color='blue', linewidth=3)
+
     plt.xlabel("lagrange")
     plt.ylabel("neuron")
 
@@ -327,19 +329,47 @@ def get_key_and_ind(ind, num_ind_in_stack, M_flattened_ind):
         raise Exception(f"wtf ind out of bound to lookup ind{ind}")
     return lagrangian_key, int(lagrangian_index)
 
+
+def show_M_matrix(num_dof, result, top_num_to_include_slice, save_dir):
+    assert num_dof == int(num_dof)
+    num_dof = int(num_dof)
+    M = np.zeros((num_dof, num_dof))
+    num_of_M = 0
+    to_include = result[top_num_to_include_slice]
+    for (key, ind) in to_include:
+        if key == "M":
+            num_of_M += 1
+            row = ind // num_dof
+            col = ind % num_dof
+            M[row, col] = 1
+
+    fig, ax = plt.subplots()
+    im = ax.imshow(M)
+
+    fig_name = f"included M matrix, top_num_to_include_slice={top_num_to_include_slice}, num of M={num_of_M}"
+    ax.set_title(fig_name)
+    fig.tight_layout()
+    plt.savefig(f"{save_dir}/{fig_name}")
+
+
 from new_neuron_analysis.run_trained_policy import lagrangian_keys as lagrangian_keys_in_run_policy
 def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
                                           lagrangian_values, layers_values):
     aug_plot_dir = f"{data_dir}/top_vars_plots"
+
+    num_dof = np.sqrt(len(linear_global_dict["M"]))
+    assert num_dof == int(num_dof)
+
 
     def get_concat_data(linear_global_dict):
 
         concat = None
         num_ind_in_stack = []
 
-        keys_to_include = ["M", "Coriolis", "COM" , "total_contact_forces_contact_bodynode",
+        keys_to_include = ["COM", "M", "Coriolis", "total_contact_forces_contact_bodynode",
                            "com_jacobian", "contact_bodynode_jacobian"]
-
+        # keys_to_include = ["COM", "M", "Coriolis", "total_contact_forces_left_foot",
+        #                    "com_jacobian", "left_foot_jacobian"]
 
 
         for key in keys_to_include:
@@ -348,7 +378,6 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
                 raise Exception(f"this key {key} in not in lagrangian_keys")
 
             nd = np.array(linear_global_dict[key])
-
             if key == "M":
                 nd, M_flattened_ind = get_upper_tri(nd)
 
@@ -374,7 +403,7 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
 
     linear_cos = np.abs(concat[:,:,0])
     normalized_SSE = concat[:,:,1]
-    max_normalized_SSE = 150 #hard code since > 150 will be made 0
+    max_normalized_SSE = 500 #hard code since > 150 will be made 0
     linear_cos[np.where(normalized_SSE>max_normalized_SSE)] = 0
     new_metric_matrix = 0.5*linear_cos + (1 - normalized_SSE/max_normalized_SSE) * 0.5
 
@@ -414,13 +443,15 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
         lagrangian_l = lagrangian_values[lagrangian_key][lagrangian_index]
         neuron_l = layers_values[int(neuron_coord[0]), int(neuron_coord[1]), :]
 
-        if aug_plot_dir is not None:
-            fig_name = f"largest_rank_{i}_{lagrangian_key}_{lagrangian_index}_VS_layer{neuron_coord[0]}" \
-                       f"_neuron_{neuron_coord[1]}_linear_co_{linear_co} normalized_SSE{normalized_SSE}.jpg"
-            plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir)
 
         test_linear_co = np.abs(np.corrcoef(lagrangian_l, neuron_l)[1, 0])
         test_normalized_SSE, test_TV = get_normalized_SSE(lagrangian_l, neuron_l, regr)
+        if aug_plot_dir is not None:
+            fig_name = f"largest_rank_{i}_{lagrangian_key}_{lagrangian_index}_VS_layer{neuron_coord[0]}" \
+                       f"_neuron_{neuron_coord[1]}_linear_co_{linear_co} normalized_SSE{normalized_SSE}.jpg"
+            plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir, regr)
+
+
         if test_normalized_SSE > max_normalized_SSE:
             test_linear_co = 0
         test_new_metric = 0.5 * test_linear_co + (1 - test_normalized_SSE / max_normalized_SSE) * 0.5
@@ -432,6 +463,9 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
     with open(fn, 'w') as fp:
         json.dump(result, fp)
 
+
+    show_M_matrix(num_dof, result=result, top_num_to_include_slice=slice(0,10), save_dir=aug_plot_dir),
+    show_M_matrix(num_dof, result=result, top_num_to_include_slice=slice(0,20), save_dir=aug_plot_dir)
     return result
 
 
@@ -446,9 +480,9 @@ def crunch_and_plot_data(trained_policy_env, trained_policy_num_timesteps, polic
 
 
     linear_global_dict = crunch_linear_correlation(lagrangian_values, layers_values_list, data_dir)
-    # BEST_TO_TAKE = 5
-    # scatter_the_linear_significant_ones(linear_global_dict, BEST_TO_TAKE, layers_values_list, lagrangian_values,
-    #                                     data_dir)
+    BEST_TO_TAKE = 5
+    scatter_the_linear_significant_ones(linear_global_dict, BEST_TO_TAKE, layers_values_list, lagrangian_values,
+                                        data_dir)
 
     # non_linear_global_dict = crunch_non_linear_correlation(lagrangian_values, layers_values_list, data_dir)
     # scatter_the_non_linear_significant_ones(non_linear_global_dict, BEST_TO_TAKE, layers_values_list,
@@ -558,24 +592,17 @@ def crunch_and_plot_data(trained_policy_env, trained_policy_num_timesteps, polic
 
 if __name__ == "__main__":
     policy_env = "DartWalker2d-v1"
-    policy_num_timesteps = 5000000
-    policy_run_nums = [1]
-    policy_seeds = [3]
-    eval_seed = 4
-    eval_run_num = 4
+    policy_num_timesteps = 2000000
+    policy_run_nums = [0]
+    policy_seeds = [0]
+    eval_seed = 3
+    eval_run_num = 3
     aug_num_timesteps=1500000
-
-    additional_note="sandbox"
+    additional_note=""
     for policy_run_num in policy_run_nums:
         for policy_seed in policy_seeds:
-            # lagrangian_values, input_values, layers_values_list, all_weights = read_data(policy_env,
-            #                                                                              policy_num_timesteps,
-            #                                                                              policy_run_num, policy_seed,
-            #                                                                              eval_seed, eval_run_num, additional_note)
-            #
-            # data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-            #                         eval_run_num, additional_note=additional_note)
-            crunch_and_plot_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
+
+            # crunch_and_plot_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
 
             # plot_dir = get_plot_dir(env=env, num_timesteps=num_timesteps, seed=seed, run_num=run_num)
             #
@@ -593,13 +620,24 @@ if __name__ == "__main__":
             # non_linear_global_dict = crunch_non_linear_correlation(lagrangian_values, layers_values_list, data_dir)
             # scatter_the_non_linear_significant_ones(non_linear_global_dict, BEST_TO_TAKE, layers_values_list,
             #                                         lagrangian_values, data_dir)
+            aug_plot_dir ="/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/new_neuron_analysis/result/DartWalker2d-v1_policy_num_timesteps_5000000_policy_run_num_1_policy_seed_3_run_seed_4_run_run_num_4_additional_note_"
+            result_10 = [("M", 2), ("M", 3), ("M", 5), ("M", 15), ("M", 17), ("M", 40), ("M", 41), ("M", 70), ("M", 71)]
+            result_20 = [("M", 2), ("M", 3), ("M", 4), ("M", 5), ("M", 7), ("M", 12), ("M", 13), ("M", 14), ("M", 15),
+                      ("M", 16), ("M", 17), ("M", 20), ("M", 23), ("M", 26), ("M", 40), ("M", 41), ("M", 62), ("M", 70), ("M", 71)]
+            num_dof = 9
+            show_M_matrix(num_dof, result_10, top_num_to_include_slice=slice(0,len(result_10)), save_dir=aug_plot_dir)
+            show_M_matrix(num_dof, result_20, top_num_to_include_slice=slice(0,len(result_20)), save_dir=aug_plot_dir)
+
+
             # from new_neuron_analysis.experiment_augment_input import read_all_data
             #
             # linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights =\
             #     read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num,
             #               additional_note,
             #               num_layers=2)
-            # aug_plot_dir = None
-            # linear_lagrangian_to_include_in_state(linear_global_dict, non_linear_global_dict,
-            #                                       aug_plot_dir,
-            #                                       lagrangian_values, layers_values_list)
+            #
+            # data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
+            #                         eval_seed,
+            #                         eval_run_num, additional_note=additional_note)
+            # linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
+            #                               lagrangian_values, layers_values)

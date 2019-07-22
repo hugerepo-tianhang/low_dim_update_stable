@@ -1,10 +1,15 @@
+import numpy as np
+import matplotlib.pyplot as plt
+# sphinx_gallery_thumbnail_number = 2
 
-import json
-a = [("a", 1), ("b", 2)]
-with open("test.json", 'w') as fp:
-    json.dump(a, fp)
+harvest = np.array([[0,1,1],[1,0,0],[0,0,0]])
 
 
-with open("test.json", 'r') as fp:
-    b = json.load(fp)
+fig, ax = plt.subplots()
+im = ax.imshow(harvest)
 
+
+
+ax.set_title("included M matrix")
+fig.tight_layout()
+plt.show()

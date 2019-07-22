@@ -71,7 +71,7 @@ def ts2xy(timesteps, xaxis):
     return x_var, y_var
 
 
-def plot_curves(xy_list, labels, xaxis, title, xy_list_details=None):
+def plot_curves(xy_list, labels, xaxis, title, xy_list_details=None, fill_betweens=None):
     """
     plot the curves
 
@@ -94,17 +94,28 @@ def plot_curves(xy_list, labels, xaxis, title, xy_list_details=None):
     # colors = iter(cm.rainbow(np.linspace(0, 1, len(xy_list))))
     # names = list(mcd.CSS4_COLORS.keys())
 
-    cm = plt.get_cmap('CMRmap')
+    # cm = plt.get_cmap('CMRmap')
 
 
     for (i, (x, y)) in enumerate(xy_list):
-        # color = COLORS[i]
-        color = cm(1.*i/len(xy_list))
+        color = COLORS[i]
+        # color = cm(1.*i/len(xy_list))
 
 
         # ax.scatter(x, y, s=2, color=color)
         x, y_mean = window_func(x, y, EPISODES_WINDOW, np.mean)  # So returns average of last EPISODE_WINDOW episodes
         ax.plot(x, y_mean, color=color, label=labels[i])
+        if fill_betweens is not None:
+            new_x, fill_between_y_up, fill_between_y_down = fill_betweens[i]
+            fill_x, y_up_moving_avg = window_func(new_x, fill_between_y_up, EPISODES_WINDOW,
+                                    np.mean)  # So returns average of last EPISODE_WINDOW episodes
+            fill_x, y_down_moving_avg = window_func(new_x, fill_between_y_down, EPISODES_WINDOW,
+                                    np.mean)  # So returns average of last EPISODE_WINDOW episodes
+
+            assert (len(fill_x) == len(y_up_moving_avg) == len(y_down_moving_avg))
+            assert (fill_x == x).all()
+            ax.fill_between(fill_x, y_up_moving_avg, y_down_moving_avg, facecolor=color, alpha='0.5')
+
         if xy_list_details is not None:
             for (detail_x, detail_y) in xy_list_details[i]:
                 detail_x, detail_y_mean = window_func(detail_x, detail_y, EPISODES_WINDOW,

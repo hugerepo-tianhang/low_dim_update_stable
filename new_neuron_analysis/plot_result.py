@@ -94,6 +94,40 @@ def plot(result_dir, aug_num_timesteps):
 
 
 
+def subsample(l, target_len):
+    new_inds = np.sort(np.random.choice(len(l), target_len, replace=False))
+    assert (new_inds == np.sort(new_inds)).all()
+    assert new_inds[0] <= new_inds[-1]
+
+    return l[new_inds]
+# def subsample(l, target_len):
+#     def decide_next_skip(prob_of_down, up, down):
+#         r = np.random.random_sample()
+#         if r > prob_of_down:
+#             current_skip_num = up
+#         else:
+#             current_skip_num = down
+#         return current_skip_num
+#
+#     memory_size_threshold = 800000
+#     current_non_skipped = 0
+#     total_num_dumped = 0
+#
+#     if total_timesteps > memory_size_threshold:
+#         down_sample_fraction = (total_timesteps - memory_size_threshold)/total_timesteps
+#         down = int(1 / down_sample_fraction)
+#         up = down + 1
+#         prob_of_down = (down_sample_fraction - 1 / up) * up * down
+#
+#
+#         current_skip_num = decide_next_skip(prob_of_down, up, down)
+#
+#
+#     if total_timesteps > memory_size_threshold and current_non_skipped >= current_skip_num:
+#         current_skip_num = decide_next_skip(prob_of_down, up, down)
+#         current_non_skipped = 0
+
+
 def plot_results_group_by_run_and_seed(dirs, num_timesteps, xaxis, task_name, labels, include_details=False):
     """
     plot the results
@@ -120,6 +154,7 @@ def plot_results_group_by_run_and_seed(dirs, num_timesteps, xaxis, task_name, la
             xy_dict[new_label].append(ts2xy(timesteps, xaxis))
 
     xy_list = []
+    fill_betweens = []
     new_labels = []
     xy_list_detail = []
     for label, xy_sublist in xy_dict.items():
@@ -129,13 +164,25 @@ def plot_results_group_by_run_and_seed(dirs, num_timesteps, xaxis, task_name, la
         min_len = np.min(lens)
         new_x = xy_sublist[amin][0]
 
-        new_y = np.mean([xy_item[1][:min_len] for xy_item in xy_sublist], axis=0)
+        # new_ys = [xy_item[1][:min_len] for xy_item in xy_sublist]
+        new_ys = [subsample(xy_item[1], min_len) for xy_item in xy_sublist]
+        new_y = np.mean(new_ys, axis=0)
+        std = np.std(new_ys, axis=0)
+
+        fill_between_y_up = new_y + std
+        fill_between_y_down = new_y - std
+
+        fill_betweens.append((new_x, fill_between_y_up, fill_between_y_down))
         xy_list.append((new_x, new_y))
+
+        assert len(fill_between_y_down) == len(fill_between_y_up) == len(new_y) == len(new_x)
+        if not (len(fill_between_y_down) == len(fill_between_y_up) == len(new_y) == len(new_x)):
+            print("ss")
         xy_list_detail.append(xy_sublist)
     if include_details:
-        return plot_curves(xy_list, new_labels, xaxis, task_name, xy_list_detail)
+        return plot_curves(xy_list, new_labels, xaxis, task_name, xy_list_detail, fill_betweens=fill_betweens)
     else:
-        return plot_curves(xy_list, new_labels, xaxis, task_name, None)
+        return plot_curves(xy_list, new_labels, xaxis, task_name, None, fill_betweens=fill_betweens)
 
 
 def _plot(labels, total_log_dirs, aug_num_timesteps, result_dir, title):
@@ -151,15 +198,17 @@ def _plot(labels, total_log_dirs, aug_num_timesteps, result_dir, title):
 if __name__ =="__main__":
     def run():
         trained_policy_env = "DartWalker2d-v1"
-        trained_policy_num_timesteps = 2000000
-        policy_run_nums = [0]
-        policy_seeds = [0]
-        eval_seed = 3
-        eval_run_num = 3
+        trained_policy_num_timesteps = 5000000
+        policy_run_nums = [1]
+        policy_seeds = [3]
+        eval_seed = 4
+        eval_run_num = 4
         aug_num_timesteps=1500000
-        additional_note = "testtop30linearshouldoutperformsinceitsadditive"
+        additional_note = "sandbox"
         for policy_run_num in policy_run_nums:
             for policy_seed in policy_seeds:
                 result_dir = get_result_dir(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note=additional_note)
 
                 plot(result_dir, aug_num_timesteps)
+
+    run()
