@@ -116,6 +116,27 @@ class DartEnv(gym.Env):
             'video.frames_per_second' : int(np.round(1.0 / self.dt))
         }
 
+    # def show_M_matrix(self, num_dof, result, top_num_to_include_slice, save_dir):
+    #     assert num_dof == int(num_dof)
+    #     num_dof = int(num_dof)
+    #     M = np.zeros((num_dof, num_dof))
+    #     num_of_M = 0
+    #     to_include = result[top_num_to_include_slice]
+    #     for (key, ind) in to_include:
+    #         if key == "M":
+    #             num_of_M += 1
+    #             row = ind // num_dof
+    #             col = ind % num_dof
+    #             M[row, col] = 1
+    #
+    #     fig, ax = plt.subplots()
+    #     im = ax.imshow(M)
+    #
+    #     fig_name = f"included M matrix, top_num_to_include_slice={top_num_to_include_slice}, num of M={num_of_M}"
+    #     ax.set_title(fig_name)
+    #     fig.tight_layout()
+    #     plt.savefig(f"{save_dir}/{fig_name}")
+
     def find_dxdq(self):
         # x = m1x1 + m2x2/(m1+m2), dxdq = m1 dx1dq + .../m1+m2
         # TODO is this correct?

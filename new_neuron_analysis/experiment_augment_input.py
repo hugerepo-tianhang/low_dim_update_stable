@@ -23,7 +23,7 @@ import multiprocessing
 import time
 
 import logging
-
+from new_neuron_analysis.analyse_data import show
 
 
 
@@ -177,6 +177,7 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
 
 
         lagrangian_inds_to_include = linear_top_vars_list[top_num_to_include_slice]
+
 
 
     args.env = f'{experiment_label}_{entry_point}-v1'

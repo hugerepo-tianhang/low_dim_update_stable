@@ -406,6 +406,7 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
     max_normalized_SSE = 500 #hard code since > 150 will be made 0
     linear_cos[np.where(normalized_SSE>max_normalized_SSE)] = 0
     new_metric_matrix = 0.5*linear_cos + (1 - normalized_SSE/max_normalized_SSE) * 0.5
+    new_metric_matrix = normalized_SSE
 
 
     argmax_for_each = np.argmax(new_metric_matrix, axis=1)

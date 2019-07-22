@@ -1,5 +1,6 @@
-import sys
 import os
+import sys
+
 d = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..'))
 od = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..', '..'))
 sys.path.append(d)
@@ -7,9 +8,8 @@ sys.path.append(od)
 
 from new_neuron_analysis.run_trained_policy import eval_trained_policy_and_collect_data
 from new_neuron_analysis.analyse_data import crunch_and_plot_data
-from new_neuron_analysis.experiment_augment_input import run_experiment, _run_experiment, get_result_dir, get_test_dir
-from stable_baselines.ppo2.run_mujoco import train
-from new_neuron_analysis.plot_result import plot, get_results
+from new_neuron_analysis.experiment_augment_input import run_experiment, _run_experiment
+from new_neuron_analysis.plot_result import plot
 import warnings
 from new_neuron_analysis.dir_tree_util import *
 warnings.filterwarnings("ignore")
@@ -42,8 +42,8 @@ def main():
     policy_num_timesteps = 5000000
     policy_envs = ["DartHalfCheetah-v1"]
 
-    # policy_envs = ["DartWalker2d-v1"]
-    policy_envs = ["DartSnake7Link-v1", "DartHopper-v1", ]
+    policy_envs = ["DartWalker2d-v1"]
+    # policy_envs = ["DartSnake7Link-v1", "DartHopper-v1", ]
 
     policy_seeds = [3,4,5]
     policy_run_nums = [1]
@@ -56,7 +56,7 @@ def main():
     augment_num_timesteps = 1500000
     top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
     network_sizes = [64]
-    additional_note = "fixed_filter_too_strict_and_made_all_zeros_and_plots"
+    additional_note = "use_normalized_SSE_only"
 
     # policy_num_timesteps = 5000000
     # policy_env = "DartWalker2d-v1"
@@ -147,6 +147,8 @@ def main():
                             create_dir_if_not(result_dir)
 
 
+
+
                             run_experiment_args = [(augment_num_timesteps, top_num_to_include, augment_seed,
                                     augment_run_num, network_size,
                                     policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
@@ -161,6 +163,8 @@ def main():
                                     [64 / network_size * 3e-4]]
 
                             pool.starmap(_run_experiment, run_experiment_args)
+
+
 
                             try:
                                 plot(result_dir, aug_num_timesteps=augment_num_timesteps)

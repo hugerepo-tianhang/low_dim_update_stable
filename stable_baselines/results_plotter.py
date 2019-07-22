@@ -71,7 +71,7 @@ def ts2xy(timesteps, xaxis):
     return x_var, y_var
 
 
-def plot_curves(xy_list, labels, xaxis, title, xy_list_details=None, fill_betweens=None):
+def plot_curves(xy_list, labels, xaxis, title, xy_list_details=None, y_errors=None):
     """
     plot the curves
 
@@ -85,7 +85,6 @@ def plot_curves(xy_list, labels, xaxis, title, xy_list_details=None, fill_betwee
     num = len(labels)
     width = len(labels[0])
     fig = plt.figure(figsize=(width//3, num*1.5))
-    figLegend = plt.figure(figsize=(width//6, num*2))
     ax = fig.add_subplot(111)
 
     maxx = max(xy[0][-1] for xy in xy_list)
@@ -103,25 +102,15 @@ def plot_curves(xy_list, labels, xaxis, title, xy_list_details=None, fill_betwee
 
 
         # ax.scatter(x, y, s=2, color=color)
-        x, y_mean = window_func(x, y, EPISODES_WINDOW, np.mean)  # So returns average of last EPISODE_WINDOW episodes
-        ax.plot(x, y_mean, color=color, label=labels[i])
-        if fill_betweens is not None:
-            new_x, fill_between_y_up, fill_between_y_down = fill_betweens[i]
-            fill_x, y_up_moving_avg = window_func(new_x, fill_between_y_up, EPISODES_WINDOW,
-                                    np.mean)  # So returns average of last EPISODE_WINDOW episodes
-            fill_x, y_down_moving_avg = window_func(new_x, fill_between_y_down, EPISODES_WINDOW,
-                                    np.mean)  # So returns average of last EPISODE_WINDOW episodes
+        ax.plot(x, y, color=color, label=labels[i])
 
-            assert (len(fill_x) == len(y_up_moving_avg) == len(y_down_moving_avg))
-            assert (fill_x == x).all()
-            ax.fill_between(fill_x, y_up_moving_avg, y_down_moving_avg, facecolor=color, alpha='0.5')
+        # ax.fill_between(x, y+y_errors[i], y-y_errors[i], alpha=0.1, color=color)
+        ax.plot(x, y+y_errors[i], alpha=0.4, color=color)
+        ax.plot(x, y-y_errors[i], alpha=0.4, color=color)
 
         if xy_list_details is not None:
             for (detail_x, detail_y) in xy_list_details[i]:
-                detail_x, detail_y_mean = window_func(detail_x, detail_y, EPISODES_WINDOW,
-                                        np.mean)  # So returns average of last EPISODE_WINDOW episodes
-
-                ax.plot(detail_x, detail_y_mean, color=color, label=labels[i], alpha=0.5)
+                ax.plot(detail_x, detail_y, color=color, label=labels[i], alpha=0.5)
 
         ax.legend(loc="upper left")
 
@@ -132,8 +121,7 @@ def plot_curves(xy_list, labels, xaxis, title, xy_list_details=None, fill_betwee
     plt.tight_layout()
 
 
-    figLegend.legend(*ax.get_legend_handles_labels(), "center")
-    return fig, figLegend
+    return fig
 
 def plot_results(dirs, num_timesteps, xaxis, task_name, labels):
     """
