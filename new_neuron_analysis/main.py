@@ -56,7 +56,7 @@ def main():
     augment_num_timesteps = 1500000
     top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
     network_sizes = [64]
-    additional_note = "use_normalized_SSE_only"
+    additional_note = "dont_use_any_contact_related_things_and_use_mixed_metric_to_select"
 
     # policy_num_timesteps = 5000000
     # policy_env = "DartWalker2d-v1"

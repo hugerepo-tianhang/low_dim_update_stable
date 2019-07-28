@@ -23,7 +23,6 @@ import multiprocessing
 import time
 
 import logging
-from new_neuron_analysis.analyse_data import show
 
 
 
@@ -93,6 +92,16 @@ def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
     # non_linear_global_dict
     return linear_global_dict , non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights
 
+def get_wanted_lagrangians(keys_to_include, linear_top_vars_list, top_num_to_include_slice):
+    linear_top_vars_list_wanted = []
+    for (key, ind) in linear_top_vars_list:
+        if key in keys_to_include:
+            linear_top_vars_list_wanted.append((key, ind))
+
+    return linear_top_vars_list_wanted[top_num_to_include_slice]
+
+
+
 
 def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
                policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
@@ -121,6 +130,8 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
                                   f'_augment_seed_{augment_seed}_augment_run_num_{augment_run_num}'
                                   f'_network_size_{network_size}_learning_rate_{learning_rate}_{additional_note}'
                       , exc_info=e)
+
+
 
 
 def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
@@ -175,9 +186,15 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
         linear_top_vars_list = read_linear_top_var(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                                            eval_run_num, additional_note)
 
+        # keys_to_include = ["COM", "M", "Coriolis", "total_contact_forces_contact_bodynode",
+        #                    "com_jacobian", "contact_bodynode_jacobian"]
+        keys_to_include = ["COM", "M", "Coriolis", "com_jacobian"]
+        # lagrangian_inds_to_include = linear_top_vars_list[top_num_to_include_slice]
+        lagrangian_inds_to_include = get_wanted_lagrangians(keys_to_include, linear_top_vars_list, top_num_to_include_slice)
 
-        lagrangian_inds_to_include = linear_top_vars_list[top_num_to_include_slice]
 
+    with open(f"{log_dir}/lagrangian_inds_to_include.json") as fp:
+        json.dump(lagrangian_inds_to_include, fp)
 
 
     args.env = f'{experiment_label}_{entry_point}-v1'

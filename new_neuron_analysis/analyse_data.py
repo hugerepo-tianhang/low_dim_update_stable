@@ -366,16 +366,15 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
         concat = None
         num_ind_in_stack = []
 
-        keys_to_include = ["COM", "M", "Coriolis", "total_contact_forces_contact_bodynode",
-                           "com_jacobian", "contact_bodynode_jacobian"]
-        # keys_to_include = ["COM", "M", "Coriolis", "total_contact_forces_left_foot",
-        #                    "com_jacobian", "left_foot_jacobian"]
+        # keys_to_include = ["COM", "M", "Coriolis", "total_contact_forces_contact_bodynode",
+        #                    "com_jacobian", "contact_bodynode_jacobian"]
 
 
-        for key in keys_to_include:
 
-            if key not in lagrangian_keys_in_run_policy:
-                raise Exception(f"this key {key} in not in lagrangian_keys")
+        for key in lagrangian_keys_in_run_policy:
+
+            # if key not in lagrangian_keys_in_run_policy:
+            #     raise Exception(f"this key {key} in not in lagrangian_keys")
 
             nd = np.array(linear_global_dict[key])
             if key == "M":
@@ -406,7 +405,7 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
     max_normalized_SSE = 500 #hard code since > 150 will be made 0
     linear_cos[np.where(normalized_SSE>max_normalized_SSE)] = 0
     new_metric_matrix = 0.5*linear_cos + (1 - normalized_SSE/max_normalized_SSE) * 0.5
-    new_metric_matrix = normalized_SSE
+    # new_metric_matrix = normalized_SSE
 
 
     argmax_for_each = np.argmax(new_metric_matrix, axis=1)

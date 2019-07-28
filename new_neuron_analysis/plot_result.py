@@ -2,7 +2,7 @@ from stable_baselines.results_plotter import *
 from new_neuron_analysis.experiment_augment_input import get_experiment_path_for_this_run, \
      get_log_dir, get_result_dir, AttributeDict, os, get_project_dir, get_save_dir
 
-from new_neuron_analysis.plot_result.plot_util import symmetric_ema
+from new_neuron_analysis.plotting_module.plot_util import symmetric_ema
 
 def get_results(result_dir):
     labels = []
