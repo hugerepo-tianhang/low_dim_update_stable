@@ -54,7 +54,7 @@ def main():
     augment_seeds = range(15)
     augment_run_nums = [0]
     augment_num_timesteps = 1500000
-    augment_num_timesteps = 5000
+    # augment_num_timesteps = 5000
     top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
     network_sizes = [64]
     additional_note = "dont_use_any_contact_related_things_and_use_mixed_metric_to_select"
