@@ -42,7 +42,7 @@ def main():
     policy_num_timesteps = 5000000
     policy_envs = ["DartHalfCheetah-v1"]
 
-    policy_envs = ["DartWalker2d-v1"]
+    policy_envs = ["DartWalker2d-v1", "DartSnake7Link-v1", "DartHopper-v1"]
     # policy_envs = ["DartSnake7Link-v1", "DartHopper-v1", ]
 
     policy_seeds = [3,4,5]
@@ -54,6 +54,7 @@ def main():
     augment_seeds = range(15)
     augment_run_nums = [0]
     augment_num_timesteps = 1500000
+    augment_num_timesteps = 5000
     top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
     network_sizes = [64]
     additional_note = "dont_use_any_contact_related_things_and_use_mixed_metric_to_select"
@@ -110,13 +111,13 @@ def main():
 
         # ============================================================
 
-        #train_policy_args = [(["--env", policy_env, "--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
-         #           str(policy_seed)])
-          #                   for policy_env in policy_envs
-          #                   for policy_seed in policy_seeds
-          #                   for policy_run_num in policy_run_nums]
-
-        #pool.map(train, train_policy_args)
+        # train_policy_args = [(["--env", policy_env, "--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
+        #            str(policy_seed)])
+        #                     for policy_env in policy_envs
+        #                     for policy_seed in policy_seeds
+        #                     for policy_run_num in policy_run_nums]
+        #
+        # pool.map(train, train_policy_args)
 
 
         # #============================================================
