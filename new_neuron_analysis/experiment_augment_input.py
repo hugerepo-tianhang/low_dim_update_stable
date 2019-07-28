@@ -193,7 +193,7 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
         lagrangian_inds_to_include = get_wanted_lagrangians(keys_to_include, linear_top_vars_list, top_num_to_include_slice)
 
 
-    with open(f"{log_dir}/lagrangian_inds_to_include.json") as fp:
+    with open(f"{log_dir}/lagrangian_inds_to_include.json", 'w') as fp:
         json.dump(lagrangian_inds_to_include, fp)
 
 
