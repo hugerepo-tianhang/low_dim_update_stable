@@ -49,7 +49,7 @@ def main():
     policy_envs = ["DartHalfCheetah-v1"]
 
     # policy_envs = ["DartWalker2d-v1", "DartSnake7Link-v1", "DartHopper-v1"]
-    # policy_envs = ["DartSnake7Link-v1", "DartHopper-v1", ]
+    policy_envs = ["DartSnake7Link-v1"]
 
     policy_seeds = [3,4]
     policy_run_nums = [1]
@@ -63,7 +63,7 @@ def main():
     # augment_num_timesteps = 5000
     top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
     network_sizes = [64]
-    additional_note = "check_half_cheetach_anyways_ignoring_lcp_error"
+    additional_note = "lower_fluid_force_see_if_there_is_more_bug_in_simulator"
 
     # policy_num_timesteps = 5000000
     # policy_seeds = [4]

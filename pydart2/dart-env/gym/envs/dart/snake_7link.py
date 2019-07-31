@@ -48,9 +48,9 @@ class DartSnake7LinkEnv(dart_env.DartEnv, utils.EzPickle):
                 vel_neg = bn_vel[3:] - np.cross(bn_vel[0:3], norm_dir) * 0.05
                 fluid_force = [0.0, 0.0, 0.0]
                 if np.dot(vel_pos, norm_dir) > 0.0:
-                    fluid_force = -50.0 * np.dot(vel_pos, norm_dir) * norm_dir
+                    fluid_force = -20.0 * np.dot(vel_pos, norm_dir) * norm_dir
                 if np.dot(vel_neg, norm_dir) < 0.0:
-                    fluid_force = -50.0 * np.dot(vel_neg, norm_dir) * norm_dir
+                    fluid_force = -20.0 * np.dot(vel_neg, norm_dir) * norm_dir
                 bn.add_ext_force(fluid_force)
 
             self.robot_skeleton.set_forces(tau)
