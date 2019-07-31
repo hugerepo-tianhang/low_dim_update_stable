@@ -116,13 +116,13 @@ def main():
 
         # ============================================================
 
-        train_policy_args = [(["--env", policy_env, "--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
-                   str(policy_seed)])
-                            for policy_env in policy_envs
-                            for policy_seed in policy_seeds
-                            for policy_run_num in policy_run_nums]
-
-        pool.map(train, train_policy_args)
+        # train_policy_args = [(["--env", policy_env, "--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
+        #            str(policy_seed)])
+        #                     for policy_env in policy_envs
+        #                     for policy_seed in policy_seeds
+        #                     for policy_run_num in policy_run_nums]
+        #
+        # pool.map(train, train_policy_args)
 
 
         # #============================================================
