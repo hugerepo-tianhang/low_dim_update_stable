@@ -2,6 +2,8 @@ import numpy as np
 from gym import utils
 from gym.envs.dart import dart_env
 
+from matplotlib import pyplot as plt
+
 
 class DartSnake7LinkEnv(dart_env.DartEnv, utils.EzPickle):
     def __init__(self,num_inds_to_add=0):
@@ -33,6 +35,9 @@ class DartSnake7LinkEnv(dart_env.DartEnv, utils.EzPickle):
         self.robot_skeleton.bodynodes[-1].set_friction_coeff(0)
 
         utils.EzPickle.__init__(self)
+
+        # self.Q_history = []
+        self.steps = 0
 
     def do_simulation(self, tau, n_frames):
         for _ in range(n_frames):
@@ -68,15 +73,25 @@ class DartSnake7LinkEnv(dart_env.DartEnv, utils.EzPickle):
         self.do_simulation(tau, self.frame_skip)
 
     def step(self, a):
+
+
+        self.steps += 1
         pre_state = [self.state_vector()]
 
         posbefore = self.robot_skeleton.q[0]
         self.advance(a)
+
+
+        # self.Q_history.append(self.robot_skeleton.q.reshape(-1,1))
+
+
         posafter = self.robot_skeleton.q[0]
         deviation = self.robot_skeleton.q[2]
 
         alive_bonus = 0.1
         reward = (posafter - posbefore) / self.dt
+        if reward > 30:
+            print("s")
         reward += alive_bonus
         reward -= 1e-3 * np.square(a).sum()
         reward -= np.abs(deviation) * 0.1
@@ -85,6 +100,16 @@ class DartSnake7LinkEnv(dart_env.DartEnv, utils.EzPickle):
         self.num_steps += 1.0
         done = not (np.isfinite(s).all() and (np.abs(s[2:]) < 100).all() and abs(deviation) < 1.5)
         ob = self._get_obs()
+
+        # if self.steps > 800:
+        #     self.Q_history = np.hstack(self.Q_history)
+        #     for i in range(self.Q_history.shape[0]):
+        #         fig = plt.figure()
+        #         plt.plot(range(len(self.Q_history[i,:])), self.Q_history[i,:])
+        #         fig.savefig(f"2600{i}.png")
+        #
+        #     print("s")
+
 
         return ob, reward, done, {}
 

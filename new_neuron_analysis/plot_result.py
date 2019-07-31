@@ -95,7 +95,7 @@ def plot(result_dir, aug_num_timesteps):
 
 
 def subsample(l, target_len):
-    new_inds = np.sort(np.random.choice(len(l), target_len, replace=False))
+    # new_inds = np.sort(np.random.choice(len(l), target_len, replace=False))
     new_inds = np.linspace(0,len(l)-1, num=target_len, dtype=int)
     assert (new_inds == np.sort(new_inds)).all()
     assert new_inds[0] <= new_inds[-1]
@@ -148,10 +148,13 @@ def _plot(labels, dirs, num_timesteps, result_dir, title, resample=int(1e6), smo
 
         timesteps = load_results(folder)
         timesteps = timesteps[timesteps.l.cumsum() <= num_timesteps]
+        x,y = ts2xy(timesteps, X_TIMESTEPS)
+        if max(y) > 10000:
+            print("s")
         if new_label not in xy_dict:
-            xy_dict[new_label] = [ts2xy(timesteps, X_TIMESTEPS)]
+            xy_dict[new_label] = [(x,y)]
         else:
-            xy_dict[new_label].append(ts2xy(timesteps, X_TIMESTEPS))
+            xy_dict[new_label].append((x,y))
 
     xy_list = []
     y_errors = []
@@ -169,7 +172,10 @@ def _plot(labels, dirs, num_timesteps, result_dir, title, resample=int(1e6), smo
             high = min(x[-1] for x in origxs)
             ys = []
             for (x, y) in xy_sublist:
-                new_y = symmetric_ema(x, y, low, high, minxlen, decay_steps=smooth_step)[1]
+                # new_y = symmetric_ema(x, y, low, high, minxlen, decay_steps=smooth_step)[1]
+                new_y = subsample(y, minxlen)
+                if max(new_y) > 10000:
+                    print("s")
                 x_use, y_use = window_func(var_1=origal_x, var_2=new_y, window=EPISODES_WINDOW, func=np.mean)
                 ys.append(y_use)
 
@@ -224,11 +230,11 @@ if __name__ =="__main__":
         # trained_policy_env = "DartHopper-v1"
         trained_policy_num_timesteps = 5000000
         policy_run_nums = [1]
-        policy_seeds = [4]
+        policy_seeds = [3]
         eval_seed = 4
         eval_run_num = 4
         aug_num_timesteps=1500000
-        additional_note = "include_extra_vars_and_across_4_envs"
+        additional_note = "fixed_filter_too_strict_and_made_all_zeros_and_plots"
         # trained_policy_num_timesteps = 2000000
         # policy_run_nums = [0]
         # policy_seeds = [0]

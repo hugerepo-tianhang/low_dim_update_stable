@@ -327,7 +327,119 @@ def visualize_policy_and_collect_COM(augment_num_timesteps, top_num_to_include_s
         plt.savefig(f"{aug_plot_dir}/COM{i}.jpg")
         plt.close()
 
+def visualize_augment_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
+                   policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
+                    additional_note, result_dir, lagrangian_inds_to_include=None):
 
+    args = AttributeDict()
+
+    args.normalize = True
+    args.num_timesteps = augment_num_timesteps
+    args.run_num = augment_run_num
+    args.alg = "ppo2"
+    args.seed = augment_seed
+
+    logger.log(f"#######TRAIN: {args}")
+    # non_linear_global_dict
+    timestamp = get_time_stamp('%Y_%m_%d_%H_%M_%S')
+    experiment_label = f"learning_rate_{learning_rate}timestamp_{timestamp}_augment_num_timesteps{augment_num_timesteps}" \
+                       f"_top_num_to_include{top_num_to_include_slice.start}_{top_num_to_include_slice.stop}" \
+                       f"_augment_seed{augment_seed}_augment_run_num{augment_run_num}_network_size{network_size}" \
+                       f"_policy_num_timesteps{policy_num_timesteps}_policy_run_num{policy_run_num}_policy_seed{policy_seed}" \
+                       f"_eval_seed{eval_seed}_eval_run_num{eval_run_num}_additional_note_{additional_note}"
+
+    if policy_env == "DartWalker2d-v1":
+        entry_point = 'gym.envs.dart:DartWalker2dEnv_aug_input'
+    elif policy_env == "DartHopper-v1":
+        entry_point = 'gym.envs.dart:DartHopperEnv_aug_input'
+    elif policy_env == "DartHalfCheetah-v1":
+        entry_point = 'gym.envs.dart:DartHalfCheetahEnv_aug_input'
+    elif policy_env == "DartSnake7Link-v1":
+        entry_point = 'gym.envs.dart:DartSnake7LinkEnv_aug_input'
+    else:
+        raise NotImplemented()
+
+
+    this_run_dir = get_experiment_path_for_this_run(entry_point, args.num_timesteps, args.run_num,
+                                                    args.seed, learning_rate=learning_rate, top_num_to_include=top_num_to_include_slice,
+                                                    result_dir=result_dir, network_size=network_size)
+    full_param_traj_dir_path = get_full_params_dir(this_run_dir)
+    log_dir = get_log_dir(this_run_dir)
+    save_dir = get_save_dir(this_run_dir)
+
+
+    create_dir_remove(this_run_dir)
+    create_dir_remove(full_param_traj_dir_path)
+    create_dir_remove(save_dir)
+    create_dir_remove(log_dir)
+    logger.configure(log_dir)
+
+    # note this is only linear
+    if lagrangian_inds_to_include is None:
+        linear_top_vars_list = read_linear_top_var(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                                           eval_run_num, additional_note)
+
+        # keys_to_include = ["COM", "M", "Coriolis", "total_contact_forces_contact_bodynode",
+        #                    "com_jacobian", "contact_bodynode_jacobian"]
+        keys_to_include = ["COM", "M", "Coriolis", "com_jacobian"]
+        # lagrangian_inds_to_include = linear_top_vars_list[top_num_to_include_slice]
+        lagrangian_inds_to_include = get_wanted_lagrangians(keys_to_include, linear_top_vars_list, top_num_to_include_slice)
+
+
+    with open(f"{log_dir}/lagrangian_inds_to_include.json", 'w') as fp:
+        json.dump(lagrangian_inds_to_include, fp)
+
+
+    args.env = f'{experiment_label}_{entry_point}-v1'
+    register(
+        id=args.env,
+        entry_point=entry_point,
+        max_episode_steps=1000,
+        kwargs={"lagrangian_inds_to_include": lagrangian_inds_to_include}
+    )
+
+
+    def make_env():
+        env_out = gym.make(args.env)
+        env_out.env.visualize = False
+        env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
+        return env_out
+
+    env = DummyVecEnv([make_env])
+    walker_env = env.envs[0].env.env
+    walker_env.disableViewer = True
+
+
+    if args.normalize:
+        env = VecNormalize(env)
+    policy = MlpPolicy
+
+
+    # extra run info I added for my purposes
+    run_info = {"run_num": args.run_num,
+                "env_id": args.env,
+                "full_param_traj_dir_path": full_param_traj_dir_path}
+
+    layers = [network_size, network_size]
+    set_global_seeds(args.seed)
+    walker_env.seed(args.seed)
+
+    policy_kwargs = {"net_arch" : [dict(vf=layers, pi=layers)]}
+    model = PPO2(policy=policy, env=env, n_steps=4096, nminibatches=64, lam=0.95, gamma=0.99,
+                 noptepochs=10,
+                 ent_coef=0.0, learning_rate=learning_rate, cliprange=0.2, optimizer='adam', policy_kwargs=policy_kwargs,
+                 seed=args.seed)
+    model.tell_run_info(run_info)
+
+
+    model.learn(total_timesteps=args.num_timesteps, seed=args.seed)
+
+    model.save(f"{save_dir}/ppo2")
+
+    if args.normalize:
+        env.save_running_average(save_dir)
+
+    return log_dir
 
 if __name__ == '__main__':
     # visualize_policy_and_collect_COM(seed=0, run_num=0, policy_num_timesteps=3000000, policy_run_num=0, policy_seed=0)

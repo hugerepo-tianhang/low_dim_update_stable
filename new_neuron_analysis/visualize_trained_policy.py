@@ -298,10 +298,19 @@ def visualize_policy_and_collect_COM(seed, run_num, policy_env, policy_num_times
 if __name__ == '__main__':
     # visualize_policy_and_collect_COM(seed=0, run_num=0, policy_num_timesteps=3000000, policy_run_num=0, policy_seed=0)
 
-    policy_env = "DartWalker2d-v1"
+    # policy_env = "DartWalker2d-v1"
+    policy_seed = 0
+    policy_run_num = 0
+    policy_num_timesteps = 5000
+    policy_env = "DartHalfCheetah-v1"
+    # policy_envs = ["DartHalfCheetah-v1"]
 
-    visualize_policy_and_collect_COM(seed=3, run_num=3, policy_env=policy_env, policy_num_timesteps=2000000,
-                                     policy_seed=0, policy_run_num=0)
+    eval_seed = 0
+    eval_run_num = 0
+
+
+    visualize_policy_and_collect_COM(seed=eval_seed, run_num=eval_run_num, policy_env=policy_env, policy_num_timesteps=policy_num_timesteps,
+                                     policy_seed=policy_seed, policy_run_num=policy_run_num)
     # visualize_policy_and_collect_COM(seed=3, run_num=3, policy_env=policy_env, policy_num_timesteps=2000000,
     #                              policy_seed=1, policy_run_num=0)
 # seeds = [0, 1, 2]

@@ -12,8 +12,7 @@ from stable_baselines.common.policies import MlpPolicy
 from stable_baselines.common.vec_env.dummy_vec_env import DummyVecEnv
 import csv
 import os
-from stable_baselines.low_dim_analysis.eval_util import get_aug_plot_dir, get_full_params_dir, get_dir_path_for_this_run, get_log_dir, get_save_dir
-
+from stable_baselines.low_dim_analysis.eval_util import *
 import pandas as pd
 from gym.envs.registration import register
 import json
@@ -21,6 +20,7 @@ from new_neuron_analysis.analyse_data import read_data
 from new_neuron_analysis.util import comp_dict
 import multiprocessing
 import time
+from stable_baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
 
 import logging
 
@@ -47,9 +47,6 @@ def get_experiment_path_for_this_run(env, num_timesteps,run_num,seed, learning_r
 
     return f'{result_dir}/{get_run_name_experiment(env, num_timesteps,run_num,seed, learning_rate, top_num_to_include, network_size)}'
 
-def get_test_experiment_path_for_this_run(env, num_timesteps,run_num,seed, learning_rate, top_num_to_include, result_dir, network_size):
-
-    return f'{result_dir}/{get_run_name_experiment(env, num_timesteps,run_num,seed, learning_rate, 0, network_size)}'
 
 class AttributeDict(dict):
     __getattr__ = dict.__getitem__
@@ -102,41 +99,69 @@ def get_wanted_lagrangians(keys_to_include, linear_top_vars_list, top_num_to_inc
 
 
 
+#
+# def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
+#                policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
+#                additional_note, result_dir, lagrangian_inds_to_include=None):
+#
+#
+#     time.sleep(2)
+#     exception_logger = logging.getLogger()
+#     handler = logging.FileHandler(f'{result_dir}/error.log')
+#     handler.setLevel(logging.ERROR)
+#     # # create a logging format
+#     # formatter = logging.Formatter(f'top_num_to_include_slice_{top_num_to_include_slice}'
+#     #                               f'_augment_seed_{augment_seed}_augment_run_num_{augment_run_num}'
+#     #                               f'_network_size_{network_size}_learning_rate_{learning_rate}_{additional_note}\n%(message)s')
+#     # handler.setFormatter(formatter)
+#     #
+#     # # add the handlers to the logger
+#     exception_logger.addHandler(handler)
+#
+#     try:
+#         _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
+#                    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num,
+#                    learning_rate, additional_note, result_dir, lagrangian_inds_to_include=lagrangian_inds_to_include)
+#     except Exception as e:
+#         exception_logger.error(f'########top_num_to_include_slice_{top_num_to_include_slice}'
+#                                   f'_augment_seed_{augment_seed}_augment_run_num_{augment_run_num}'
+#                                   f'_network_size_{network_size}_learning_rate_{learning_rate}_{additional_note}'
+#                       , exc_info=e)
+
+
+def run_model(model, env, vedio_dir):
+
+    obs = env.reset()
+    env = VecVideoRecorder(env, vedio_dir, record_video_trigger=lambda x: x == 0, video_length=3000, name_prefix="vis_this_policy")
+
+    env.render()
+    ep_infos = []
+
+
+    for _ in range(3000):
+        actions = model.step(obs)[0]
+
+        obs, rew, done, infos = env.step(actions)
+
+
+        for info in infos:
+            maybe_ep_info = info.get('episode')
+            if maybe_ep_info is not None:
+                ep_infos.append(maybe_ep_info)
+
+        env.render()
+        done = done.any()
+        if done:
+            episode_rew = safe_mean([ep_info['r'] for ep_info in ep_infos])
+            print(f'episode_rew={episode_rew}')
+            obs = env.reset()
+
+
+
 
 def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
-               policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
-               additional_note, result_dir, lagrangian_inds_to_include=None):
-
-
-    time.sleep(2)
-    exception_logger = logging.getLogger()
-    handler = logging.FileHandler(f'{result_dir}/error.log')
-    handler.setLevel(logging.ERROR)
-    # # create a logging format
-    # formatter = logging.Formatter(f'top_num_to_include_slice_{top_num_to_include_slice}'
-    #                               f'_augment_seed_{augment_seed}_augment_run_num_{augment_run_num}'
-    #                               f'_network_size_{network_size}_learning_rate_{learning_rate}_{additional_note}\n%(message)s')
-    # handler.setFormatter(formatter)
-    #
-    # # add the handlers to the logger
-    exception_logger.addHandler(handler)
-
-    try:
-        _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
-                   policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num,
-                   learning_rate, additional_note, result_dir, lagrangian_inds_to_include=lagrangian_inds_to_include)
-    except Exception as e:
-        exception_logger.error(f'########top_num_to_include_slice_{top_num_to_include_slice}'
-                                  f'_augment_seed_{augment_seed}_augment_run_num_{augment_run_num}'
-                                  f'_network_size_{network_size}_learning_rate_{learning_rate}_{additional_note}'
-                      , exc_info=e)
-
-
-
-
-def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
                    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
-                    additional_note, result_dir, lagrangian_inds_to_include=None):
+                   additional_note, result_dir, keys_to_include, lagrangian_inds_to_include=None, visualize=False):
 
     args = AttributeDict()
 
@@ -174,22 +199,22 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
     log_dir = get_log_dir(this_run_dir)
     save_dir = get_save_dir(this_run_dir)
 
-
-    create_dir_remove(this_run_dir)
-    create_dir_remove(full_param_traj_dir_path)
-    create_dir_remove(save_dir)
-    create_dir_remove(log_dir)
-    logger.configure(log_dir)
+    if visualize:
+        vis_dir = get_aug_plot_dir(this_run_dir) + "_vis"
+        final_file = get_full_param_traj_file_path(full_param_traj_dir_path, "pi_final")
+        final_params = pd.read_csv(final_file, header=None).values[0]
+    else:
+        create_dir_remove(this_run_dir)
+        create_dir_remove(full_param_traj_dir_path)
+        create_dir_remove(save_dir)
+        create_dir_remove(log_dir)
+        logger.configure(log_dir)
 
     # note this is only linear
     if lagrangian_inds_to_include is None:
         linear_top_vars_list = read_linear_top_var(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                                            eval_run_num, additional_note)
 
-        # keys_to_include = ["COM", "M", "Coriolis", "total_contact_forces_contact_bodynode",
-        #                    "com_jacobian", "contact_bodynode_jacobian"]
-        keys_to_include = ["COM", "M", "Coriolis", "com_jacobian"]
-        # lagrangian_inds_to_include = linear_top_vars_list[top_num_to_include_slice]
         lagrangian_inds_to_include = get_wanted_lagrangians(keys_to_include, linear_top_vars_list, top_num_to_include_slice)
 
 
@@ -208,13 +233,13 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
 
     def make_env():
         env_out = gym.make(args.env)
-        env_out.env.visualize = False
+        env_out.env.visualize = visualize
         env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
         return env_out
 
     env = DummyVecEnv([make_env])
     walker_env = env.envs[0].env.env
-    walker_env.disableViewer = True
+    walker_env.disableViewer = not visualize
 
 
     if args.normalize:
@@ -222,115 +247,123 @@ def _run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_see
     policy = MlpPolicy
 
 
-    # extra run info I added for my purposes
-    run_info = {"run_num": args.run_num,
-                "env_id": args.env,
-                "full_param_traj_dir_path": full_param_traj_dir_path}
-
-    layers = [network_size, network_size]
-    set_global_seeds(args.seed)
-    walker_env.seed(args.seed)
-
-    policy_kwargs = {"net_arch" : [dict(vf=layers, pi=layers)]}
-    model = PPO2(policy=policy, env=env, n_steps=4096, nminibatches=64, lam=0.95, gamma=0.99,
-                 noptepochs=10,
-                 ent_coef=0.0, learning_rate=learning_rate, cliprange=0.2, optimizer='adam', policy_kwargs=policy_kwargs,
-                 seed=args.seed)
-    model.tell_run_info(run_info)
-
-
-    model.learn(total_timesteps=args.num_timesteps, seed=args.seed)
-
-    model.save(f"{save_dir}/ppo2")
-
-    if args.normalize:
-        env.save_running_average(save_dir)
-
-    return log_dir
-
-def run_check_experiment(augment_num_timesteps, augment_seed, augment_run_num, network_size,
-                         policy_env, learning_rate):
-
-    args = AttributeDict()
-
-    args.normalize = True
-    args.num_timesteps = augment_num_timesteps
-    args.run_num = augment_run_num
-    args.alg = "ppo2"
-    args.seed = augment_seed
-    args.env = 'DartWalker2d-v1'
-
-    logger.log(f"#######TRAIN: {args}")
-
-    result_dir = get_original_env_test_dir(policy_env, augment_seed)
-
-
-    this_run_dir = get_experiment_path_for_this_run(args.env, args.num_timesteps, args.run_num,
-                                                    args.seed, learning_rate=learning_rate, top_num_to_include=0,
-                                                    result_dir=result_dir, network_size=network_size)
-    full_param_traj_dir_path = get_full_params_dir(this_run_dir)
-    log_dir = get_log_dir(this_run_dir)
-    save_dir = get_save_dir(this_run_dir)
-
-    current_process_id = multiprocessing.current_process()._identity
-    if current_process_id == (1,):
-        create_dir_if_not(result_dir)
-    create_dir_remove(this_run_dir)
-    create_dir_remove(full_param_traj_dir_path)
-    create_dir_remove(save_dir)
-    create_dir_remove(log_dir)
-    logger.configure(log_dir)
-
-
-
-
-    def make_env():
-        env_out = gym.make(args.env)
-        env_out.env.visualize = False
-        env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
-        return env_out
-
-    env = DummyVecEnv([make_env])
-    walker_env = env.envs[0].env.env
-    walker_env.disableViewer = True
-
-
-
-    if args.normalize:
-        env = VecNormalize(env)
-
-    policy = MlpPolicy
-
-    # extra run info I added for my purposes
-
-
-    run_info = {"run_num": args.run_num,
-                "env_id": args.env,
-                "full_param_traj_dir_path": full_param_traj_dir_path,
-                "this_run_dir": this_run_dir}
-
-    layers = [network_size, network_size]
 
     set_global_seeds(args.seed)
     walker_env.seed(args.seed)
 
-    policy_kwargs = {"net_arch" : [dict(vf=layers, pi=layers)]}
-    model = PPO2(policy=policy, env=env, n_steps=4096, nminibatches=64, lam=0.95, gamma=0.99,
-                 noptepochs=10,
-                 ent_coef=0.0, learning_rate=learning_rate, cliprange=0.2, optimizer='adam', policy_kwargs=policy_kwargs,
-                 seed=args.seed)
-    model.tell_run_info(run_info)
 
+    if visualize:
+        model = PPO2.load(f"{save_dir}/ppo2", seed=augment_seed)
+        model.set_pi_from_flat(final_params)
+        if args.normalize:
+            env.load_running_average(save_dir)
 
-    # model.learn(total_timesteps=args.num_timesteps, seed=args.seed)
-    model.learn(total_timesteps=args.num_timesteps)
+        run_model(model=model, env=env, vedio_dir=vis_dir)
+    else:
+        # extra run info I added for my purposes
+        run_info = {"run_num": args.run_num,
+                    "env_id": args.env,
+                    "full_param_traj_dir_path": full_param_traj_dir_path}
 
-    model.save(f"{save_dir}/ppo2")
+        layers = [network_size, network_size]
+        policy_kwargs = {"net_arch" : [dict(vf=layers, pi=layers)]}
+        model = PPO2(policy=policy, env=env, n_steps=4096, nminibatches=64, lam=0.95, gamma=0.99,
+                     noptepochs=10,
+                     ent_coef=0.0, learning_rate=learning_rate, cliprange=0.2, optimizer='adam', policy_kwargs=policy_kwargs,
+                     seed=args.seed)
+        model.tell_run_info(run_info)
+        model.learn(total_timesteps=args.num_timesteps, seed=args.seed)
 
-    if args.normalize:
-        env.save_running_average(save_dir)
+        model.save(f"{save_dir}/ppo2")
+
+        if args.normalize:
+            env.save_running_average(save_dir)
 
     return log_dir
+#
+# def run_check_experiment(augment_num_timesteps, augment_seed, augment_run_num, network_size,
+#                          policy_env, learning_rate):
+#
+#     args = AttributeDict()
+#
+#     args.normalize = True
+#     args.num_timesteps = augment_num_timesteps
+#     args.run_num = augment_run_num
+#     args.alg = "ppo2"
+#     args.seed = augment_seed
+#     args.env = 'DartWalker2d-v1'
+#
+#     logger.log(f"#######TRAIN: {args}")
+#
+#     result_dir = get_original_env_test_dir(policy_env, augment_seed)
+#
+#
+#     this_run_dir = get_experiment_path_for_this_run(args.env, args.num_timesteps, args.run_num,
+#                                                     args.seed, learning_rate=learning_rate, top_num_to_include=0,
+#                                                     result_dir=result_dir, network_size=network_size)
+#     full_param_traj_dir_path = get_full_params_dir(this_run_dir)
+#     log_dir = get_log_dir(this_run_dir)
+#     save_dir = get_save_dir(this_run_dir)
+#
+#     current_process_id = multiprocessing.current_process()._identity
+#     if current_process_id == (1,):
+#         create_dir_if_not(result_dir)
+#     create_dir_remove(this_run_dir)
+#     create_dir_remove(full_param_traj_dir_path)
+#     create_dir_remove(save_dir)
+#     create_dir_remove(log_dir)
+#     logger.configure(log_dir)
+#
+#
+#
+#
+#     def make_env():
+#         env_out = gym.make(args.env)
+#         env_out.env.visualize = False
+#         env_out = bench.Monitor(env_out, logger.get_dir(), allow_early_resets=True)
+#         return env_out
+#
+#     env = DummyVecEnv([make_env])
+#     walker_env = env.envs[0].env.env
+#     walker_env.disableViewer = True
+#
+#
+#
+#     if args.normalize:
+#         env = VecNormalize(env)
+#
+#     policy = MlpPolicy
+#
+#     # extra run info I added for my purposes
+#
+#
+#     run_info = {"run_num": args.run_num,
+#                 "env_id": args.env,
+#                 "full_param_traj_dir_path": full_param_traj_dir_path,
+#                 "this_run_dir": this_run_dir}
+#
+#     layers = [network_size, network_size]
+#
+#     set_global_seeds(args.seed)
+#     walker_env.seed(args.seed)
+#
+#     policy_kwargs = {"net_arch" : [dict(vf=layers, pi=layers)]}
+#     model = PPO2(policy=policy, env=env, n_steps=4096, nminibatches=64, lam=0.95, gamma=0.99,
+#                  noptepochs=10,
+#                  ent_coef=0.0, learning_rate=learning_rate, cliprange=0.2, optimizer='adam', policy_kwargs=policy_kwargs,
+#                  seed=args.seed)
+#     model.tell_run_info(run_info)
+#
+#
+#     # model.learn(total_timesteps=args.num_timesteps, seed=args.seed)
+#     model.learn(total_timesteps=args.num_timesteps)
+#
+#     model.save(f"{save_dir}/ppo2")
+#
+#     if args.normalize:
+#         env.save_running_average(save_dir)
+#
+#     return log_dir
 
 if __name__ == "__main__":
 
@@ -356,23 +389,41 @@ if __name__ == "__main__":
     #
     # augment_num_timesteps = 5000
     # additional_note = ""
-
-
+    keys_to_include = ["COM", "M", "Coriolis", "total_contact_forces_contact_bodynode",
+                       "com_jacobian", "contact_bodynode_jacobian"]
+    # keys_to_include = ["COM", "M", "Coriolis", "com_jacobian"]
 
     policy_num_timesteps = 5000000
-    policy_env = "DartHalfCheetah-v1"
-    policy_seeds = [3]
+    policy_env = "DartSnake7Link-v1"
     policy_run_nums = [1]
+    policy_seeds = [3]
 
     eval_seeds = [4]
     eval_run_nums = [4]
 
-    augment_seeds = range(30)
+    augment_seeds = [1]
     augment_run_nums = [0]
     augment_num_timesteps = 1500000
     top_num_to_includes = [slice(0,20)]
     network_sizes = [64]
-    additional_note = "sandbox"
+    additional_note = "fixed_filter_too_strict_and_made_all_zeros_and_plots"
+
+
+    # policy_seeds = [0]
+    # policy_run_nums = [0]
+    # policy_num_timesteps = 5000
+    # policy_envs = ["DartHalfCheetah-v1"]
+    # # policy_envs = ["DartHalfCheetah-v1"]
+    #
+    # eval_seeds = [0]
+    # eval_run_nums = [0]
+    #
+    # augment_seeds = [0]
+    # augment_run_nums = range(2)
+    # augment_num_timesteps = 5000
+    # top_num_to_includes = [slice(0,10)]
+    # network_sizes = [64]
+    # additional_note = "sandbox"
     #     for total_num_to_include in total_num_to_includes:
     #     for trained_policy_run_num in trained_policy_run_nums:
     #         for trained_policy_seed in trained_policy_seeds:
@@ -391,11 +442,11 @@ if __name__ == "__main__":
 
                                         create_dir_if_not(result_dir)
 
-                                        _run_experiment(augment_num_timesteps, top_num_to_include_slice=top_num_to_include, augment_seed=augment_seed,
+                                        run_experiment(augment_num_timesteps, top_num_to_include_slice=top_num_to_include, augment_seed=augment_seed,
                                                        augment_run_num=augment_run_num, network_size=network_size,
                                                        policy_env=policy_env, policy_num_timesteps=policy_num_timesteps,
                                                        policy_run_num=policy_run_num, policy_seed=policy_seed, eval_seed=eval_seed,
-                                                       eval_run_num=eval_run_num, learning_rate=learning_rate, additional_note=additional_note, result_dir=result_dir)
+                                                       eval_run_num=eval_run_num, learning_rate=learning_rate, additional_note=additional_note, result_dir=result_dir, keys_to_include=keys_to_include, visualize=True)
     # run_check_experiment(augment_num_timesteps, augment_seed=0,
     #                      augment_run_num=0, network_size=64,
     #                      policy_env=policy_env, learning_rate=0.0001)    # from joblib import Parallel, delayed
