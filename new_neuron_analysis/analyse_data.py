@@ -330,27 +330,6 @@ def get_key_and_ind(ind, num_ind_in_stack, M_flattened_ind):
     return lagrangian_key, int(lagrangian_index)
 
 
-def show_M_matrix(num_dof, result, top_num_to_include_slice, save_dir):
-    assert num_dof == int(num_dof)
-    num_dof = int(num_dof)
-    M = np.zeros((num_dof, num_dof))
-    num_of_M = 0
-    to_include = result[top_num_to_include_slice]
-    for (key, ind) in to_include:
-        if key == "M":
-            num_of_M += 1
-            row = ind // num_dof
-            col = ind % num_dof
-            M[row, col] = 1
-
-    fig, ax = plt.subplots()
-    im = ax.imshow(M)
-
-    fig_name = f"included M matrix, top_num_to_include_slice={top_num_to_include_slice}, num of M={num_of_M}"
-    ax.set_title(fig_name)
-    fig.tight_layout()
-    plt.savefig(f"{save_dir}/{fig_name}")
-
 
 from new_neuron_analysis.run_trained_policy import lagrangian_keys as lagrangian_keys_in_run_policy
 def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
@@ -464,8 +443,8 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
         json.dump(result, fp)
 
 
-    show_M_matrix(num_dof, result=result, top_num_to_include_slice=slice(0,10), save_dir=aug_plot_dir),
-    show_M_matrix(num_dof, result=result, top_num_to_include_slice=slice(0,20), save_dir=aug_plot_dir)
+    # show_M_matrix(num_dof, result=result, top_num_to_include_slice=slice(0,10), save_dir=aug_plot_dir),
+    # show_M_matrix(num_dof, result=result, top_num_to_include_slice=slice(0,20), save_dir=aug_plot_dir)
     return result
 
 
@@ -620,24 +599,24 @@ if __name__ == "__main__":
             # non_linear_global_dict = crunch_non_linear_correlation(lagrangian_values, layers_values_list, data_dir)
             # scatter_the_non_linear_significant_ones(non_linear_global_dict, BEST_TO_TAKE, layers_values_list,
             #                                         lagrangian_values, data_dir)
-            aug_plot_dir ="/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/new_neuron_analysis/result/DartWalker2d-v1_policy_num_timesteps_5000000_policy_run_num_1_policy_seed_3_run_seed_4_run_run_num_4_additional_note_"
-            result_10 = [("M", 2), ("M", 3), ("M", 5), ("M", 15), ("M", 17), ("M", 40), ("M", 41), ("M", 70), ("M", 71)]
-            result_20 = [("M", 2), ("M", 3), ("M", 4), ("M", 5), ("M", 7), ("M", 12), ("M", 13), ("M", 14), ("M", 15),
-                      ("M", 16), ("M", 17), ("M", 20), ("M", 23), ("M", 26), ("M", 40), ("M", 41), ("M", 62), ("M", 70), ("M", 71)]
-            num_dof = 9
-            show_M_matrix(num_dof, result_10, top_num_to_include_slice=slice(0,len(result_10)), save_dir=aug_plot_dir)
-            show_M_matrix(num_dof, result_20, top_num_to_include_slice=slice(0,len(result_20)), save_dir=aug_plot_dir)
+            # aug_plot_dir ="/home/panda-linux/PycharmProjects/low_dim_update_dart/low_dim_update_stable/new_neuron_analysis/result/DartWalker2d-v1_policy_num_timesteps_5000000_policy_run_num_1_policy_seed_3_run_seed_4_run_run_num_4_additional_note_"
+            # result_10 = [("M", 2), ("M", 3), ("M", 5), ("M", 15), ("M", 17), ("M", 40), ("M", 41), ("M", 70), ("M", 71)]
+            # result_20 = [("M", 2), ("M", 3), ("M", 4), ("M", 5), ("M", 7), ("M", 12), ("M", 13), ("M", 14), ("M", 15),
+            #           ("M", 16), ("M", 17), ("M", 20), ("M", 23), ("M", 26), ("M", 40), ("M", 41), ("M", 62), ("M", 70), ("M", 71)]
+            # num_dof = 9
+            # show_M_matrix(num_dof, result_10, top_num_to_include_slice=slice(0,len(result_10)), save_dir=aug_plot_dir)
+            # show_M_matrix(num_dof, result_20, top_num_to_include_slice=slice(0,len(result_20)), save_dir=aug_plot_dir)
 
 
-            # from new_neuron_analysis.experiment_augment_input import read_all_data
-            #
-            # linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights =\
-            #     read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num,
-            #               additional_note,
-            #               num_layers=2)
-            #
-            # data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
-            #                         eval_seed,
-            #                         eval_run_num, additional_note=additional_note)
-            # linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
-            #                               lagrangian_values, layers_values)
+            from new_neuron_analysis.experiment_augment_input import read_all_data
+
+            linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights =\
+                read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num,
+                          additional_note,
+                          num_layers=2)
+
+            data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
+                                    eval_seed,
+                                    eval_run_num, additional_note=additional_note)
+            linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
+                                          lagrangian_values, layers_values)

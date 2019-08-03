@@ -156,8 +156,27 @@ def run_model(model, env, vedio_dir):
             print(f'episode_rew={episode_rew}')
             obs = env.reset()
 
+from matplotlib import pyplot as plt
+def show_M_matrix(num_dof, lagrangian_inds_to_include, top_num_to_include_slice, save_dir):
+    assert num_dof == int(num_dof)
+    num_dof = int(num_dof)
+    M = np.zeros((num_dof, num_dof))
+    num_of_M = 0
+    to_include = lagrangian_inds_to_include
+    for (key, ind) in to_include:
+        if key == "M":
+            num_of_M += 1
+            row = ind // num_dof
+            col = ind % num_dof
+            M[row, col] = 1
 
+    fig, ax = plt.subplots()
+    im = ax.imshow(M)
 
+    fig_name = f"included M matrix, top_num_to_include_slice={top_num_to_include_slice}, num of M={num_of_M}"
+    ax.set_title(fig_name)
+    fig.tight_layout()
+    plt.savefig(f"{save_dir}/{fig_name}")
 
 def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
                    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
@@ -251,6 +270,8 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
     set_global_seeds(args.seed)
     walker_env.seed(args.seed)
 
+    num_dof = walker_env.robot_skeleton.ndofs
+    show_M_matrix(num_dof, lagrangian_inds_to_include, top_num_to_include_slice, log_dir)
 
     if visualize:
         model = PPO2.load(f"{save_dir}/ppo2", seed=augment_seed)
@@ -403,7 +424,7 @@ if __name__ == "__main__":
 
     augment_seeds = [1]
     augment_run_nums = [0]
-    augment_num_timesteps = 1500000
+    augment_num_timesteps = 5000
     top_num_to_includes = [slice(0,20)]
     network_sizes = [64]
     additional_note = "fixed_filter_too_strict_and_made_all_zeros_and_plots"
@@ -446,7 +467,7 @@ if __name__ == "__main__":
                                                        augment_run_num=augment_run_num, network_size=network_size,
                                                        policy_env=policy_env, policy_num_timesteps=policy_num_timesteps,
                                                        policy_run_num=policy_run_num, policy_seed=policy_seed, eval_seed=eval_seed,
-                                                       eval_run_num=eval_run_num, learning_rate=learning_rate, additional_note=additional_note, result_dir=result_dir, keys_to_include=keys_to_include, visualize=True)
+                                                       eval_run_num=eval_run_num, learning_rate=learning_rate, additional_note=additional_note, result_dir=result_dir, keys_to_include=keys_to_include, visualize=False)
     # run_check_experiment(augment_num_timesteps, augment_seed=0,
     #                      augment_run_num=0, network_size=64,
     #                      policy_env=policy_env, learning_rate=0.0001)    # from joblib import Parallel, delayed
