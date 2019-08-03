@@ -48,7 +48,7 @@ def main():
     policy_num_timesteps = 5000000
     policy_envs = ["DartWalker2d-v1"]
 
-    policy_envs = ["DartHopper-v1"]
+    # policy_envs = ["DartHopper-v1"]
 
     policy_seeds = [3,4]
     policy_run_nums = [1]
