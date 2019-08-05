@@ -45,7 +45,7 @@ class LinearGlobalDictRow(object):
 
 
 
-def get_normalized_SSE(lagrange_l, neuron_l, regr):
+def get_mean_normalized_SSE(lagrange_l, neuron_l, regr):
     neuron_l_copy = copy.deepcopy(neuron_l)
     range_neuron = max(neuron_l_copy) - min(neuron_l_copy)
     if range_neuron != 0:
@@ -57,9 +57,9 @@ def get_normalized_SSE(lagrange_l, neuron_l, regr):
     X[np.isnan(X)] = 0
     regr.fit(X, y)
     y_pred = regr.predict(X)
-    SSE = ((y - y_pred) ** 2).sum()
-    TV = ((y - np.average(y)) ** 2).sum()
-    return SSE,TV
+    mean_SSE = np.mean((y - y_pred) ** 2)
+    mean_TV = np.mean((y - np.average(y)) ** 2)
+    return mean_SSE,mean_TV
 
 # def get_Reflective_correlation_coefficient(lagrange_l, neuron_l):
 #
@@ -181,7 +181,7 @@ def scatter_the_linear_significant_ones(linear_global_dict, BEST_TO_TAKE, layer_
 
                     best_neuron_l = layer_values_list[int(best_layer_ind)][int(best_neuron_ind)]
 
-                    best_normalized_SSE, best_TV = get_normalized_SSE(lagrange_l, best_neuron_l, regr)
+                    best_normalized_SSE, best_TV = get_mean_normalized_SSE(lagrange_l, best_neuron_l, regr)
 
                     name = f"{linear_best_dir}/{key}_index_{ind}_VS_layer_{best_layer_ind}_neuron_{best_neuron_ind}_" \
                            f"linear_correlation{best_co}_normalized_SSE_{best_normalized_SSE}_Syy_{best_TV}.jpg"
@@ -205,7 +205,7 @@ def crunch_linear_correlation(lagrangian_values, layers_values_list, data_dir):
         if np.isnan(linear_co):
             linear_co = 0
 
-        normalized_SSE, best_TV = get_normalized_SSE(lagrange_l, neuron_l, regr)
+        normalized_SSE, best_TV = get_mean_normalized_SSE(lagrange_l, neuron_l, regr)
         #TODO get a weighted metric??
         # if normalized_SSE > 150:
         #     linear_co = 0
@@ -333,7 +333,7 @@ def get_key_and_ind(ind, num_ind_in_stack, M_flattened_ind):
 
 from new_neuron_analysis.run_trained_policy import lagrangian_keys as lagrangian_keys_in_run_policy
 def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
-                                          lagrangian_values, layers_values):
+                                          lagrangian_values, layers_values, metric_param):
     aug_plot_dir = f"{data_dir}/top_vars_plots"
 
     num_dof = np.sqrt(len(linear_global_dict["M"]))
@@ -381,9 +381,10 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
 
     linear_cos = np.abs(concat[:,:,0])
     normalized_SSE = concat[:,:,1]
-    max_normalized_SSE = 500 #hard code since > 150 will be made 0
-    linear_cos[np.where(normalized_SSE>max_normalized_SSE)] = 0
-    new_metric_matrix = 0.5*linear_cos + (1 - normalized_SSE/max_normalized_SSE) * 0.5
+    max_normalized_SSE = 1/15 # 200/3000 if higher than this, start getting neg
+
+    # linear_cos[np.where(normalized_SSE>max_normalized_SSE)] = 0 # if SSE too big directly determined that it's not linear
+    new_metric_matrix = metric_param *linear_cos + (1 - normalized_SSE/max_normalized_SSE) * (1-metric_param) # (max - norm)/max
     # new_metric_matrix = normalized_SSE
 
 
@@ -419,24 +420,24 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
         #=================================
         #for debugging below
 
-        lagrangian_l = lagrangian_values[lagrangian_key][lagrangian_index]
-        neuron_l = layers_values[int(neuron_coord[0]), int(neuron_coord[1]), :]
-
-
-        test_linear_co = np.abs(np.corrcoef(lagrangian_l, neuron_l)[1, 0])
-        test_normalized_SSE, test_TV = get_normalized_SSE(lagrangian_l, neuron_l, regr)
-        if aug_plot_dir is not None:
-            fig_name = f"largest_rank_{i}_{lagrangian_key}_{lagrangian_index}_VS_layer{neuron_coord[0]}" \
-                       f"_neuron_{neuron_coord[1]}_linear_co_{linear_co} normalized_SSE{normalized_SSE}.jpg"
-            plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir, regr)
-
-
-        if test_normalized_SSE > max_normalized_SSE:
-            test_linear_co = 0
-        test_new_metric = 0.5 * test_linear_co + (1 - test_normalized_SSE / max_normalized_SSE) * 0.5
-        test_list.append(test_new_metric)
-        #====================================
-    assert max(np.abs(np.array(test_list) - max_over_new_metric_for_each_lagrange[arg_sorted])) < 0.0000001
+    #     lagrangian_l = lagrangian_values[lagrangian_key][lagrangian_index]
+    #     neuron_l = layers_values[int(neuron_coord[0]), int(neuron_coord[1]), :]
+    #
+    #
+    #     test_linear_co = np.abs(np.corrcoef(lagrangian_l, neuron_l)[1, 0])
+    #     test_normalized_SSE, test_TV = get_mean_normalized_SSE(lagrangian_l, neuron_l, regr)
+    #     if aug_plot_dir is not None:
+    #         fig_name = f"largest_rank_{i}_{lagrangian_key}_{lagrangian_index}_VS_layer{neuron_coord[0]}" \
+    #                    f"_neuron_{neuron_coord[1]}_linear_co_{linear_co} normalized_SSE{normalized_SSE}.jpg"
+    #         plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir, regr)
+    #
+    #
+    #     if test_normalized_SSE > max_normalized_SSE:
+    #         test_linear_co = 0
+    #     test_new_metric = 0.5 * test_linear_co + (1 - test_normalized_SSE / max_normalized_SSE) * 0.5
+    #     test_list.append(test_new_metric)
+    #     #====================================
+    # assert max(np.abs(np.array(test_list) - max_over_new_metric_for_each_lagrange[arg_sorted])) < 0.0000001
 
     fn = f"{data_dir}/linear_top_vars_list.json"
     with open(fn, 'w') as fp:
@@ -448,7 +449,7 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
     return result
 
 
-def crunch_and_plot_data(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note):
+def crunch_and_plot_data(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param):
     lagrangian_values, input_values, layers_values_list, all_weights = read_data(trained_policy_env,
                                                                                  trained_policy_num_timesteps,
                                                                                  policy_run_num, policy_seed,
@@ -469,7 +470,7 @@ def crunch_and_plot_data(trained_policy_env, trained_policy_num_timesteps, polic
 
     linear_lagrangian_to_include_in_state(linear_global_dict,
                                           data_dir,
-                                          lagrangian_values, layers_values_list)
+                                          lagrangian_values, layers_values_list, metric_param=metric_param)
 
 
 #
@@ -571,17 +572,18 @@ def crunch_and_plot_data(trained_policy_env, trained_policy_num_timesteps, polic
 
 if __name__ == "__main__":
     policy_env = "DartWalker2d-v1"
-    policy_num_timesteps = 2000000
-    policy_run_nums = [0]
-    policy_seeds = [0]
-    eval_seed = 3
-    eval_run_num = 3
+    policy_num_timesteps = 5000000
+    policy_run_nums = [1]
+    policy_seeds = [3]
+    eval_seed = 4
+    eval_run_num = 4
     aug_num_timesteps=1500000
-    additional_note=""
+    additional_note="use_COM_Jac_on_hopper_and_walker"
+    metric_param =0.5
     for policy_run_num in policy_run_nums:
         for policy_seed in policy_seeds:
 
-            # crunch_and_plot_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
+            crunch_and_plot_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
 
             # plot_dir = get_plot_dir(env=env, num_timesteps=num_timesteps, seed=seed, run_num=run_num)
             #
@@ -608,15 +610,15 @@ if __name__ == "__main__":
             # show_M_matrix(num_dof, result_20, top_num_to_include_slice=slice(0,len(result_20)), save_dir=aug_plot_dir)
 
 
-            from new_neuron_analysis.experiment_augment_input import read_all_data
-
-            linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights =\
-                read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num,
-                          additional_note,
-                          num_layers=2)
-
-            data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
-                                    eval_seed,
-                                    eval_run_num, additional_note=additional_note)
-            linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
-                                          lagrangian_values, layers_values)
+            # from new_neuron_analysis.experiment_augment_input import read_all_data
+            #
+            # linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights =\
+            #     read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num,
+            #               additional_note,
+            #               num_layers=2)
+            #
+            # data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
+            #                         eval_seed,
+            #                         eval_run_num, additional_note=additional_note)
+            # linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
+            #                               lagrangian_values, layers_values, metric_param=metric_param)

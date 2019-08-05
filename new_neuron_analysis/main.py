@@ -27,13 +27,13 @@ def complete_run(policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
     return [experiment_label, log_dir]
 
 def crunch_correlation_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                         eval_run_num, additional_note):
+                         eval_run_num, additional_note, metric_param):
     eval_trained_policy_and_collect_data(eval_seed=eval_seed, eval_run_num=eval_run_num, policy_env=policy_env,
                                          policy_num_timesteps=policy_num_timesteps,
                                          policy_run_num=policy_run_num, policy_seed=policy_seed, additional_note=additional_note)
 
     crunch_and_plot_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                         eval_run_num, additional_note=additional_note)
+                         eval_run_num, additional_note=additional_note, metric_param=metric_param)
 
 
 def main():
@@ -41,7 +41,7 @@ def main():
 
     keys_to_include = ["COM", "M", "Coriolis", "total_contact_forces_contact_bodynode",
                        "com_jacobian", "contact_bodynode_jacobian"]
-    keys_to_include = ["COM", "M", "Coriolis", "com_jacobian"]
+    keys_to_include = ["COM", "M", "Coriolis"]
 
 
 
@@ -50,7 +50,7 @@ def main():
 
     # policy_envs = ["DartHopper-v1"]
 
-    policy_seeds = [3,4]
+    policy_seeds = [3]
     policy_run_nums = [1]
 
     eval_seeds = [4]
@@ -62,7 +62,9 @@ def main():
     # augment_num_timesteps = 5000
     top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
     network_sizes = [64]
-    additional_note = "use_COM_Jac_on_hopper_and_walker"
+    metric_params = [0,1]
+    metric_params = [0.5]
+    additional_note = "what_is_the_stable_rule_to_select_also_300000_to_eval_also_dont_use_jac_at_all_metric_params_0.5"
 
     # policy_num_timesteps = 5000000
     # policy_seeds = [4]
@@ -125,12 +127,13 @@ def main():
 
 
         # #============================================================
-        correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note)
+        correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
                                 for policy_env in policy_envs
                                 for policy_seed in policy_seeds
                                 for policy_run_num in policy_run_nums
                                 for eval_seed in eval_seeds
-                                for eval_run_num in eval_run_nums]
+                                for eval_run_num in eval_run_nums
+                                for metric_param in metric_params]
 
         pool.starmap(crunch_correlation_data, correlation_data_args)
 
