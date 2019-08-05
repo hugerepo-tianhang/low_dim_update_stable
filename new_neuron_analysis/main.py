@@ -63,8 +63,8 @@ def main():
     top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
     network_sizes = [64]
     metric_params = [0,1]
-    metric_params = [0.5]
-    additional_note = "what_is_the_stable_rule_to_select_also_300000_to_eval_also_dont_use_jac_at_all_metric_params_05"
+    # metric_params = [0.5]
+    additional_note = "what_is_the_stable_rule_to_select_also_300000_to_eval_also_dont_use_jac_at_all_metric_params_01"
 
     # policy_num_timesteps = 5000000
     # policy_seeds = [4]
