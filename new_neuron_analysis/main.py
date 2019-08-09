@@ -42,7 +42,7 @@ def main():
 
     keys_to_include = ["COM", "M", "Coriolis", "total_contact_forces_contact_bodynode",
                        "com_jacobian", "contact_bodynode_jacobian"]
-    keys_to_include = ["COM", "M", "Coriolis"]
+    # keys_to_include = ["COM", "M", "Coriolis"]
 
 
 
@@ -51,7 +51,7 @@ def main():
 
     # policy_envs = ["DartHopper-v1"]
 
-    policy_seeds = [3]
+    policy_seeds = [3,4]
     policy_run_nums = [1]
 
     eval_seeds = [4]
@@ -62,9 +62,9 @@ def main():
     augment_num_timesteps = 1500000
     top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
     network_sizes = [64]
-    metric_params = [0,1,0.5]
+    metric_params = [0.5]
     # metric_params = [0.5]
-    additional_note = "sandbox"
+    additional_note = "augment_neurons_instead_of_vars_and_see_what_happens"
 
     # policy_num_timesteps = 5000000
     # policy_seeds = [4]
@@ -96,21 +96,21 @@ def main():
     # network_sizes = [64]
     # additional_note = "sandbox"
 
-    policy_num_timesteps = 2000000
-    policy_envs = ["DartWalker2d-v1"]
-    policy_seeds = [0]
-    policy_run_nums = [0]
-
-    eval_seeds = [3]
-    eval_run_nums = [3]
-
-    augment_seeds = range(1)
-    augment_run_nums = [0]
-    augment_num_timesteps = 5000
-    top_num_to_includes = [slice(0, 10)]
-    network_sizes = [64]
-    additional_note = "sandbox"
-    metric_params = [0.5]
+    # policy_num_timesteps = 2000000
+    # policy_envs = ["DartWalker2d-v1"]
+    # policy_seeds = [0]
+    # policy_run_nums = [0]
+    #
+    # eval_seeds = [3]
+    # eval_run_nums = [3]
+    #
+    # augment_seeds = range(1)
+    # augment_run_nums = [0]
+    # augment_num_timesteps = 5000
+    # top_num_to_includes = [slice(0, 10)]
+    # network_sizes = [64]
+    # additional_note = "sandbox"
+    # metric_params = [0.5]
 
 
 
@@ -128,15 +128,15 @@ def main():
 
 
         # #============================================================
-        # correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
-        #                         for policy_env in policy_envs
-        #                         for policy_seed in policy_seeds
-        #                         for policy_run_num in policy_run_nums
-        #                         for eval_seed in eval_seeds
-        #                         for eval_run_num in eval_run_nums
-        #                         for metric_param in metric_params]
-        #
-        # pool.starmap(crunch_correlation_data, correlation_data_args)
+        correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
+                                for policy_env in policy_envs
+                                for policy_seed in policy_seeds
+                                for policy_run_num in policy_run_nums
+                                for eval_seed in eval_seeds
+                                for eval_run_num in eval_run_nums
+                                for metric_param in metric_params]
+
+        pool.starmap(crunch_correlation_data, correlation_data_args)
 
         #============================================================
 
