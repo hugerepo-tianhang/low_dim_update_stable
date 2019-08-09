@@ -38,14 +38,12 @@ def get_plot_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, 
                f"{run_name}_additional_note_{additional_note}"
     return data_dir
 
-def get_result_dir(env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note):
+def get_result_dir(env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param=None):
     data_dir = f"{get_project_dir()}/result/" \
                f"{get_run_name_dir_tree(env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)}_additional_note_{additional_note}"
-    return data_dir
 
-def get_test_dir(env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, augment_seed, additional_note):
-    data_dir = f"{get_project_dir()}/test/" \
-               f"{get_run_name_dir_tree(env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num)}_additional_note_{additional_note}"
+    if metric_param is not None:
+        data_dir += f"_metric_param_{metric_param}"
     return data_dir
 
 def get_original_env_test_dir(env,augment_seed):

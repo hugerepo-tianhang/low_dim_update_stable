@@ -7,8 +7,9 @@ sys.path.append(d)
 sys.path.append(od)
 from stable_baselines.ppo2.run_mujoco import train
 from new_neuron_analysis.run_trained_policy import eval_trained_policy_and_collect_data
-from new_neuron_analysis.analyse_data import crunch_and_plot_data
-from new_neuron_analysis.experiment_augment_input import run_experiment, run_experiment
+from new_neuron_analysis.analyse_data import crunch_and_plot_data, linear_lagrangian_to_include_in_state
+from new_neuron_analysis.experiment_augment_input import run_experiment, read_all_data
+from new_neuron_analysis.run_experiment_with_neuron_augmented_check import run_experiment_with_trained, read_all_data
 from new_neuron_analysis.plot_result import plot
 import warnings
 from new_neuron_analysis.dir_tree_util import *
@@ -59,12 +60,11 @@ def main():
     augment_seeds = range(15)
     augment_run_nums = [0]
     augment_num_timesteps = 1500000
-    # augment_num_timesteps = 5000
     top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
     network_sizes = [64]
-    metric_params = [0,1]
+    metric_params = [0,1,0.5]
     # metric_params = [0.5]
-    additional_note = "what_is_the_stable_rule_to_select_also_300000_to_eval_also_dont_use_jac_at_all_metric_params_01"
+    additional_note = "sandbox"
 
     # policy_num_timesteps = 5000000
     # policy_seeds = [4]
@@ -96,20 +96,21 @@ def main():
     # network_sizes = [64]
     # additional_note = "sandbox"
 
-    # policy_num_timesteps = 2000000
-    # policy_env = "DartWalker2d-v1"
-    # policy_seeds = [0]
-    # policy_run_nums = [0]
-    #
-    # eval_seeds = [3]
-    # eval_run_nums = [3]
-    #
-    # augment_seeds = range(1)
-    # augment_run_nums = [0]
-    # augment_num_timesteps = 5000
-    # top_num_to_includes = [slice(0, 10), slice(0,0)]
-    # network_sizes = [64]
-    # additional_note = "non_linear"
+    policy_num_timesteps = 2000000
+    policy_envs = ["DartWalker2d-v1"]
+    policy_seeds = [0]
+    policy_run_nums = [0]
+
+    eval_seeds = [3]
+    eval_run_nums = [3]
+
+    augment_seeds = range(1)
+    augment_run_nums = [0]
+    augment_num_timesteps = 5000
+    top_num_to_includes = [slice(0, 10)]
+    network_sizes = [64]
+    additional_note = "sandbox"
+    metric_params = [0.5]
 
 
 
@@ -127,15 +128,15 @@ def main():
 
 
         # #============================================================
-        correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
-                                for policy_env in policy_envs
-                                for policy_seed in policy_seeds
-                                for policy_run_num in policy_run_nums
-                                for eval_seed in eval_seeds
-                                for eval_run_num in eval_run_nums
-                                for metric_param in metric_params]
-
-        pool.starmap(crunch_correlation_data, correlation_data_args)
+        # correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
+        #                         for policy_env in policy_envs
+        #                         for policy_seed in policy_seeds
+        #                         for policy_run_num in policy_run_nums
+        #                         for eval_seed in eval_seeds
+        #                         for eval_run_num in eval_run_nums
+        #                         for metric_param in metric_params]
+        #
+        # pool.starmap(crunch_correlation_data, correlation_data_args)
 
         #============================================================
 
@@ -144,33 +145,44 @@ def main():
                 for policy_run_num in policy_run_nums:
                     for eval_seed in eval_seeds:
                         for eval_run_num in eval_run_nums:
+                            for metric_param in metric_params:
+                                result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
+                                                                policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
 
-                            result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
-                                                            policy_seed, eval_seed, eval_run_num, additional_note)
+                                linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = \
+                                    read_all_data(
+                                        policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                                        eval_run_num,
+                                        additional_note=additional_note)
+                                linear_top_vars_list, linear_correlation_neuron_list = linear_lagrangian_to_include_in_state(linear_global_dict,
+                                                                                             result_dir,
+                                                                                             lagrangian_values,
+                                                                                             layers_values,
+                                                                                             metric_param=metric_param)
 
-                            create_dir_if_not(result_dir)
+                                create_dir_if_not(result_dir)
 
-                            run_experiment_args = [(augment_num_timesteps, top_num_to_include, augment_seed,
-                                    augment_run_num, network_size,
-                                    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                                    eval_run_num, learning_rate, additional_note, result_dir,keys_to_include, None)
-
-
-                                    for augment_seed in augment_seeds
-                                    for augment_run_num in augment_run_nums
-                                    for top_num_to_include in top_num_to_includes
-                                    for network_size in network_sizes
-                                    for learning_rate in
-                                    [64 / network_size * 3e-4]]
-
-                            pool.starmap(run_experiment, run_experiment_args)
+                                run_experiment_args = [(augment_num_timesteps, top_num_to_include, augment_seed,
+                                        augment_run_num, network_size,
+                                        policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+                                        eval_run_num, learning_rate, additional_note, result_dir,keys_to_include, metric_param, linear_top_vars_list, linear_correlation_neuron_list)
 
 
+                                        for augment_seed in augment_seeds
+                                        for augment_run_num in augment_run_nums
+                                        for top_num_to_include in top_num_to_includes
+                                        for network_size in network_sizes
+                                        for learning_rate in
+                                        [64 / network_size * 3e-4]]
 
-                            try:
-                                plot(result_dir, aug_num_timesteps=augment_num_timesteps)
-                            except Exception as e:
-                                print(e)
+                                pool.starmap(run_experiment_with_trained, run_experiment_args)
+
+
+
+                                try:
+                                    plot(result_dir, aug_num_timesteps=augment_num_timesteps)
+                                except Exception as e:
+                                    print(e)
 
 
 main()

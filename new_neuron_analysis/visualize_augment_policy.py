@@ -149,9 +149,9 @@ def plot_everything(lagrangian_values, layer_values_list, out_dir, PLOT_CUTOFF):
 
 def visualize_policy_and_collect_COM(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
                policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
-               additional_note):
+               additional_note, metric_param):
     result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
-                                policy_seed, eval_seed, eval_run_num, additional_note)
+                                policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
     args = AttributeDict()
 
     args.normalize = True
@@ -175,7 +175,7 @@ def visualize_policy_and_collect_COM(augment_num_timesteps, top_num_to_include_s
 
     this_run_dir = get_experiment_path_for_this_run(entry_point, args.num_timesteps, args.run_num,
                                                     args.seed, learning_rate=learning_rate, top_num_to_include=top_num_to_include_slice,
-                                                    result_dir=result_dir, network_size=network_size)
+                                                    result_dir=result_dir, network_size=network_size, metric_param=metric_param)
     traj_params_dir_name = get_full_params_dir(this_run_dir)
     save_dir = get_save_dir( this_run_dir)
 
@@ -461,12 +461,13 @@ if __name__ == '__main__':
 
     additional_note = ""
     learning_rate = 64 / network_size * 3e-4
-
+    metric_param = None
     visualize_policy_and_collect_COM(augment_num_timesteps, top_num_to_include_slice=top_num_to_include, augment_seed=augment_seed,
                                                        augment_run_num=augment_run_num, network_size=network_size,
                                                        policy_env=policy_env, policy_num_timesteps=policy_num_timesteps,
                                                        policy_run_num=policy_run_num, policy_seed=policy_seed, eval_seed=eval_seed,
-                                                       eval_run_num=eval_run_num, learning_rate=learning_rate, additional_note=additional_note)
+                                                       eval_run_num=eval_run_num, learning_rate=learning_rate,
+                                     additional_note=additional_note, metric_param=metric_param)
     # visualize_policy_and_collect_COM(seed=3, run_num=3, policy_env=policy_env, policy_num_timesteps=2000000,
     #                              policy_seed=1, policy_run_num=0)
 # seeds = [0, 1, 2]

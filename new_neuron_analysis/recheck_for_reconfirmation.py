@@ -7,7 +7,7 @@ sys.path.append(od)
 
 from new_neuron_analysis.run_trained_policy import eval_trained_policy_and_collect_data
 from new_neuron_analysis.analyse_data import crunch_and_plot_data
-from new_neuron_analysis.experiment_augment_input import run_experiment, run_experiment, get_result_dir, get_test_dir
+from new_neuron_analysis.experiment_augment_input import run_experiment, run_experiment, get_result_dir
 from stable_baselines.ppo2.run_mujoco import train
 from new_neuron_analysis.plot_result import plot, get_results
 import warnings

@@ -373,7 +373,7 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
 
 
 
-    result = []
+    linear_correlation_list = []
 
 
     num_ind_in_stack, concat, M_flattened_ind = get_concat_data(linear_global_dict)
@@ -394,13 +394,14 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
     max_over_neurons_concat = concat[np.arange(len(argmax_for_each)), argmax_for_each]
 
 
-    # old use linear cos for lagrangian wide
-    # max_for_each_lagrange = np.abs(max_over_neurons_concat[:,0])
-    # arg_sorted = np.argsort(max_for_each_lagrange)
 
-    #new use new metric for lagrangian wide
-    arg_sorted = np.argsort(max_over_new_metric_for_each_lagrange)
-    arg_sorted = arg_sorted[::-1]
+    # #new use new metric for lagrangian wide
+    # arg_sorted = np.argsort(max_over_new_metric_for_each_lagrange)
+    # arg_sorted = arg_sorted[::-1]
+
+    # old use linear cos for lagrangian wide
+    max_for_each_lagrange = np.abs(max_over_neurons_concat[:,0])
+    arg_sorted = np.argsort(max_for_each_lagrange)
 
     #now arg_sorted has the biggest correlated var at the first element
     if aug_plot_dir is not None:
@@ -408,6 +409,7 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
 
 
     test_list = []
+    linear_correlation_neuron_list = []
     for i, ind in enumerate(arg_sorted):
 
         neuron_coord = max_over_neurons_concat[ind][-2:]
@@ -415,21 +417,21 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
         normalized_SSE =  max_over_neurons_concat[ind][1]
 
         lagrangian_key, lagrangian_index = get_key_and_ind(ind, num_ind_in_stack, M_flattened_ind)
-        result.append((lagrangian_key, lagrangian_index))
-
+        linear_correlation_list.append((lagrangian_key, lagrangian_index))
+        linear_correlation_neuron_list.append((int(neuron_coord[0]), int(neuron_coord[1])))
         #=================================
-        #for debugging below
+        # for debugging below
 
-    #     lagrangian_l = lagrangian_values[lagrangian_key][lagrangian_index]
-    #     neuron_l = layers_values[int(neuron_coord[0]), int(neuron_coord[1]), :]
-    #
-    #
-    #     test_linear_co = np.abs(np.corrcoef(lagrangian_l, neuron_l)[1, 0])
-    #     test_normalized_SSE, test_TV = get_mean_normalized_SSE(lagrangian_l, neuron_l, regr)
-    #     if aug_plot_dir is not None:
-    #         fig_name = f"largest_rank_{i}_{lagrangian_key}_{lagrangian_index}_VS_layer{neuron_coord[0]}" \
-    #                    f"_neuron_{neuron_coord[1]}_linear_co_{linear_co} normalized_SSE{normalized_SSE}.jpg"
-    #         plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir, regr)
+        lagrangian_l = lagrangian_values[lagrangian_key][lagrangian_index]
+        neuron_l = layers_values[int(neuron_coord[0]), int(neuron_coord[1]), :]
+
+
+        test_linear_co = np.abs(np.corrcoef(lagrangian_l, neuron_l)[1, 0])
+        test_normalized_SSE, test_TV = get_mean_normalized_SSE(lagrangian_l, neuron_l, regr)
+        # if aug_plot_dir is not None:
+        #     fig_name = f"largest_rank_{i}_{lagrangian_key}_{lagrangian_index}_VS_layer{neuron_coord[0]}" \
+        #                f"_neuron_{neuron_coord[1]}_linear_co_{linear_co} normalized_SSE{normalized_SSE}.jpg"
+        #     plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir, regr)
     #
     #
     #     if test_normalized_SSE > max_normalized_SSE:
@@ -439,14 +441,18 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
     #     #====================================
     # assert max(np.abs(np.array(test_list) - max_over_new_metric_for_each_lagrange[arg_sorted])) < 0.0000001
 
-    fn = f"{data_dir}/linear_top_vars_list.json"
+    fn = f"{data_dir}/linear_top_vars_list_metric_param_{metric_param}.json"
     with open(fn, 'w') as fp:
-        json.dump(result, fp)
+        json.dump(linear_correlation_list, fp)
+
+    fn = f"{data_dir}/linear_correlation_neuron_list_metric_param_{metric_param}.json"
+    with open(fn, 'w') as fp:
+        json.dump(linear_correlation_neuron_list, fp)
 
 
     # show_M_matrix(num_dof, result=result, top_num_to_include_slice=slice(0,10), save_dir=aug_plot_dir),
     # show_M_matrix(num_dof, result=result, top_num_to_include_slice=slice(0,20), save_dir=aug_plot_dir)
-    return result
+    return linear_correlation_list, linear_correlation_neuron_list
 
 
 def crunch_and_plot_data(trained_policy_env, trained_policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param):
@@ -467,10 +473,6 @@ def crunch_and_plot_data(trained_policy_env, trained_policy_num_timesteps, polic
     # non_linear_global_dict = crunch_non_linear_correlation(lagrangian_values, layers_values_list, data_dir)
     # scatter_the_non_linear_significant_ones(non_linear_global_dict, BEST_TO_TAKE, layers_values_list,
     #                                         lagrangian_values, data_dir)
-
-    linear_lagrangian_to_include_in_state(linear_global_dict,
-                                          data_dir,
-                                          lagrangian_values, layers_values_list, metric_param=metric_param)
 
 
 #

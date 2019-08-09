@@ -23,7 +23,7 @@ import time
 from stable_baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
 
 import logging
-
+import tensorflow as tf
 
 
 def safe_mean(arr):
@@ -54,17 +54,26 @@ class AttributeDict(dict):
 
 def read_linear_top_var(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                                            eval_run_num, additional_note, metric_param):
-    # trained_policy_data_dir = get_data_dir(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-    #                                        eval_run_num, additional_note=additional_note)
     trained_policy_data_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
                                 policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
 
-    linear_top_vars_list_path = f"{trained_policy_data_dir}/linear_top_vars_list.json"
+    linear_top_vars_list_path = f"{trained_policy_data_dir}/linear_top_vars_list"
     if metric_param is not None:
         linear_top_vars_list_path += f"_metric_param_{metric_param}"
+    linear_top_vars_list_path += ".json"
+
+    linear_correlation_neuron_list_path = f"{trained_policy_data_dir}/linear_correlation_neuron_list"
+    if metric_param is not None:
+        linear_correlation_neuron_list_path += f"_metric_param_{metric_param}"
+    linear_correlation_neuron_list_path += ".json"
+
+
     with open(linear_top_vars_list_path, 'r') as fp:
         linear_top_vars_list = json.load(fp)
-    return linear_top_vars_list
+
+    with open(linear_correlation_neuron_list_path, 'r') as fp:
+        linear_correlation_neuron_list = json.load(fp)
+    return linear_top_vars_list, linear_correlation_neuron_list
 
 def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note,
                   num_layers=2):
@@ -93,13 +102,26 @@ def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
     # non_linear_global_dict
     return linear_global_dict , non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights
 
-def get_wanted_lagrangians_and_neurons(keys_to_include, linear_top_vars_list, top_num_to_include_slice):
+def get_wanted_lagrangians_and_neurons(keys_to_include, linear_top_vars_list, linear_correlation_neuron_list, top_num_to_include_slice):
     linear_top_vars_list_wanted = []
-    for (key, ind) in linear_top_vars_list:
+    linear_top_neurons_list_wanted = []
+    for i, (key, ind) in enumerate(linear_top_vars_list):
         if key in keys_to_include:
             linear_top_vars_list_wanted.append((key, ind))
+            linear_top_neurons_list_wanted.append(linear_correlation_neuron_list[i])
 
-    return linear_top_vars_list_wanted[top_num_to_include_slice]
+    return linear_top_vars_list_wanted[top_num_to_include_slice], linear_top_neurons_list_wanted[top_num_to_include_slice]
+
+    # for i, neuron_coord in enumerate(linear_correlation_neuron_list):
+    #     if neuron_coord in linear_top_neurons_list_wanted:
+    #         continue
+    #     else:
+    #         key, ind = linear_top_vars_list[i]
+    #         if key in keys_to_include:
+    #             linear_top_neurons_list_wanted.append(neuron_coord)
+    #             linear_top_vars_list_wanted.append(linear_top_vars_list[i])
+
+    # return linear_top_vars_list_wanted[top_num_to_include_slice], linear_top_neurons_list_wanted[top_num_to_include_slice]
 
 
 
@@ -182,14 +204,27 @@ def show_M_matrix(num_dof, lagrangian_inds_to_include, top_num_to_include_slice,
     fig.tight_layout()
     plt.savefig(f"{save_dir}/{fig_name}")
 
+from stable_baselines.low_dim_analysis.common_parser import get_common_parser
 
-
-
-from new_neuron_analysis.analyse_data import linear_lagrangian_to_include_in_state
-def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
+def run_experiment_with_trained(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
                    policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
-                   additional_note, result_dir, keys_to_include, metric_param, linear_top_vars_list=None,
-                   linear_correlation_neuron_list=None, visualize=False):
+                   additional_note, result_dir, keys_to_include, metric_param, linear_top_vars_list=None,linear_correlation_neuron_list=None,  visualize=False, ):
+    with tf.variable_scope("trained_model"):
+        common_arg_parser = get_common_parser()
+        trained_args, cma_unknown_args = common_arg_parser.parse_known_args()
+        trained_args.env = policy_env
+        trained_args.seed = policy_seed
+        trained_args.num_timesteps = policy_num_timesteps
+        trained_args.run_num = policy_run_num
+        trained_this_run_dir = get_dir_path_for_this_run(trained_args)
+        trained_traj_params_dir_name = get_full_params_dir(trained_this_run_dir)
+        trained_save_dir = get_save_dir(trained_this_run_dir)
+
+        trained_final_file = get_full_param_traj_file_path(trained_traj_params_dir_name, "pi_final")
+        trained_final_params = pd.read_csv(trained_final_file, header=None).values[0]
+
+        trained_model = PPO2.load(f"{trained_save_dir}/ppo2", seed=augment_seed)
+        trained_model.set_pi_from_flat(trained_final_params)
 
     args = AttributeDict()
 
@@ -227,28 +262,27 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
     log_dir = get_log_dir(this_run_dir)
     save_dir = get_save_dir(this_run_dir)
 
-    if visualize:
-        vis_dir = get_aug_plot_dir(this_run_dir) + "_vis"
-        final_file = get_full_param_traj_file_path(full_param_traj_dir_path, "pi_final")
-        final_params = pd.read_csv(final_file, header=None).values[0]
-    else:
-        create_dir_remove(this_run_dir)
-        create_dir_remove(full_param_traj_dir_path)
-        create_dir_remove(save_dir)
-        create_dir_remove(log_dir)
-        logger.configure(log_dir)
+
+    create_dir_remove(this_run_dir)
+    create_dir_remove(full_param_traj_dir_path)
+    create_dir_remove(save_dir)
+    create_dir_remove(log_dir)
+    logger.configure(log_dir)
 
     # note this is only linear
-    if linear_top_vars_list is None:
+    if linear_top_vars_list is None or linear_correlation_neuron_list is None:
 
-        linear_top_vars_list = read_linear_top_var(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
+        linear_top_vars_list, linear_correlation_neuron_list = read_linear_top_var(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                                            eval_run_num, additional_note, metric_param=metric_param)
 
-    lagrangian_inds_to_include = get_wanted_lagrangians(keys_to_include, linear_top_vars_list, top_num_to_include_slice)
+    lagrangian_inds_to_include, neurons_inds_to_include = \
+        get_wanted_lagrangians_and_neurons(keys_to_include, linear_top_vars_list, linear_correlation_neuron_list, top_num_to_include_slice)
 
 
     with open(f"{log_dir}/lagrangian_inds_to_include.json", 'w') as fp:
         json.dump(lagrangian_inds_to_include, fp)
+    with open(f"{log_dir}/neurons_inds_to_include.json", 'w') as fp:
+        json.dump(neurons_inds_to_include, fp)
 
 
     args.env = f'{experiment_label}_{entry_point}-v1'
@@ -256,7 +290,8 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
         id=args.env,
         entry_point=entry_point,
         max_episode_steps=1000,
-        kwargs={"lagrangian_inds_to_include": lagrangian_inds_to_include}
+        kwargs={"lagrangian_inds_to_include": None, "trained_model": trained_model,
+                "neurons_inds_to_include": neurons_inds_to_include}
     )
 
 
@@ -283,32 +318,27 @@ def run_experiment(augment_num_timesteps, top_num_to_include_slice, augment_seed
     num_dof = walker_env.robot_skeleton.ndofs
     show_M_matrix(num_dof, lagrangian_inds_to_include, top_num_to_include_slice, log_dir)
 
-    if visualize:
-        model = PPO2.load(f"{save_dir}/ppo2", seed=augment_seed)
-        model.set_pi_from_flat(final_params)
-        if args.normalize:
-            env.load_running_average(save_dir)
 
-        run_model(model=model, env=env, vedio_dir=vis_dir)
-    else:
-        # extra run info I added for my purposes
-        run_info = {"run_num": args.run_num,
-                    "env_id": args.env,
-                    "full_param_traj_dir_path": full_param_traj_dir_path}
 
-        layers = [network_size, network_size]
-        policy_kwargs = {"net_arch" : [dict(vf=layers, pi=layers)]}
-        model = PPO2(policy=policy, env=env, n_steps=4096, nminibatches=64, lam=0.95, gamma=0.99,
-                     noptepochs=10,
-                     ent_coef=0.0, learning_rate=learning_rate, cliprange=0.2, optimizer='adam', policy_kwargs=policy_kwargs,
-                     seed=args.seed)
-        model.tell_run_info(run_info)
-        model.learn(total_timesteps=args.num_timesteps, seed=args.seed)
 
-        model.save(f"{save_dir}/ppo2")
+    # extra run info I added for my purposes
+    run_info = {"run_num": args.run_num,
+                "env_id": args.env,
+                "full_param_traj_dir_path": full_param_traj_dir_path}
 
-        if args.normalize:
-            env.save_running_average(save_dir)
+    layers = [network_size, network_size]
+    policy_kwargs = {"net_arch" : [dict(vf=layers, pi=layers)]}
+    model = PPO2(policy=policy, env=env, n_steps=4096, nminibatches=64, lam=0.95, gamma=0.99,
+                 noptepochs=10,
+                 ent_coef=0.0, learning_rate=learning_rate, cliprange=0.2, optimizer='adam', policy_kwargs=policy_kwargs,
+                 seed=args.seed)
+    model.tell_run_info(run_info)
+    model.learn(total_timesteps=args.num_timesteps, seed=args.seed)
+
+    model.save(f"{save_dir}/ppo2")
+
+    if args.normalize:
+        env.save_running_average(save_dir)
 
     return log_dir
 #
@@ -424,21 +454,38 @@ if __name__ == "__main__":
                        "com_jacobian", "contact_bodynode_jacobian"]
     # keys_to_include = ["COM", "M", "Coriolis", "com_jacobian"]
 
-    policy_num_timesteps = 5000000
-    policy_env = "DartSnake7Link-v1"
-    policy_run_nums = [1]
-    policy_seeds = [3]
+    # policy_num_timesteps = 5000000
+    # policy_env = "DartSnake7Link-v1"
+    # policy_run_nums = [1]
+    # policy_seeds = [3]
+    #
+    # eval_seeds = [4]
+    # eval_run_nums = [4]
+    #
+    # augment_seeds = [1]
+    # augment_run_nums = [0]
+    # augment_num_timesteps = 1500000
+    # top_num_to_includes = [slice(0,20)]
+    # network_sizes = [64]
+    # additional_note = "lower_fluid_force_see_if_there_is_more_bug_in_simulator"
+    # metric_params = [None]
 
-    eval_seeds = [4]
-    eval_run_nums = [4]
+    policy_num_timesteps = 2000000
+    policy_env = "DartWalker2d-v1"
+    policy_seeds = [0]
+    policy_run_nums = [0]
 
-    augment_seeds = [1]
+    eval_seeds = [3]
+    eval_run_nums = [3]
+
+    augment_seeds = range(1)
     augment_run_nums = [0]
-    augment_num_timesteps = 1500000
-    top_num_to_includes = [slice(0,20)]
+    augment_num_timesteps = 5000
+    top_num_to_includes = [slice(0, 10), slice(0,0)]
     network_sizes = [64]
-    additional_note = "lower_fluid_force_see_if_there_is_more_bug_in_simulator"
-    metric_params = [None]
+    additional_note = "sandbox"
+    metric_params = [0.5]
+
 
     # policy_seeds = [0]
     # policy_run_nums = [0]
@@ -474,13 +521,13 @@ if __name__ == "__main__":
 
                                             create_dir_if_not(result_dir)
 
-                                            run_experiment(augment_num_timesteps, top_num_to_include_slice=top_num_to_include, augment_seed=augment_seed,
+                                            run_experiment_with_trained(augment_num_timesteps, top_num_to_include_slice=top_num_to_include, augment_seed=augment_seed,
                                                            augment_run_num=augment_run_num, network_size=network_size,
                                                            policy_env=policy_env, policy_num_timesteps=policy_num_timesteps,
                                                            policy_run_num=policy_run_num, policy_seed=policy_seed, eval_seed=eval_seed,
                                                            eval_run_num=eval_run_num, learning_rate=learning_rate,
                                                            additional_note=additional_note, result_dir=result_dir, keys_to_include=keys_to_include,
-                                                           metric_param=metric_param, visualize=True)
+                                                           metric_param=metric_param, visualize=False)
     # run_check_experiment(augment_num_timesteps, augment_seed=0,
     #                      augment_run_num=0, network_size=64,
     #                      policy_env=policy_env, learning_rate=0.0001)    # from joblib import Parallel, delayed

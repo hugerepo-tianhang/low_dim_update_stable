@@ -172,10 +172,9 @@ def _plot(labels, dirs, num_timesteps, result_dir, title, resample=int(1e6), smo
             high = min(x[-1] for x in origxs)
             ys = []
             for (x, y) in xy_sublist:
-                # new_y = symmetric_ema(x, y, low, high, minxlen, decay_steps=smooth_step)[1]
-                new_y = subsample(y, minxlen)
-                if max(new_y) > 10000:
-                    print("s")
+                new_y = symmetric_ema(x, y, low, high, minxlen, decay_steps=smooth_step)[1]
+                # new_y = subsample(y, minxlen)
+
                 x_use, y_use = window_func(var_1=origal_x, var_2=new_y, window=EPISODES_WINDOW, func=np.mean)
                 ys.append(y_use)
 
@@ -226,15 +225,15 @@ def _plot(labels, dirs, num_timesteps, result_dir, title, resample=int(1e6), smo
 if __name__ =="__main__":
     def run():
         trained_policy_env = "DartWalker2d-v1"
-        trained_policy_env = "DartSnake7Link-v1"
+        # trained_policy_env = "DartSnake7Link-v1"
         # trained_policy_env = "DartHopper-v1"
         trained_policy_num_timesteps = 5000000
         policy_run_nums = [1]
-        policy_seeds = [3]
+        policy_seeds = [4]
         eval_seed = 4
         eval_run_num = 4
         aug_num_timesteps=1500000
-        additional_note = "fixed_filter_too_strict_and_made_all_zeros_and_plots"
+        additional_note = "dont_use_any_contact_related_things_and_use_mixed_metric_to_select"
         # trained_policy_num_timesteps = 2000000
         # policy_run_nums = [0]
         # policy_seeds = [0]
