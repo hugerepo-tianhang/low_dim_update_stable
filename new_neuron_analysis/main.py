@@ -36,6 +36,12 @@ def crunch_correlation_data(policy_env, policy_num_timesteps, policy_run_num, po
     crunch_and_plot_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                          eval_run_num, additional_note=additional_note, metric_param=metric_param)
 
+class FloatSlice(object):
+    def __init__(self, start, stop):
+        self.start = start
+        self.stop = stop
+    def __repr__(self):
+        return f"start{self.start}stop{self.stop}".replace(".", "")
 
 def main():
     import multiprocessing as mp
@@ -60,11 +66,11 @@ def main():
     augment_seeds = range(15)
     augment_run_nums = [0]
     augment_num_timesteps = 1500000
-    top_num_to_includes = [slice(0,0), slice(0,20),slice(0,10)]
+    linear_co_thresholds = [FloatSlice(0.5,1), FloatSlice(0.8,1), FloatSlice(10,1)]
     network_sizes = [64]
     metric_params = [0.5]
     # metric_params = [0.5]
-    additional_note = "augment_neurons_instead_of_vars_and_see_what_happens"
+    additional_note = "augment_neurons_threshold_and_ignore_dup_neurons"
 
     # policy_num_timesteps = 5000000
     # policy_seeds = [4]
@@ -107,7 +113,7 @@ def main():
     # augment_seeds = range(1)
     # augment_run_nums = [0]
     # augment_num_timesteps = 5000
-    # top_num_to_includes = [slice(0, 10)]
+    # linear_co_thresholds = [FloatSlice(10,1)]
     # network_sizes = [64]
     # additional_note = "sandbox"
     # metric_params = [0.5]
@@ -128,15 +134,15 @@ def main():
 
 
         # #============================================================
-        correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
-                                for policy_env in policy_envs
-                                for policy_seed in policy_seeds
-                                for policy_run_num in policy_run_nums
-                                for eval_seed in eval_seeds
-                                for eval_run_num in eval_run_nums
-                                for metric_param in metric_params]
-
-        pool.starmap(crunch_correlation_data, correlation_data_args)
+        # correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
+        #                         for policy_env in policy_envs
+        #                         for policy_seed in policy_seeds
+        #                         for policy_run_num in policy_run_nums
+        #                         for eval_seed in eval_seeds
+        #                         for eval_run_num in eval_run_nums
+        #                         for metric_param in metric_params]
+        #
+        # pool.starmap(crunch_correlation_data, correlation_data_args)
 
         #============================================================
 
@@ -162,7 +168,7 @@ def main():
 
                                 create_dir_if_not(result_dir)
 
-                                run_experiment_args = [(augment_num_timesteps, top_num_to_include, augment_seed,
+                                run_experiment_args = [(augment_num_timesteps, linear_co_threshold, augment_seed,
                                         augment_run_num, network_size,
                                         policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                                         eval_run_num, learning_rate, additional_note, result_dir,keys_to_include, metric_param, linear_top_vars_list, linear_correlation_neuron_list)
@@ -170,7 +176,7 @@ def main():
 
                                         for augment_seed in augment_seeds
                                         for augment_run_num in augment_run_nums
-                                        for top_num_to_include in top_num_to_includes
+                                        for linear_co_threshold in linear_co_thresholds
                                         for network_size in network_sizes
                                         for learning_rate in
                                         [64 / network_size * 3e-4]]

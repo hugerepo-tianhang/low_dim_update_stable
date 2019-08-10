@@ -102,26 +102,28 @@ def read_all_data(policy_env, policy_num_timesteps, policy_run_num, policy_seed,
     # non_linear_global_dict
     return linear_global_dict , non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights
 
-def get_wanted_lagrangians_and_neurons(keys_to_include, linear_top_vars_list, linear_correlation_neuron_list, top_num_to_include_slice):
+def get_wanted_lagrangians_and_neurons(keys_to_include, linear_top_vars_list, linear_correlation_neuron_list, linear_co_threshold):
     linear_top_vars_list_wanted = []
+    linear_top_vars_list_wanted_to_print = []
     linear_top_neurons_list_wanted = []
-    for i, (key, ind) in enumerate(linear_top_vars_list):
-        if key in keys_to_include:
-            linear_top_vars_list_wanted.append((key, ind))
-            linear_top_neurons_list_wanted.append(linear_correlation_neuron_list[i])
-
-    return linear_top_vars_list_wanted[top_num_to_include_slice], linear_top_neurons_list_wanted[top_num_to_include_slice]
-
-    # for i, neuron_coord in enumerate(linear_correlation_neuron_list):
-    #     if neuron_coord in linear_top_neurons_list_wanted:
-    #         continue
-    #     else:
-    #         key, ind = linear_top_vars_list[i]
-    #         if key in keys_to_include:
-    #             linear_top_neurons_list_wanted.append(neuron_coord)
-    #             linear_top_vars_list_wanted.append(linear_top_vars_list[i])
-
+    # for i, (key, ind) in enumerate(linear_top_vars_list):
+    #     if key in keys_to_include:
+    #         linear_top_vars_list_wanted.append((key, ind))
+    #         linear_top_neurons_list_wanted.append(linear_correlation_neuron_list[i])
+    #
     # return linear_top_vars_list_wanted[top_num_to_include_slice], linear_top_neurons_list_wanted[top_num_to_include_slice]
+
+    for i, neuron_coord in enumerate(linear_correlation_neuron_list):
+        if neuron_coord in linear_top_neurons_list_wanted:
+            continue
+        else:
+            key, ind, linear_co, new_metric = linear_top_vars_list[i]
+
+            if linear_co > linear_co_threshold.start and key in keys_to_include:
+                linear_top_neurons_list_wanted.append(neuron_coord)
+                linear_top_vars_list_wanted.append((key, ind))
+                linear_top_vars_list_wanted_to_print.append(linear_top_vars_list[i])
+    return linear_top_vars_list_wanted, linear_top_neurons_list_wanted, linear_top_vars_list_wanted_to_print
 
 
 
@@ -206,9 +208,9 @@ def show_M_matrix(num_dof, lagrangian_inds_to_include, top_num_to_include_slice,
 
 from stable_baselines.low_dim_analysis.common_parser import get_common_parser
 
-def run_experiment_with_trained(augment_num_timesteps, top_num_to_include_slice, augment_seed, augment_run_num, network_size,
-                   policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
-                   additional_note, result_dir, keys_to_include, metric_param, linear_top_vars_list=None,linear_correlation_neuron_list=None,  visualize=False, ):
+def run_experiment_with_trained(augment_num_timesteps, linear_co_threshold, augment_seed, augment_run_num, network_size,
+                                policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
+                                additional_note, result_dir, keys_to_include, metric_param, linear_top_vars_list=None, linear_correlation_neuron_list=None, visualize=False, ):
     with tf.variable_scope("trained_model"):
         common_arg_parser = get_common_parser()
         trained_args, cma_unknown_args = common_arg_parser.parse_known_args()
@@ -238,7 +240,7 @@ def run_experiment_with_trained(augment_num_timesteps, top_num_to_include_slice,
     # non_linear_global_dict
     timestamp = get_time_stamp('%Y_%m_%d_%H_%M_%S')
     experiment_label = f"learning_rate_{learning_rate}timestamp_{timestamp}_augment_num_timesteps{augment_num_timesteps}" \
-                       f"_top_num_to_include{top_num_to_include_slice.start}_{top_num_to_include_slice.stop}" \
+                       f"_top_num_to_include{linear_co_threshold.start}_{linear_co_threshold.stop}" \
                        f"_augment_seed{augment_seed}_augment_run_num{augment_run_num}_network_size{network_size}" \
                        f"_policy_num_timesteps{policy_num_timesteps}_policy_run_num{policy_run_num}_policy_seed{policy_seed}" \
                        f"_eval_seed{eval_seed}_eval_run_num{eval_run_num}_additional_note_{additional_note}"
@@ -256,7 +258,7 @@ def run_experiment_with_trained(augment_num_timesteps, top_num_to_include_slice,
 
 
     this_run_dir = get_experiment_path_for_this_run(entry_point, args.num_timesteps, args.run_num,
-                                                    args.seed, learning_rate=learning_rate, top_num_to_include=top_num_to_include_slice,
+                                                    args.seed, learning_rate=learning_rate, top_num_to_include=linear_co_threshold,
                                                     result_dir=result_dir, network_size=network_size)
     full_param_traj_dir_path = get_full_params_dir(this_run_dir)
     log_dir = get_log_dir(this_run_dir)
@@ -275,12 +277,14 @@ def run_experiment_with_trained(augment_num_timesteps, top_num_to_include_slice,
         linear_top_vars_list, linear_correlation_neuron_list = read_linear_top_var(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                                            eval_run_num, additional_note, metric_param=metric_param)
 
-    lagrangian_inds_to_include, neurons_inds_to_include = \
-        get_wanted_lagrangians_and_neurons(keys_to_include, linear_top_vars_list, linear_correlation_neuron_list, top_num_to_include_slice)
+    lagrangian_inds_to_include, neurons_inds_to_include, linear_top_vars_list_wanted_to_print = \
+        get_wanted_lagrangians_and_neurons(keys_to_include, linear_top_vars_list, linear_correlation_neuron_list, linear_co_threshold)
 
 
     with open(f"{log_dir}/lagrangian_inds_to_include.json", 'w') as fp:
         json.dump(lagrangian_inds_to_include, fp)
+    with open(f"{log_dir}/linear_top_vars_list_wanted_to_print.json", 'w') as fp:
+        json.dump(linear_top_vars_list_wanted_to_print, fp)
     with open(f"{log_dir}/neurons_inds_to_include.json", 'w') as fp:
         json.dump(neurons_inds_to_include, fp)
 
@@ -316,7 +320,7 @@ def run_experiment_with_trained(augment_num_timesteps, top_num_to_include_slice,
     walker_env.seed(args.seed)
 
     num_dof = walker_env.robot_skeleton.ndofs
-    show_M_matrix(num_dof, lagrangian_inds_to_include, top_num_to_include_slice, log_dir)
+    show_M_matrix(num_dof, lagrangian_inds_to_include, linear_co_threshold, log_dir)
 
 
 
@@ -521,13 +525,13 @@ if __name__ == "__main__":
 
                                             create_dir_if_not(result_dir)
 
-                                            run_experiment_with_trained(augment_num_timesteps, top_num_to_include_slice=top_num_to_include, augment_seed=augment_seed,
-                                                           augment_run_num=augment_run_num, network_size=network_size,
-                                                           policy_env=policy_env, policy_num_timesteps=policy_num_timesteps,
-                                                           policy_run_num=policy_run_num, policy_seed=policy_seed, eval_seed=eval_seed,
-                                                           eval_run_num=eval_run_num, learning_rate=learning_rate,
-                                                           additional_note=additional_note, result_dir=result_dir, keys_to_include=keys_to_include,
-                                                           metric_param=metric_param, visualize=False)
+                                            run_experiment_with_trained(augment_num_timesteps, linear_co_threshold=top_num_to_include, augment_seed=augment_seed,
+                                                                        augment_run_num=augment_run_num, network_size=network_size,
+                                                                        policy_env=policy_env, policy_num_timesteps=policy_num_timesteps,
+                                                                        policy_run_num=policy_run_num, policy_seed=policy_seed, eval_seed=eval_seed,
+                                                                        eval_run_num=eval_run_num, learning_rate=learning_rate,
+                                                                        additional_note=additional_note, result_dir=result_dir, keys_to_include=keys_to_include,
+                                                                        metric_param=metric_param, visualize=False)
     # run_check_experiment(augment_num_timesteps, augment_seed=0,
     #                      augment_run_num=0, network_size=64,
     #                      policy_env=policy_env, learning_rate=0.0001)    # from joblib import Parallel, delayed

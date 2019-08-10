@@ -401,6 +401,8 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
 
     # old use linear cos for lagrangian wide
     max_for_each_lagrange = np.abs(max_over_neurons_concat[:,0])
+
+
     arg_sorted = np.argsort(max_for_each_lagrange)
 
     #now arg_sorted has the biggest correlated var at the first element
@@ -415,9 +417,13 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
         neuron_coord = max_over_neurons_concat[ind][-2:]
         linear_co =  max_over_neurons_concat[ind][0]
         normalized_SSE =  max_over_neurons_concat[ind][1]
+        new_metric = metric_param * linear_co + \
+                     (1 - normalized_SSE / max_normalized_SSE) * (1 - metric_param)  # (max - norm)/max
 
         lagrangian_key, lagrangian_index = get_key_and_ind(ind, num_ind_in_stack, M_flattened_ind)
-        linear_correlation_list.append((lagrangian_key, lagrangian_index))
+
+
+        linear_correlation_list.append((lagrangian_key, lagrangian_index, linear_co, new_metric))
         linear_correlation_neuron_list.append((int(neuron_coord[0]), int(neuron_coord[1])))
         #=================================
         # for debugging below
