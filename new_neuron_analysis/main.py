@@ -59,7 +59,7 @@ def main():
 
     # policy_envs = ["DartHopper-v1"]
 
-    policy_seeds = [3,4]
+    policy_seeds = [3]
     policy_run_nums = [1]
 
     eval_seeds = [4]
