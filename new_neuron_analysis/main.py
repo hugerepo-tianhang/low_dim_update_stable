@@ -1,6 +1,7 @@
 import os
 import sys
-
+import matplotlib
+matplotlib.use('Agg')
 d = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..'))
 od = os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..', '..'))
 sys.path.append(d)
@@ -14,6 +15,7 @@ from new_neuron_analysis.plot_result import plot
 import warnings
 from new_neuron_analysis.dir_tree_util import *
 warnings.filterwarnings("ignore")
+
 
 def complete_run(policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                  eval_run_num, augment_env, augment_num_timesteps, top_num_to_include, augment_seed,
@@ -102,22 +104,39 @@ def main():
     # network_sizes = [64]
     # additional_note = "sandbox"
 
-    # policy_num_timesteps = 2000000
-    # policy_envs = ["DartWalker2d-v1"]
-    # policy_seeds = [0]
-    # policy_run_nums = [0]
-    #
-    # eval_seeds = [3]
-    # eval_run_nums = [3]
-    #
-    # augment_seeds = range(1)
-    # augment_run_nums = [0]
-    # augment_num_timesteps = 5000
-    # linear_co_thresholds = [FloatSlice(10,1)]
-    # network_sizes = [64]
-    # additional_note = "sandbox"
-    # metric_params = [0.5]
+    policy_num_timesteps = 2000000
+    policy_envs = ["DartWalker2d-v1"]
+    policy_seeds = [0]
+    policy_run_nums = [0]
 
+    eval_seeds = [3]
+    eval_run_nums = [3]
+
+    augment_seeds = range(1)
+    augment_run_nums = [0]
+    augment_num_timesteps = 5000
+    linear_co_thresholds = [FloatSlice(10,1)]
+    linear_co_thresholds = [slice(0,10)]
+    network_sizes = [64]
+    additional_note = "sandbox"
+    metric_params = [0.5]
+
+    policy_num_timesteps = 5000
+    policy_envs = ["DartSnake7Link-v1"]
+    policy_seeds = [3]
+    policy_run_nums = [0]
+
+    eval_seeds = [3]
+    eval_run_nums = [3]
+
+    augment_seeds = range(1)
+    augment_run_nums = [0]
+    augment_num_timesteps = 5000
+    linear_co_thresholds = [FloatSlice(10,1)]
+    linear_co_thresholds = [slice(0,10)]
+    network_sizes = [64]
+    additional_note = "sandbox"
+    metric_params = [0.5]
 
 
     with mp.Pool(mp.cpu_count()) as pool:
@@ -134,15 +153,15 @@ def main():
 
 
         # #============================================================
-        correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
-                                for policy_env in policy_envs
-                                for policy_seed in policy_seeds
-                                for policy_run_num in policy_run_nums
-                                for eval_seed in eval_seeds
-                                for eval_run_num in eval_run_nums
-                                for metric_param in metric_params]
-
-        pool.starmap(crunch_correlation_data, correlation_data_args)
+        # correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
+        #                         for policy_env in policy_envs
+        #                         for policy_seed in policy_seeds
+        #                         for policy_run_num in policy_run_nums
+        #                         for eval_seed in eval_seeds
+        #                         for eval_run_num in eval_run_nums
+        #                         for metric_param in metric_params]
+        #
+        # pool.starmap(crunch_correlation_data, correlation_data_args)
 
         #============================================================
 

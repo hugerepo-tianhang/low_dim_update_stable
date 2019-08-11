@@ -127,7 +127,7 @@ def subsample(l, target_len):
 #     if total_timesteps > memory_size_threshold and current_non_skipped >= current_skip_num:
 #         current_skip_num = decide_next_skip(prob_of_down, up, down)
 #         current_non_skipped = 0
-admit_top_to_include = ["0:20", "0:0", "0:10"]
+# admit_top_to_include = ["0:20", "0:0", "0:10"]
 
 
 def _plot(labels, dirs, num_timesteps, result_dir, title, resample=int(1e6), smooth_step=1.0, include_details=False):
@@ -139,8 +139,8 @@ def _plot(labels, dirs, num_timesteps, result_dir, title, resample=int(1e6), smo
         top_num_to_include, network_size, lr = extra(label)
 
 
-        if top_num_to_include not in admit_top_to_include:#HACK
-            continue
+        # if top_num_to_include not in admit_top_to_include:#HACK
+        #     continue
 
 
         new_label = f"top_num_to_include{top_num_to_include}, network_size{network_size}, lr{lr}"
@@ -233,7 +233,7 @@ if __name__ =="__main__":
         eval_seed = 4
         eval_run_num = 4
         aug_num_timesteps=1500000
-        additional_note = "dont_use_any_contact_related_things_and_use_mixed_metric_to_select"
+        additional_note = "augment_neurons_threshold_and_ignore_dup_neurons_metric_param_0.5"
         # trained_policy_num_timesteps = 2000000
         # policy_run_nums = [0]
         # policy_seeds = [0]

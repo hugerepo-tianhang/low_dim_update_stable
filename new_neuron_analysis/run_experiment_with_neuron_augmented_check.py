@@ -106,24 +106,26 @@ def get_wanted_lagrangians_and_neurons(keys_to_include, linear_top_vars_list, li
     linear_top_vars_list_wanted = []
     linear_top_vars_list_wanted_to_print = []
     linear_top_neurons_list_wanted = []
-    # for i, (key, ind) in enumerate(linear_top_vars_list):
-    #     if key in keys_to_include:
-    #         linear_top_vars_list_wanted.append((key, ind))
-    #         linear_top_neurons_list_wanted.append(linear_correlation_neuron_list[i])
+    for i, (key, ind, linear_co, normalized_SSE) in enumerate(linear_top_vars_list):
+        if key in keys_to_include:
+            linear_top_vars_list_wanted.append((key, ind))
+            linear_top_neurons_list_wanted.append(linear_correlation_neuron_list[i])
+            linear_top_vars_list_wanted_to_print.append(linear_top_vars_list[i])
+
+    # linear_co_threshold is the slice that I'll pass in slice(0,20), this name is just for temp use
+    return linear_top_vars_list_wanted[linear_co_threshold], linear_top_neurons_list_wanted[linear_co_threshold], \
+           linear_top_vars_list_wanted_to_print[linear_co_threshold]
+    # for i, neuron_coord in enumerate(linear_correlation_neuron_list):
+    #     if neuron_coord in linear_top_neurons_list_wanted:
+    #         continue
+    #     else:
+    #         key, ind, linear_co, new_metric = linear_top_vars_list[i]
     #
-    # return linear_top_vars_list_wanted[top_num_to_include_slice], linear_top_neurons_list_wanted[top_num_to_include_slice]
-
-    for i, neuron_coord in enumerate(linear_correlation_neuron_list):
-        if neuron_coord in linear_top_neurons_list_wanted:
-            continue
-        else:
-            key, ind, linear_co, new_metric = linear_top_vars_list[i]
-
-            if linear_co > linear_co_threshold.start and key in keys_to_include:
-                linear_top_neurons_list_wanted.append(neuron_coord)
-                linear_top_vars_list_wanted.append((key, ind))
-                linear_top_vars_list_wanted_to_print.append(linear_top_vars_list[i])
-    return linear_top_vars_list_wanted, linear_top_neurons_list_wanted, linear_top_vars_list_wanted_to_print
+    #         if linear_co > linear_co_threshold.start and key in keys_to_include:
+    #             linear_top_neurons_list_wanted.append(neuron_coord)
+    #             linear_top_vars_list_wanted.append((key, ind))
+    #             linear_top_vars_list_wanted_to_print.append(linear_top_vars_list[i])
+    # return linear_top_vars_list_wanted, linear_top_neurons_list_wanted, linear_top_vars_list_wanted_to_print
 
 
 

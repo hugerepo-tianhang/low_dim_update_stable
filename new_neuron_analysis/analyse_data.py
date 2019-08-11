@@ -404,6 +404,7 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
 
 
     arg_sorted = np.argsort(max_for_each_lagrange)
+    arg_sorted = arg_sorted[::-1]
 
     #now arg_sorted has the biggest correlated var at the first element
     if aug_plot_dir is not None:
@@ -417,7 +418,7 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
         neuron_coord = max_over_neurons_concat[ind][-2:]
         linear_co =  max_over_neurons_concat[ind][0]
         normalized_SSE =  max_over_neurons_concat[ind][1]
-        new_metric = metric_param * linear_co + \
+        new_metric = metric_param * np.abs(linear_co) + \
                      (1 - normalized_SSE / max_normalized_SSE) * (1 - metric_param)  # (max - norm)/max
 
         lagrangian_key, lagrangian_index = get_key_and_ind(ind, num_ind_in_stack, M_flattened_ind)
@@ -434,11 +435,11 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
 
         test_linear_co = np.abs(np.corrcoef(lagrangian_l, neuron_l)[1, 0])
         test_normalized_SSE, test_TV = get_mean_normalized_SSE(lagrangian_l, neuron_l, regr)
-        # if aug_plot_dir is not None:
-        #     fig_name = f"largest_rank_{i}_{lagrangian_key}_{lagrangian_index}_VS_layer{neuron_coord[0]}" \
-        #                f"_neuron_{neuron_coord[1]}_linear_co_{linear_co} normalized_SSE{normalized_SSE}.jpg"
-        #     plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir, regr)
-    #
+        if aug_plot_dir is not None:
+            fig_name = f"largest_rank_{i}_{lagrangian_key}_{lagrangian_index}_VS_layer{neuron_coord[0]}" \
+                       f"_neuron_{neuron_coord[1]}_linear_co_{linear_co} normalized_SSE{normalized_SSE}.jpg"
+            plot_best(lagrangian_l, neuron_l, fig_name, aug_plot_dir, regr)
+
     #
     #     if test_normalized_SSE > max_normalized_SSE:
     #         test_linear_co = 0

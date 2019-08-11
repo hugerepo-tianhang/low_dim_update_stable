@@ -157,24 +157,41 @@ class DartSnake7LinkEnv(dart_env.DartEnv, utils.EzPickle):
         return self.robot_skeleton.body("h_head")
 
 class DartSnake7LinkEnv_aug_input(DartSnake7LinkEnv):
-    def __init__(self, lagrangian_inds_to_include):
+    def __init__(self, lagrangian_inds_to_include, trained_model=None, neurons_inds_to_include=None):
 
-        if lagrangian_inds_to_include is None:
-            raise Exception("don't give none, give empty list")
+        self.lagrangian_inds_to_include = lagrangian_inds_to_include
+        self.trained_model = trained_model
+        self.neurons_inds_to_include = neurons_inds_to_include
+
+        if self.trained_model is None:
+            num_inds_to_add = len(self.lagrangian_inds_to_include)
+        elif self.lagrangian_inds_to_include is None:
+            num_inds_to_add = len(self.neurons_inds_to_include)
         else:
-            self.lagrangian_inds_to_include = lagrangian_inds_to_include
-
-        num_inds_to_add = len(self.lagrangian_inds_to_include)
-
+            raise Exception("both include is None, give empty array")
         super().__init__(num_inds_to_add=num_inds_to_add)
+        # DartWalker2dEnv.__init__(self, obs_dim=obs_dim)
+
+
 
     def _get_obs(self):
         state = super()._get_obs()
+        if self.lagrangian_inds_to_include is not None:
+            lagrangian_to_add = []
+            for (key, ind) in self.lagrangian_inds_to_include:
+                flat_array = self.get_lagrangian_flat_array(key)
+                lagrangian_to_add.append(flat_array.reshape(-1)[ind])
 
-        lagrangian_to_add = []
-        for (key, ind) in self.lagrangian_inds_to_include:
-            flat_array = self.get_lagrangian_flat_array(key)
-            lagrangian_to_add.append(flat_array.reshape(-1)[ind])
+            state = np.hstack((state, np.array(lagrangian_to_add)))
+        elif self.trained_model is not None and self.neurons_inds_to_include is not None:
+            neuron_values = self.trained_model.give_neuron_values(state.reshape((1,-1)))
+            neuron_values = neuron_values[1:-2]
+            neuron_values = [neuron_value.reshape((-1)) for neuron_value in neuron_values]
+            neuron_to_add = []
+            for (neuron_l_ind, neuron_ind) in self.neurons_inds_to_include:
+                neuron_to_add.append(neuron_values[neuron_l_ind][neuron_ind])
+            state = np.hstack((state, np.array(neuron_to_add)))
 
-        state = np.hstack((state, np.array(lagrangian_to_add)))
+        else:
+            raise Exception("how do you get here")
         return state
