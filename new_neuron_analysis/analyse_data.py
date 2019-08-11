@@ -473,9 +473,9 @@ def crunch_and_plot_data(trained_policy_env, trained_policy_num_timesteps, polic
 
 
     linear_global_dict = crunch_linear_correlation(lagrangian_values, layers_values_list, data_dir)
-    BEST_TO_TAKE = 5
-    scatter_the_linear_significant_ones(linear_global_dict, BEST_TO_TAKE, layers_values_list, lagrangian_values,
-                                        data_dir)
+    # BEST_TO_TAKE = 5
+    # scatter_the_linear_significant_ones(linear_global_dict, BEST_TO_TAKE, layers_values_list, lagrangian_values,
+    #                                     data_dir)
 
     # non_linear_global_dict = crunch_non_linear_correlation(lagrangian_values, layers_values_list, data_dir)
     # scatter_the_non_linear_significant_ones(non_linear_global_dict, BEST_TO_TAKE, layers_values_list,
