@@ -68,12 +68,12 @@ def main():
     augment_seeds = range(15)
     augment_run_nums = [0]
     augment_num_timesteps = 1500000
-    linear_co_thresholds = [FloatSlice(0.5,1), FloatSlice(0.8,1), FloatSlice(10,1)]
-    # linear_co_thresholds = [slice(0,0), FloatSlice(0,10), FloatSlice(0,20)]
+    # linear_co_thresholds = [FloatSlice(0.5,1), FloatSlice(0.8,1), FloatSlice(10,1)]
+    linear_co_thresholds = [slice(0,0), slice(0,10), slice(0,20)]
     network_sizes = [64]
     metric_params = [0.5]
     # metric_params = [0.5]
-    additional_note = "augment_neurons_threshold_with_fixed_reverse_order_without_dup"
+    additional_note = "augment_neurons_threshold_with_fixed_reverse_order_top_etc"
 
     # policy_num_timesteps = 5000000
     # policy_seeds = [4]
