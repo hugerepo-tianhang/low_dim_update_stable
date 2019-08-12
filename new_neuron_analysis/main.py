@@ -68,12 +68,13 @@ def main():
     augment_seeds = range(15)
     augment_run_nums = [0]
     augment_num_timesteps = 1500000
-    # linear_co_thresholds = [FloatSlice(0.5,1), FloatSlice(0.8,1), FloatSlice(10,1)]
+    linear_co_thresholds = [FloatSlice(0.5,1), FloatSlice(0.8,1), FloatSlice(10,1)]
     linear_co_thresholds = [slice(0,0), slice(0,10), slice(0,20)]
     network_sizes = [64]
     metric_params = [0.5]
     # metric_params = [0.5]
-    additional_note = "augment_vars_of_neurons_threshold_with_fixed_reverse_order_top_etc"
+    result_additional_note = "Use_Vars_of_neurons_threshold_with_fixed_reverse_order_top_etc"
+    data_additional_note = "augment_neurons_threshold_with_fixed_reverse_order_top_etc"
     lagrangian_to_use = None
     neurons_to_use = None
     use_lagrangian = True
@@ -185,13 +186,13 @@ def main():
                         for eval_run_num in eval_run_nums:
                             for metric_param in metric_params:
                                 result_dir = get_result_dir(policy_env, policy_num_timesteps, policy_run_num,
-                                                                policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
+                                                                policy_seed, eval_seed, eval_run_num, result_additional_note, metric_param)
 
                                 linear_global_dict, non_linear_global_dict, lagrangian_values, input_values, layers_values, all_weights = \
                                     read_all_data(
                                         policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
                                         eval_run_num,
-                                        additional_note=additional_note)
+                                        additional_note=data_additional_note)
                                 linear_top_vars_list, linear_correlation_neuron_list = linear_lagrangian_to_include_in_state(linear_global_dict,
                                                                                              result_dir,
                                                                                              lagrangian_values,
@@ -203,7 +204,7 @@ def main():
                                 run_experiment_args = [(augment_num_timesteps, linear_co_threshold, augment_seed,
                                         augment_run_num, network_size,
                                         policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                                        eval_run_num, learning_rate, additional_note, result_dir,keys_to_include,
+                                        eval_run_num, learning_rate, result_additional_note, result_dir,keys_to_include,
                                         metric_param, linear_top_vars_list, linear_correlation_neuron_list,
                                         visualize,
                                         lagrangian_to_use, neurons_to_use, use_lagrangian)
