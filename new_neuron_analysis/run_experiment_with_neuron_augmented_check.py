@@ -106,27 +106,33 @@ def get_wanted_lagrangians_and_neurons(keys_to_include, linear_top_vars_list, li
     linear_top_vars_list_wanted = []
     linear_top_vars_list_wanted_to_print = []
     linear_top_neurons_list_wanted = []
-    for i, (key, ind, linear_co, normalized_SSE) in enumerate(linear_top_vars_list):
-        if key in keys_to_include:
-            linear_top_vars_list_wanted.append((key, ind))
-            linear_top_neurons_list_wanted.append(linear_correlation_neuron_list[i])
-            linear_top_vars_list_wanted_to_print.append(linear_top_vars_list[i])
 
-    # linear_co_threshold is the slice that I'll pass in slice(0,20), this name is just for temp use
-    return linear_top_vars_list_wanted[linear_co_threshold], linear_top_neurons_list_wanted[linear_co_threshold], \
-           linear_top_vars_list_wanted_to_print[linear_co_threshold]
-    # for i, neuron_coord in enumerate(linear_correlation_neuron_list):
-    #     if neuron_coord in linear_top_neurons_list_wanted:
-    #         continue
-    #     else:
-    #         key, ind, linear_co, new_metric = linear_top_vars_list[i]
-    #
-    #         if linear_co > linear_co_threshold.start and key in keys_to_include:
-    #             linear_top_neurons_list_wanted.append(neuron_coord)
-    #             linear_top_vars_list_wanted.append((key, ind))
-    #             linear_top_vars_list_wanted_to_print.append(linear_top_vars_list[i])
-    # return linear_top_vars_list_wanted, linear_top_neurons_list_wanted, linear_top_vars_list_wanted_to_print
-    #
+    if isinstance(linear_co_threshold, slice):
+        print("use top")
+
+        for i, (key, ind, linear_co, normalized_SSE) in enumerate(linear_top_vars_list):
+            if key in keys_to_include:
+                linear_top_vars_list_wanted.append((key, ind))
+                linear_top_neurons_list_wanted.append(linear_correlation_neuron_list[i])
+                linear_top_vars_list_wanted_to_print.append(linear_top_vars_list[i])
+
+        # linear_co_threshold is the slice that I'll pass in slice(0,20), this name is just for temp use
+        return linear_top_vars_list_wanted[linear_co_threshold], linear_top_neurons_list_wanted[linear_co_threshold], \
+               linear_top_vars_list_wanted_to_print[linear_co_threshold]
+    else:
+        print("use threshold")
+        for i, neuron_coord in enumerate(linear_correlation_neuron_list):
+            if neuron_coord in linear_top_neurons_list_wanted:
+                continue
+            else:
+                key, ind, linear_co, new_metric = linear_top_vars_list[i]
+
+                if linear_co > linear_co_threshold.start and key in keys_to_include:
+                    linear_top_neurons_list_wanted.append(neuron_coord)
+                    linear_top_vars_list_wanted.append((key, ind))
+                    linear_top_vars_list_wanted_to_print.append(linear_top_vars_list[i])
+        return linear_top_vars_list_wanted, linear_top_neurons_list_wanted, linear_top_vars_list_wanted_to_print
+
 
 
 #
@@ -213,7 +219,8 @@ from stable_baselines.low_dim_analysis.common_parser import get_common_parser
 def run_experiment_with_trained(augment_num_timesteps, linear_co_threshold, augment_seed, augment_run_num, network_size,
                                 policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, learning_rate,
                                 additional_note, result_dir, keys_to_include, metric_param, linear_top_vars_list=None,
-                                linear_correlation_neuron_list=None, visualize=False, lagrangian_to_use=None, neurons_to_use=None, use_lagrangian=True):
+                                linear_correlation_neuron_list=None, visualize=False, lagrangian_inds_to_include=None,
+                                neurons_inds_to_include=None, use_lagrangian=True):
     with tf.variable_scope("trained_model"):
         common_arg_parser = get_common_parser()
         trained_args, cma_unknown_args = common_arg_parser.parse_known_args()
@@ -274,7 +281,8 @@ def run_experiment_with_trained(augment_num_timesteps, linear_co_threshold, augm
     create_dir_remove(log_dir)
     logger.configure(log_dir)
 
-    if lagrangian_to_use is None:
+    linear_top_vars_list_wanted_to_print = []
+    if (use_lagrangian and lagrangian_inds_to_include is None) or (not use_lagrangian and neurons_inds_to_include is None):
         # note this is only linear
         if linear_top_vars_list is None or linear_correlation_neuron_list is None:
 
@@ -283,10 +291,8 @@ def run_experiment_with_trained(augment_num_timesteps, linear_co_threshold, augm
 
         lagrangian_inds_to_include, neurons_inds_to_include, linear_top_vars_list_wanted_to_print = \
             get_wanted_lagrangians_and_neurons(keys_to_include, linear_top_vars_list, linear_correlation_neuron_list, linear_co_threshold)
-    else:
-        lagrangian_inds_to_include = lagrangian_to_use
-        neurons_inds_to_include = []
-        linear_top_vars_list_wanted_to_print = []
+
+
 
     with open(f"{log_dir}/lagrangian_inds_to_include.json", 'w') as fp:
         json.dump(lagrangian_inds_to_include, fp)

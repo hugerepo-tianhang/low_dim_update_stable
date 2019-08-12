@@ -76,7 +76,7 @@ def main():
     additional_note = "augment_vars_of_neurons_threshold_with_fixed_reverse_order_top_etc"
     lagrangian_to_use = None
     neurons_to_use = None
-    use_lagrangian = False
+    use_lagrangian = True
 
     visualize = False
     # policy_num_timesteps = 5000000
@@ -125,6 +125,11 @@ def main():
     # network_sizes = [64]
     # additional_note = "sandbox"
     # metric_params = [0.5]
+    # lagrangian_to_use = None
+    # neurons_to_use = None
+    # use_lagrangian = False
+    # visualize = False
+
 
     # policy_num_timesteps = 5000
     # policy_envs = ["DartSnake7Link-v1"]
@@ -138,14 +143,15 @@ def main():
     # augment_run_nums = [0]
     # augment_num_timesteps = 5000
     # linear_co_thresholds = [FloatSlice(10,1)]
-    # linear_co_thresholds = [slice(0,10)]
+    # # linear_co_thresholds = [slice(0,10)]
     # network_sizes = [64]
     # additional_note = "sandbox"
     # metric_params = [0.5]
-    lagrangian_to_use = None
-    neurons_to_use = None
-    use_lagrangian = False
-    visualize = False
+    # lagrangian_to_use = None
+    # neurons_to_use = None
+    # use_lagrangian = False
+    # visualize = True
+
     with mp.Pool(mp.cpu_count()) as pool:
 
         # ============================================================
@@ -217,6 +223,7 @@ def main():
                                 try:
                                     plot(result_dir, aug_num_timesteps=augment_num_timesteps)
                                 except Exception as e:
+                                    print("PLOTTING ERROR")
                                     print(e)
 
 
