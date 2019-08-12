@@ -55,7 +55,7 @@ def main():
 
 
     policy_num_timesteps = 5000000
-    policy_envs = ["DartWalker2d-v1", "DartSnake7Link-v1"]
+    policy_envs = ["DartSnake7Link-v1"]
 
     # policy_envs = ["DartHopper-v1"]
 
@@ -73,8 +73,12 @@ def main():
     network_sizes = [64]
     metric_params = [0.5]
     # metric_params = [0.5]
-    additional_note = "augment_neurons_threshold_with_fixed_reverse_order_top_etc"
+    additional_note = "augment_vars_of_neurons_threshold_with_fixed_reverse_order_top_etc"
+    lagrangian_to_use = None
+    neurons_to_use = None
+    use_lagrangian = False
 
+    visualize = False
     # policy_num_timesteps = 5000000
     # policy_seeds = [4]
     # policy_run_nums = [1]
@@ -138,8 +142,10 @@ def main():
     # network_sizes = [64]
     # additional_note = "sandbox"
     # metric_params = [0.5]
-
-
+    lagrangian_to_use = None
+    neurons_to_use = None
+    use_lagrangian = False
+    visualize = False
     with mp.Pool(mp.cpu_count()) as pool:
 
         # ============================================================
@@ -154,15 +160,15 @@ def main():
 
 
         # #============================================================
-        correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
-                                for policy_env in policy_envs
-                                for policy_seed in policy_seeds
-                                for policy_run_num in policy_run_nums
-                                for eval_seed in eval_seeds
-                                for eval_run_num in eval_run_nums
-                                for metric_param in metric_params]
-
-        pool.starmap(crunch_correlation_data, correlation_data_args)
+        # correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
+        #                         for policy_env in policy_envs
+        #                         for policy_seed in policy_seeds
+        #                         for policy_run_num in policy_run_nums
+        #                         for eval_seed in eval_seeds
+        #                         for eval_run_num in eval_run_nums
+        #                         for metric_param in metric_params]
+        #
+        # pool.starmap(crunch_correlation_data, correlation_data_args)
 
         #============================================================
 
@@ -191,7 +197,10 @@ def main():
                                 run_experiment_args = [(augment_num_timesteps, linear_co_threshold, augment_seed,
                                         augment_run_num, network_size,
                                         policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed,
-                                        eval_run_num, learning_rate, additional_note, result_dir,keys_to_include, metric_param, linear_top_vars_list, linear_correlation_neuron_list)
+                                        eval_run_num, learning_rate, additional_note, result_dir,keys_to_include,
+                                        metric_param, linear_top_vars_list, linear_correlation_neuron_list,
+                                        visualize,
+                                        lagrangian_to_use, neurons_to_use, use_lagrangian)
 
 
                                         for augment_seed in augment_seeds
