@@ -56,6 +56,7 @@ def main():
 
     policy_num_timesteps = 5000000
     policy_envs = ["DartSnake7Link-v1"]
+    policy_envs = ["DartWalker2d-v1"]
 
     # policy_envs = ["DartHopper-v1"]
 
@@ -73,8 +74,8 @@ def main():
     network_sizes = [64]
     metric_params = [0.5]
     # metric_params = [0.5]
-    result_additional_note = "Use_Vars_of_neurons_threshold_with_fixed_reverse_order_top_etc"
-    data_additional_note = "augment_neurons_threshold_with_fixed_reverse_order_top_etc"
+    result_additional_note = "revert_back_to_old_selection_and_see_if_any_good_result_on_walker"
+    data_additional_note = "revert_back_to_old_selection_and_see_if_any_good_result_on_walker"
     lagrangian_to_use = None
     neurons_to_use = None
     use_lagrangian = True
@@ -167,15 +168,15 @@ def main():
 
 
         # #============================================================
-        # correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
-        #                         for policy_env in policy_envs
-        #                         for policy_seed in policy_seeds
-        #                         for policy_run_num in policy_run_nums
-        #                         for eval_seed in eval_seeds
-        #                         for eval_run_num in eval_run_nums
-        #                         for metric_param in metric_params]
-        #
-        # pool.starmap(crunch_correlation_data, correlation_data_args)
+        correlation_data_args = [(policy_env, policy_num_timesteps, policy_run_num, policy_seed, eval_seed, eval_run_num, additional_note, metric_param)
+                                for policy_env in policy_envs
+                                for policy_seed in policy_seeds
+                                for policy_run_num in policy_run_nums
+                                for eval_seed in eval_seeds
+                                for eval_run_num in eval_run_nums
+                                for metric_param in metric_params]
+
+        pool.starmap(crunch_correlation_data, correlation_data_args)
 
         #============================================================
 

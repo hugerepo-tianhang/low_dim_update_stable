@@ -381,7 +381,7 @@ def linear_lagrangian_to_include_in_state(linear_global_dict, data_dir,
 
     linear_cos = np.abs(concat[:,:,0])
     normalized_SSE = concat[:,:,1]
-    max_normalized_SSE = 1/15 # 200/3000 if higher than this, start getting neg
+    max_normalized_SSE = 500/3000 # 500/3000 if higher than this, start getting neg
 
     # linear_cos[np.where(normalized_SSE>max_normalized_SSE)] = 0 # if SSE too big directly determined that it's not linear
     new_metric_matrix = metric_param *linear_cos + (1 - normalized_SSE/max_normalized_SSE) * (1-metric_param) # (max - norm)/max
