@@ -221,22 +221,24 @@ def run_experiment_with_trained(augment_num_timesteps, linear_co_threshold, augm
                                 additional_note, result_dir, keys_to_include, metric_param, linear_top_vars_list=None,
                                 linear_correlation_neuron_list=None, visualize=False, lagrangian_inds_to_include=None,
                                 neurons_inds_to_include=None, use_lagrangian=True):
-    with tf.variable_scope("trained_model"):
-        common_arg_parser = get_common_parser()
-        trained_args, cma_unknown_args = common_arg_parser.parse_known_args()
-        trained_args.env = policy_env
-        trained_args.seed = policy_seed
-        trained_args.num_timesteps = policy_num_timesteps
-        trained_args.run_num = policy_run_num
-        trained_this_run_dir = get_dir_path_for_this_run(trained_args)
-        trained_traj_params_dir_name = get_full_params_dir(trained_this_run_dir)
-        trained_save_dir = get_save_dir(trained_this_run_dir)
+    trained_model = None
+    if not use_lagrangian:
+        with tf.variable_scope("trained_model"):
+            common_arg_parser = get_common_parser()
+            trained_args, cma_unknown_args = common_arg_parser.parse_known_args()
+            trained_args.env = policy_env
+            trained_args.seed = policy_seed
+            trained_args.num_timesteps = policy_num_timesteps
+            trained_args.run_num = policy_run_num
+            trained_this_run_dir = get_dir_path_for_this_run(trained_args)
+            trained_traj_params_dir_name = get_full_params_dir(trained_this_run_dir)
+            trained_save_dir = get_save_dir(trained_this_run_dir)
 
-        trained_final_file = get_full_param_traj_file_path(trained_traj_params_dir_name, "pi_final")
-        trained_final_params = pd.read_csv(trained_final_file, header=None).values[0]
+            trained_final_file = get_full_param_traj_file_path(trained_traj_params_dir_name, "pi_final")
+            trained_final_params = pd.read_csv(trained_final_file, header=None).values[0]
 
-        trained_model = PPO2.load(f"{trained_save_dir}/ppo2", seed=augment_seed)
-        trained_model.set_pi_from_flat(trained_final_params)
+            trained_model = PPO2.load(f"{trained_save_dir}/ppo2", seed=augment_seed)
+            trained_model.set_pi_from_flat(trained_final_params)
 
     args = AttributeDict()
 

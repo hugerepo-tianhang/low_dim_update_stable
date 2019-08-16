@@ -114,8 +114,8 @@ def mujoco_arg_parser():
     parser.add_argument('--env', help='environment ID', type=str, default='DartWalker2d-v1')
     parser.add_argument('--seed', help='RNG seed', type=int, default=0)
     parser.add_argument('--run_num', default=0, type=int, help='which run number')
-    parser.add_argument('--use_run_num_start', default=-1, type=int, help='which run number')
     parser.add_argument('--additional_notes', default="", type=str, help='which run number')
+    parser.add_argument('--state_samples_to_collect', default=30000, type=int, help='number of samples for correlation')
 
 
     parser.add_argument('--nminibatches', default=64, type=int, help='which run number')

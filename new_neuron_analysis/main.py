@@ -52,7 +52,7 @@ def main():
                        "com_jacobian", "contact_bodynode_jacobian"]
     # keys_to_include = ["COM", "M", "Coriolis"]
 
-
+    training_samples_to_collect = 300000
 
     policy_num_timesteps = 5000000
     policy_envs = ["DartSnake7Link-v1"]
@@ -158,13 +158,13 @@ def main():
 
         # ============================================================
 
-        # train_policy_args = [(["--env", policy_env, "--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
-        #            str(policy_seed)])
-        #                     for policy_env in policy_envs
-        #                     for policy_seed in policy_seeds
-        #                     for policy_run_num in policy_run_nums]
-        #
-        # pool.map(train, train_policy_args)
+        train_policy_args = [(["state_samples_to_collect", training_samples_to_collect,"--env", policy_env, "--num-timesteps", str(policy_num_timesteps), "--run_num", str(policy_run_num), "--seed",
+                   str(policy_seed)])
+                            for policy_env in policy_envs
+                            for policy_seed in policy_seeds
+                            for policy_run_num in policy_run_nums]
+
+        pool.map(train, train_policy_args)
 
 
         # #============================================================

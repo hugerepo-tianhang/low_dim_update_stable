@@ -34,23 +34,9 @@ def train(args):
     Runs the test
     """
     args, argv = mujoco_arg_parser().parse_known_args(args)
-    logger.log(f"#######TRAIN: {args}, using use_run_num_start: {args.use_run_num_start}")
+    logger.log(f"#######TRAIN: {args}")
     args.alg = "ppo2"
 
-    if args.use_run_num_start != -1:
-        actual_run_num = args.run_num
-
-        args.run_num = args.use_run_num_start
-        that_run_dir = get_dir_path_for_this_run(args)
-        that_full_param_traj_dir_path = get_full_params_dir(that_run_dir)
-
-        start_pi_file = get_full_param_traj_file_path(that_full_param_traj_dir_path, "pi_start")
-        start_pi_params = pd.read_csv(start_pi_file, header=None).values[0]
-
-        start_vf_file = get_full_param_traj_file_path(that_full_param_traj_dir_path, "vf_start")
-        start_vf_params = pd.read_csv(start_vf_file, header=None).values[0]
-
-        args.run_num = actual_run_num
 
     this_run_dir = get_dir_path_for_this_run(args)
     if os.path.exists(this_run_dir):
@@ -97,15 +83,13 @@ def train(args):
 
     run_info = {"run_num": args.run_num,
                 "env_id": args.env,
-                "full_param_traj_dir_path": full_param_traj_dir_path}
+                "full_param_traj_dir_path": full_param_traj_dir_path,
+                "state_samples_to_collect": args.state_samples_to_collect}
 
     model = PPO2(policy=policy, env=env, n_steps=args.n_steps, nminibatches=args.nminibatches, lam=0.95, gamma=0.99, noptepochs=10,
                  ent_coef=0.0, learning_rate=3e-4, cliprange=0.2, optimizer=args.optimizer, seed=args.seed)
     model.tell_run_info(run_info)
 
-    if args.use_run_num_start != -1:
-        model.set_pi_from_flat(start_pi_params)  # don't set Vf's searched from CMA, those weren't really tested.
-        model.set_vf_from_flat(start_vf_params)  # don't set Vf's searched from CMA, those weren't really tested.
 
     model.learn(total_timesteps=args.num_timesteps)
 
