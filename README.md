@@ -32,4 +32,4 @@ You can see a clear linear correlation from variables in mass matrix from lagran
 
 
 # Credits
-Projects done with advisor Prof Karen Liu
+Projects done with advisor Prof Karen Liu from Stanford University
