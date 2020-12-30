@@ -8,6 +8,7 @@ The plane of first 2 PCA axis always captures about 85% of the variance of the s
 ![Alt text](readme_pics_low_dim/parameterlandscape.jpg?raw=true "return landscape Hopper")
 
 Example of first PCA direction points roughly to optimal parameter, notice that as the training goes on, the orange curve goes below 20 degree error.
+
 ![Alt text](readme_pics_low_dim/in so far grad and pc1 vs final - start cma_args.pc1_chunk_size_ 100 -page-001.jpg?raw=true "first PCA direction error")
 
 
