@@ -9,7 +9,7 @@ The plane of first 2 PCA axis always captures about 85% of the variance of the s
 
 Example of first PCA direction points roughly to optimal parameter, notice that as the training goes on, the orange curve goes below 20 degree error.
 
-![Alt text](readme_pics_low_dim/in so far grad and pc1 vs final - start cma_args.pc1_chunk_size_ 100 -page-001.jpg?raw=true "first PCA direction error")
+![Alt text](readme_pics_low_dim/firstPCA_VS_optimal_error.jpg?raw=true "first PCA direction error")
 
 
 Also includes various trials to utilize this knowledge to accelerate those algorithms including trials to quickly estimate the subspace with small error and run ES algorithm on that subspace, identify the first PCA direction and only search the cone given by the first PCA direction. However, in hard locomotion tasks, the estimated subspace is not accurate enough to contain near optimal parameter with high probability.
