@@ -16,6 +16,8 @@ Example of first PCA direction points roughly to optimal parameter, notice that 
 
 Also includes various trials to utilize this knowledge to accelerate those algorithms including trials to quickly estimate the subspace with small error and run ES algorithm on that subspace, identify the first PCA direction and only search the cone given by the first PCA direction. However, in hard locomotion tasks, the estimated subspace is not accurate enough to contain near optimal parameter with high probability.
 
+## Future work
+It's interesting to have an understanding of why above phenomenon happens, even though it's hard to prove theorems about it. 
 
 # Project 2, Physics model in model free DRL algorithms
 
@@ -28,5 +30,6 @@ You can see a clear linear correlation from variables in mass matrix from lagran
 ![Alt text](readme_pics_lagrangian/M_index_155_VS_layer_1.0_neuron_142.0_linear_correlation-0.988610646842882_normalized_SSE_3.0919008977837885_Syy_136.51385498046875.jpg?raw=true "M155 VS neuron142")
 ![Alt text](readme_pics_lagrangian/M_index_1672_VS_layer_0.0_neuron_820.0_linear_correlation-0.9935707917551969_normalized_SSE_2.4381617239831384_Syy_190.22752380371094.jpg?raw=true "M1672 VS neuron820")
 
+
 # Credits
-Work done with advisor Prof Karen Liu
+Projects done with advisor Prof Karen Liu
