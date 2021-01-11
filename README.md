@@ -19,7 +19,7 @@ Also includes various trials to utilize this knowledge to accelerate those algor
 ## Future work
 It's interesting to have an understanding of why above phenomenon happens, even though it's hard to prove theorems about it. 
 
-# Project 2, Physics model in model free DRL algorithms
+# Project 2, implicit physics model in model free DRL algorithms
 
 ## Abstract 
 Identifying linear and non linear correlations between neurons in a trained deep neural networks in DRL algorithms and variables from lagrangian equations. (new_neuron_analysis directory). This is the trial to see whether model free DRL algorithms encodes implicit model of the environment in their single neurons ( physics model in locomotion tasks ).
